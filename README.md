@@ -1,13 +1,18 @@
-This repo contains some tutorials I've prepared, to give
-my daughter and some of her friends a taste of cool things in math.
+# Exploring Math
 
-You can use and share them, just give credit where credit is due.
+This repo contains tutorials for guided exploration of some cool things in math and its applications.
+They're designed for kids in their early teens. Some of them are part 
+of an escape-room-like game, but they can each be done independently.
 
-I haven't thought much about licensing, except I would not like this 
-to be used for commercial purposes, and I would like to retain
-whatever copy rights I have.
+## TOC
+- [Discover Euler's Beautiful Formula](euler.html)
+- [Prove There Are Only Five Regular Solids](only_five.html) - continues where the previous formula left off.
+- [Locate Your Stranded Boat](tutorial.html)
+- [Your Ear is Doing Math](mind_frequrencies/index.html)
+- [Open a Safe By Hitting the Right Frequencies](humming.html)
 
-Feel free to email me at amitai.zernik@gmail.com to discuss further.
+- [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
 
+### Stubs
+- [Fourier Analysis WIP](fourier.html)
 
-Note to self: this is a cleaned version of the gal-cbc private repo.
