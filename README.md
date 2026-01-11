@@ -8,7 +8,7 @@ of an escape-room-like game, but they can each be done independently.
 - [Discover Euler's Beautiful Formula](euler.html)
 - [Prove There Are Only Five Regular Solids](only_five.html) - continues where the previous formula left off.
 - [Locate Your Stranded Boat](tutorial.html)
-- [Your Ear is Doing Math](mind_frequrencies/index.html)
+- [Your Ear is Doing Math](mind_frequencies/index.html)
 - [Open a Safe By Hitting the Right Frequencies](humming.html)
 
 - [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
