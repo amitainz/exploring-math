@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HPS: Generator Discovery</title>
+    <style>
+        body {
+            margin: 0; background: #050505; color: #00ffcc;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .container { width: 95vw; display: flex; flex-direction: column; gap: 20px; margin-top: 10px; }
+        .plot-group { position: relative; background: #000; border: 1px solid #222; border-radius: 4px; padding-bottom: 30px; }
+        canvas { width: 100%; height: 35vh; display: block; }
+        .label { padding: 8px; font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #111; }
+        .controls { padding: 20px; }
+        button {
+            background: #00ffcc; color: black; border: none;
+            padding: 15px 30px; cursor: pointer; font-weight: bold; border-radius: 4px;
+        }
+        #pitchOut { color: #fff; font-size: 2rem; margin: 10px; font-weight: 300; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <div class="controls" id="overlay">
+        <button id="startBtn">START FREQUENCY ANALYSIS</button>
+    </div>
+
+    <div id="pitchOut">Fundamental: --- Hz</div>
+
+    <div class="container">
+        <div class="plot-group">
+            <div class="label">1. Raw FFT (Magnitude Spectrum)</div>
+            <canvas id="rawCanvas"></canvas>
+        </div>
+
+        <div class="plot-group">
+            <div class="label">2. HPS (Multiplicative Generator Lattice)</div>
+            <canvas id="hpsCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const rawCanvas = document.getElementById('rawCanvas');
+        const hpsCanvas = document.getElementById('hpsCanvas');
+        const rawCtx = rawCanvas.getContext('2d');
+        const hpsCtx = hpsCanvas.getContext('2d');
+        const pitchOut = document.getElementById('pitchOut');
+
+        let audioCtx, analyser, dataArray;
+        const FFT_SIZE = 16384;
+        const HARMONICS = 4; // Number of folded layers
+        const MAX_FREQ_VIEW = 4000; // Display limit in Hz
+
+        async function init() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const source = audioCtx.createMediaStreamSource(stream);
+
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = FFT_SIZE;
+            dataArray = new Float32Array(analyser.frequencyBinCount);
+
+            source.connect(analyser);
+            document.getElementById('overlay').style.display = 'none';
+
+            resize();
+            window.addEventListener('resize', resize);
+            loop();
+        }
+
+        function resize() {
+            // Using clientWidth to handle CSS scaling correctly
+            rawCanvas.width = hpsCanvas.width = rawCanvas.clientWidth;
+            rawCanvas.height = hpsCanvas.height = rawCanvas.clientHeight;
+        }
+
+        function drawAxis(ctx, width, height) {
+            ctx.fillStyle = "#444";
+            ctx.font = "10px monospace";
+            ctx.textAlign = "center";
+
+            const step = 500; // Mark every 500Hz
+            for (let f = 0; f <= MAX_FREQ_VIEW; f += step) {
+                const x = (f / MAX_FREQ_VIEW) * width;
+                ctx.fillRect(x, height - 25, 1, 8); // Tick
+                ctx.fillText(f + "Hz", x, height - 10); // Label
+            }
+        }
+
+        function loop() {
+            if (!analyser) return;
+            requestAnimationFrame(loop);
+            analyser.getFloatFrequencyData(dataArray);
+
+            const w = rawCanvas.width;
+            const h = rawCanvas.height;
+            const nyquist = audioCtx.sampleRate / 2;
+
+            // 1. Data Normalization: Map dB (-100 to 0) to Magnitude (0 to 1)
+            let magSpectrum = new Float32Array(dataArray.length);
+            for(let i=0; i<dataArray.length; i++) {
+                let mag = (dataArray[i] + 100) / 100;
+                magSpectrum[i] = Math.max(0, mag);
+            }
+
+            // 2. HPS Calculation (Multiplicative Lattice)
+            let hpsSpectrum = new Float32Array(Math.floor(dataArray.length / HARMONICS));
+            let maxVal = 0, maxIdx = 0;
+
+            for (let i = 0; i < hpsSpectrum.length; i++) {
+                let product = magSpectrum[i];
+                for (let j = 2; j <= HARMONICS; j++) {
+                    product *= magSpectrum[i * j];
+                }
+                hpsSpectrum[i] = product;
+                if (product > maxVal) { maxVal = product; maxIdx = i; }
+            }
+
+            // 3. Rendering
+            const viewLimitIdx = Math.floor((MAX_FREQ_VIEW / nyquist) * dataArray.length);
+
+            // Raw Plot Rendering
+            rawCtx.clearRect(0, 0, w, h);
+            drawAxis(rawCtx, w, h);
+            drawGraph(rawCtx, magSpectrum, w, h, "#444", viewLimitIdx);
+
+            // HPS Plot Rendering
+            hpsCtx.clearRect(0, 0, w, h);
+            drawAxis(hpsCtx, w, h);
+            let normHps = hpsSpectrum.map(v => maxVal > 0 ? v / maxVal : 0);
+            drawGraph(hpsCtx, normHps, w, h, "#00ffcc", viewLimitIdx);
+
+            // Frequency calculation for the display
+            if (maxVal > 0.00001) {
+                const freq = maxIdx * (audioCtx.sampleRate / FFT_SIZE);
+                pitchOut.innerText = `Fundamental: ${freq.toFixed(1)} Hz`;
+            } else {
+                pitchOut.innerText = `Fundamental: --- Hz`;
+            }
+        }
+
+        function drawGraph(ctx, data, w, h, color, limit) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+
+            for(let i=0; i < limit; i++) {
+                const x = (i / limit) * w;
+                // Vertical padding: 30px from bottom for axis, 10px from top
+                const y = (h - 30) - (data[i] * (h - 45));
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        document.getElementById('startBtn').onclick = init;
+    </script>
+</body>
+</html>

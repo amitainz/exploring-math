@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Farmer's Fences</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+        .rule-card {
+            border-left: 4px solid #3b82f6;
+            background-color: #eff6ff;
+        }
+        .diagram-box {
+            background-color: #fcfcfc;
+            border: 1px dashed #cbd5e1;
+        }
+        .narrative-text {
+            font-family: Georgia, serif;
+        }
+        .todo-block {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        /* Quiz Styles */
+        .quiz-card {
+            transition: all 0.5s ease;
+        }
+        .quiz-locked {
+            opacity: 0.4;
+            filter: blur(2px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .btn-quiz {
+            transition: all 0.2s;
+        }
+        .btn-quiz:active {
+            transform: scale(0.95);
+        }
+
+        /* Hint Card Styles */
+        .hint-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .hint-card {
+            position: absolute;
+            width: 200px;
+            height: 150px;
+            cursor: pointer;
+            perspective: 1000px;
+            transition: transform 0.3s ease;
+        }
+        .hint-card:hover {
+            z-index: 50;
+            transform: scale(1.05) translateY(-5px) !important;
+        }
+        .hint-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.75rem;
+        }
+        .hint-card.is-flipped .hint-card-inner {
+            transform: rotateY(180deg);
+        }
+        .hint-front, .hint-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        .hint-front {
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .hint-back {
+            background-color: white;
+            color: #334155;
+            transform: rotateY(180deg);
+            font-size: 0.85rem;
+            text-align: left;
+            line-height: 1.25;
+            overflow-y: auto;
+            font-style: italic;
+        }
+
+        /* Polyhedron Styles */
+        .solid-container {
+            background: #fdfdfd;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .lamp-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s;
+            background: white;
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .lamp-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #fde047;
+        }
+        .lamp-icon {
+            width: 24px;
+            height: 24px;
+            fill: #475569;
+            transition: fill 0.3s;
+        }
+        .lit .lamp-icon {
+            fill: #eab308;
+        }
+        /* Canvas container */
+        .canvas-wrapper {
+            width: 100%;
+            height: 300px;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-7xl w-full mb-8 space-y-12">
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
+            <p class="text-slate-700 leading-relaxed">
+                A farmer is considering different designs for his fences. Here are the steps he uses to draw a fence diagram.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <h2 class="font-bold text-slate-800 text-xl tracking-tight">Step 1: Draw the Fences</h2>
+                    <p class="text-slate-600 mt-1">You can draw any number of lines - straight or curved. There's just one rule:</p>
+                </div>
+
+                <div class="rule-card p-4 rounded-r-lg">
+                    <h3 class="font-bold text-blue-900 text-lg">
+                        Fences Are Connected
+                    </h3>
+                    <p class="text-blue-800 text-sm mt-1 leading-snug">
+                        You should be able to get between any two fences by walking along the fences only.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-xs font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Connected (Good)
+                        </span>
+                        <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                            <path d="M30 60 C 40 20, 70 30, 80 50 S 120 10, 140 40" />
+                            <path d="M80 50 L 60 90 C 70 110, 100 100, 110 80 S 130 50, 100 45" />
+                            <path d="M60 90 L 20 100" />
+                            <path d="M140 40 L 150 25" />
+                        </svg>
+                    </div>
+
+                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-xs font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            Not Connected (Bad)
+                        </span>
+                        <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                            <path d="M20 60 C 20 10, 140 10, 140 60 S 20 110, 20 60" />
+                            <path d="M140 60 L 150 75" />
+                            <path d="M60 55 C 70 40, 90 40, 100 55 S 80 80, 60 55" />
+                            <path d="M80 65 L 85 85" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="mt-8 border-t border-slate-100 pt-6">
+                    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                        <span>🧪</span> Quick Check: Are these valid?
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="quiz-container">
+
+                        <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q1">
+                            <div class="mb-4">
+                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                    <path d="M 40 60 C 40 20, 120 20, 120 60 S 40 100, 40 60" />
+                                    <path d="M 20 60 L 140 60" />
+                                </svg>
+                            </div>
+                            <div class="w-full flex flex-col gap-2 q-controls">
+                                <button onclick="checkAnswer(1, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(1, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                            </div>
+                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
+                        </div>
+
+                        <div class="quiz-card quiz-locked bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q2">
+                            <div class="mb-4">
+                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                    <path d="M 50 60 m -25, 0 a 25,25 0 1,0 50,0 a 25,25 0 1,0 -50,0" />
+                                    <path d="M 130 60 m -20, 0 a 20,20 0 1,0 40,0 a 20,20 0 1,0 -40,0" />
+                                </svg>
+                            </div>
+                            <div class="w-full flex flex-col gap-2 q-controls">
+                                <button onclick="checkAnswer(2, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(2, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                            </div>
+                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
+                        </div>
+
+                        <div class="quiz-card quiz-locked bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q3">
+                            <div class="mb-4">
+                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                    <path d="M 30 90 C 30 30, 90 30, 90 60 S 50 80, 50 60 S 80 40, 100 40 S 130 80, 130 100" />
+                                    <path d="M 130 100 L 140 110" />
+                                </svg>
+                            </div>
+                            <div class="w-full flex flex-col gap-2 q-controls">
+                                <button onclick="checkAnswer(3, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(3, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                            </div>
+                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <hr class="border-slate-100">
+
+            <div class="space-y-4">
+                <div>
+                    <h2 class="font-bold text-slate-800 text-xl tracking-tight">Step 2. Add Posts</h2>
+                    <p class="text-slate-600 mt-1">Draw dots to represent the fence posts. You can add as many posts as you like, anywhere along the fences. There's only one additional rule.</p>
+                </div>
+
+                <div class="rule-card p-4 rounded-r-lg">
+                    <h3 class="font-bold text-blue-900 text-lg">
+                        The Posts Cut the Fences into Simple Segments
+                    </h3>
+                    <p class="text-blue-800 text-sm mt-1 leading-snug">
+                        That means each fence segment has a post on either side ("loose ends must have a post"), and the segments we get cannot intersect ("intersections must have a post").
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Correct
+                        </span>
+                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                            <path d="M20 20 L 100 80" fill="none" />
+                            <path d="M100 20 L 20 80" fill="none" />
+                            <circle cx="20" cy="20" r="3.5" />
+                            <circle cx="100" cy="80" r="3.5" />
+                            <circle cx="100" cy="20" r="3.5" />
+                            <circle cx="20" cy="80" r="3.5" />
+                            <circle cx="60" cy="50" r="3.5" />
+                            <circle cx="40" cy="35" r="3.5" />
+                        </svg>
+                    </div>
+
+                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            Missing End Post
+                        </span>
+                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                            <path d="M20 20 L 100 80" fill="none" />
+                            <path d="M100 20 L 20 80" fill="none" />
+                            <circle cx="20" cy="20" r="3.5" />
+                            <circle cx="100" cy="80" r="3.5" />
+                            <circle cx="100" cy="20" r="3.5" />
+                            <circle cx="60" cy="50" r="3.5" />
+                            <circle cx="40" cy="35" r="3.5" />
+                        </svg>
+                    </div>
+
+                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                            Missing Intersection
+                        </span>
+                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                            <path d="M20 20 L 100 80" fill="none" />
+                            <path d="M100 20 L 20 80" fill="none" />
+                            <circle cx="20" cy="20" r="3.5" />
+                            <circle cx="100" cy="80" r="3.5" />
+                            <circle cx="100" cy="20" r="3.5" />
+                            <circle cx="20" cy="80" r="3.5" />
+                            <circle cx="40" cy="35" r="3.5" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <div class="space-y-4">
+                <div>
+                    <h2 class="font-bold text-slate-800 text-xl tracking-tight">Step 3. Color In the Fields</h2>
+                    <p class="text-slate-600 mt-1">A field is any region of the diagram that is "fenced in" from all sides. The fences determine the fields - unlike with the posts, there's no choice involved in this step. But you can choose a nice set of colors to shade the fields with ;)</p>
+                </div>
+
+                <div class="flex justify-center mt-6">
+                    <div class="diagram-box p-6 rounded-xl flex flex-col items-center max-w-sm w-full">
+                        <svg viewBox="0 0 1000 1000" class="stroke-slate-800 stroke-[5] fill-none stroke-linecap-round stroke-linejoin-round" style="width: 100%; height: auto; max-height: 400px;">
+                            <path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
+
+                            <path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
+
+                            <path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480 L 820 280" fill="#ffffba" stroke="none" />
+
+                            <path d="M 480 700 Q 580 580 680 680 Q 580 750 480 700 Z" fill="#baffc9" stroke="none" />
+
+                            <path d="M 50 200 Q 150 150 300 350" />
+                            <path d="M 300 350 C 180 300 180 480 300 350" />
+                            <path d="M 300 350 Q 375 335 450 320" />
+                            <line x1="450" y1="320" x2="550" y2="310" />
+                            <line x1="550" y1="310" x2="620" y2="305" />
+                            <line x1="620" y1="305" x2="700" y2="300" />
+                            <line x1="700" y1="300" x2="820" y2="280" />
+                            <line x1="450" y1="320" x2="440" y2="100" />
+                            <line x1="550" y1="310" x2="550" y2="90" />
+                            <line x1="620" y1="305" x2="640" y2="70" />
+                            <line x1="700" y1="300" x2="760" y2="70" />
+                            <line x1="820" y1="280" x2="920" y2="100" />
+                            <line x1="620" y1="305" x2="740" y2="480" />
+                            <line x1="820" y1="280" x2="740" y2="480" />
+                            <path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480" />
+                            <line x1="740" y1="480" x2="680" y2="680" />
+                            <path d="M 480 700 Q 580 580 680 680" />
+                            <path d="M 480 700 Q 580 750 680 680" />
+                            <path d="M 480 700 Q 400 800 350 850" />
+                            <path d="M 680 680 Q 750 780 800 850" />
+                            <path d="M 480 700 Q 530 800 550 880" />
+
+                            <g fill="black" stroke="none">
+                                <circle cx="50" cy="200" r="9" />
+                                <circle cx="300" cy="350" r="9" />
+                                <circle cx="450" cy="320" r="9" />
+                                <circle cx="550" cy="310" r="9" />
+                                <circle cx="620" cy="305" r="9" />
+                                <circle cx="700" cy="300" r="9" />
+                                <circle cx="820" cy="280" r="9" />
+                                <circle cx="440" cy="100" r="9" />
+                                <circle cx="550" cy="90" r="9" />
+                                <circle cx="640" cy="70" r="9" />
+                                <circle cx="760" cy="70" r="9" />
+                                <circle cx="920" cy="100" r="9" />
+                                <circle cx="740" cy="480" r="9" />
+                                <circle cx="480" cy="700" r="9" />
+                                <circle cx="680" cy="680" r="9" />
+                                <circle cx="350" cy="850" r="9" />
+                                <circle cx="800" cy="850" r="9" />
+                                <circle cx="550" cy="880" r="9" />
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
+            <header>
+                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">Taking Stock</h2>
+            </header>
+
+            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
+                <p>
+                    The farmer decided to count how many posts, fence segments, and fields each diagram has.
+                </p>
+
+                <div class="todo-block p-4 rounded-lg border border-slate-300 text-sm">
+                    &lt;here would come diagrams and queries to the user involving counting - leave this as a TODO in some other font.&gt;
+                </div>
+
+                <p>
+                    One day, the farmer decided to see if he could design a farm with 5 fields, using only one post. He noticed that the only way he could do that was if he used 5 fences, with a kind of flower. Though you could let some of the pedals be inside each other, you would always end up using 5 fence segments.
+                </p>
+
+                <p>
+                    He thought that was curious, but what was even striking was that a similar thing happened now matter the number of posts and fields he tried to get. For example, if he had 3 posts and wanted to produced 3 fields, that always involved 5 fence segments. In fact, it seemed any two of the three quantities determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd never get any fields. And you couldn't draw any fence diagram with 5 posts and 3 diagrams (unless you started allowing disconnected diagrams).
+                </p>
+
+                <p>
+                    The farmer was sure there was some rule, some formula that would allow one to compute any quantity from the other two. But he couldn't put his finger on it.
+                </p>
+
+                <p class="font-bold text-blue-900">Can you help?</p>
+            </div>
+
+            <div class="hint-container">
+                <div class="hint-card" style="left: 5%; top: 20px; transform: rotate(-5deg);" onclick="this.classList.toggle('is-flipped')">
+                    <div class="hint-card-inner">
+                        <div class="hint-front bg-[#a5f3fc] text-[#0e7490]">HINT</div>
+                        <div class="hint-back">If you find you're stuck, it's always nice to draw more diagrams, and add more triplets of numbers you can stare at, and look for patterns in.</div>
+                    </div>
+                </div>
+
+                <div class="hint-card" style="left: 35%; top: 50px; transform: rotate(3deg);" onclick="this.classList.toggle('is-flipped')">
+                    <div class="hint-card-inner">
+                        <div class="hint-front bg-[#bfdbfe] text-[#1d4ed8]">HINT</div>
+                        <div class="hint-back">which pairs of posts and fence-segment counts are impossible? what's common to all of the impossible ones? start with an impossible pair. what's the minimal change you need in the number of posts to make it possible? what's the minimal change in the number of fence segments? what's the number of fields you get when you make these two minimal changes?</div>
+                    </div>
+                </div>
+
+                <div class="hint-card" style="right: 5%; top: 10px; transform: rotate(-2deg);" onclick="this.classList.toggle('is-flipped')">
+                    <div class="hint-card-inner">
+                        <div class="hint-front bg-[#e9d5ff] text-[#7e22ce]">HINT</div>
+                        <div class="hint-back">Think of ways you can modify a given diagram slightly - maybe adding a post, or adding a single fence segment. how does that affect the count?</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8 overflow-hidden">
+            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
+                <p>
+                    You've discovered a version of very famous formula, discovered by the great mathematician Euler in the 18th century. Euler discovered that for any polyhedron, we have $V - E + F = 2$.
+                </p>
+
+                <p>
+                    <b class="text-blue-900">Can you prove Euler's formula from the rule you've discovered?</b>
+                </p>
+
+                <p>
+                    imagine the faces are somewhat transperent, remove the ceiling and add a lamp just above it. what would you get?
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
+                    <div class="solid-container p-4 flex flex-col items-center" id="box-cube">
+
+                        <div class="lamp-btn" onclick="toggleLight('cube')">
+                            <svg class="lamp-icon" viewBox="0 0 24 24">
+                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                            </svg>
+                        </div>
+
+                        <div id="canvas-cube" class="canvas-wrapper"></div>
+                    </div>
+
+                    <div class="solid-container p-4 flex flex-col items-center" id="box-octa">
+
+                        <div class="lamp-btn" onclick="toggleLight('octa')">
+                            <svg class="lamp-icon" viewBox="0 0 24 24">
+                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                            </svg>
+                        </div>
+
+                        <div id="canvas-octa" class="canvas-wrapper"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
+            <header>
+                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">The Only Five Solids</h2>
+            </header>
+
+            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
+                <p>
+                    It was known since the time of the Greeks—and immortalized in the final book of Euclid's <i>Elements</i>—that there are only five possible regular convex solids. But for centuries, the proof relied on complex geometric arguments about interior angles and how they fold together in physical space.
+                </p>
+
+                <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 text-base italic text-slate-600">
+                    <p><b>Side Note on Topology:</b> Leonhard Euler's work marked a massive shift in mathematics. He showed that the precise "shape" (angles, lengths) often matters less than the "connectivity." This insight kicked off the field of <b>Topology</b>, where we treat shapes as if they are made of rubber, focusing on properties that don't change when you stretch them.</p>
+                </div>
+
+                <p>
+                    Euler realized that the regularity of these solids allowed for a beautiful counting proof. Let's see how he derived the <b>Master Equation</b> using only the numbers of parts:
+                </p>
+
+                <div class="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <p>1. In a platonic (or "regular") solid, every face has the same number of sides, $n$, and every vertex has the same number of edges, $m$. This is what it means to be a platonic solid, by definition. </p>
+                    <p>2. Since every edge is incident to precisely two faces and two vertices, we have $nF = 2E$ and $mV = 2E$.</p>
+                    <p>3. We solve for $F$ and $V$:
+                        $$F = \frac{2E}{n} \quad \text{and} \quad V = \frac{2E}{m}$$
+                    </p>
+                    <p>4. We plug these into Euler's formula ($V - E + F = 2$):
+                        $$\frac{2E}{m} - E + \frac{2E}{n} = 2$$
+                    </p>
+                    <p>5. We divide the whole thing by $2E$ and rearrange to get the <b>Master Equation</b>:
+                        $$\frac{1}{n} + \frac{1}{m} = \frac{1}{2} + \frac{1}{E}$$
+                    </p>
+                </div>
+
+                <p>
+                    Because the number of edges $E$ must be a positive integer, the term $\frac{1}{E}$ is always greater than zero. This implies that for a regular solid to exist, the sum $\frac{1}{n} + \frac{1}{m}$ must be <b>strictly greater than $1/2$</b>.
+                </p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-500 border-collapse">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 border">Sides per Face ($n$)</th>
+                                <th class="px-4 py-3 border">At Vertex ($m$)</th>
+                                <th class="px-4 py-3 border">Calculation</th>
+                                <th class="px-4 py-3 border">Conclusion</th>
+                            </tr>
+                        </thead>
+                        <tbody class="todo-block">
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border">$1/3 + 1/3 = 2/3 > 1/2$</td>
+                                <td class="px-4 py-3 border font-bold text-green-600 italic">Possible (Tetrahedron)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-center font-bold">4</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-center font-bold">5</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">4</td>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">5</td>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 border text-center font-bold">6</td>
+                                <td class="px-4 py-3 border text-center font-bold">3</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                                <td class="px-4 py-3 border text-slate-400">...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="todo-block p-4 rounded-lg border border-slate-300 text-sm mt-8">
+                    TODO: consider making the table interactive with sliders to control the paramters and showing the appropriate solid when the master equation is fulfilled
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const quizSolutions = {
+            1: true,  // Connected
+            2: false, // Disconnected
+            3: true   // Connected (Tricky)
+        };
+
+        function checkAnswer(id, userChoiceIsConnected) {
+            const isCorrect = userChoiceIsConnected === quizSolutions[id];
+            const card = document.getElementById(`q${id}`);
+            const feedback = card.querySelector('.q-feedback');
+            const buttons = card.querySelectorAll('button');
+
+            // Provide visual feedback
+            if (isCorrect) {
+                feedback.textContent = "Correct!";
+                feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-green-600 block";
+                card.classList.add('border-green-300', 'bg-green-50');
+
+                // Disable buttons
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+
+                // Unlock next question if it exists
+                const nextId = id + 1;
+                const nextCard = document.getElementById(`q${nextId}`);
+                if (nextCard) {
+                    setTimeout(() => {
+                        nextCard.classList.remove('quiz-locked');
+                    }, 500);
+                }
+            } else {
+                feedback.textContent = "Not quite. Look closer at the lines.";
+                feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-red-600 block";
+
+                // Shake effect (simple css toggle)
+                card.style.transform = "translateX(5px)";
+                setTimeout(() => card.style.transform = "translateX(0)", 100);
+                setTimeout(() => card.style.transform = "translateX(-5px)", 200);
+                setTimeout(() => card.style.transform = "translateX(0)", 300);
+            }
+        }
+    </script>
+
+    <script>
+        // Global references to lights to toggle them
+        const scenes = {
+            cube: { light: null, isActive: false },
+            octa: { light: null, isActive: false }
+        };
+
+        function initScene(containerId, type) {
+            const container = document.getElementById(containerId);
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene & Camera
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfcfcfc); // Match CSS background
+            scene.fog = new THREE.Fog(0xfcfcfc, 10, 50);
+
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+            camera.position.set(0, 5, 8);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            let userInteracted = false;
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent going below ground
+
+            // Stop auto-rotation when user interacts
+            controls.addEventListener('start', () => {
+                userInteracted = true;
+            });
+
+            // Ground Plane (Receives Shadow)
+            const planeGeometry = new THREE.PlaneGeometry(100, 100);
+            const planeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xdcfce7, // Match grass color
+                roughness: 0.8,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -2;
+            plane.receiveShadow = true;
+            scene.add(plane);
+
+            // Object Construction
+            const group = new THREE.Group();
+
+            let vertices = [];
+            let edges = [];
+            let facesIndices = [];
+
+            if (type === 'cube') {
+                // Cube vertices
+                // Remove top face (y=1)
+                vertices = [
+                    [-1, -1, 1], [1, -1, 1], [1, -1, -1], [-1, -1, -1], // Bottom ring
+                    [-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1]      // Top ring
+                ];
+                // Connect edges manually for control
+                edges = [
+                    [0,1], [1,2], [2,3], [3,0], // Bottom
+                    [4,5], [5,6], [6,7], [7,4], // Top
+                    [0,4], [1,5], [2,6], [3,7]  // Vertical
+                ];
+                // Face indices for transparent mesh (triangulated)
+                // Bottom, Front, Right, Back, Left. NO TOP.
+                facesIndices = [
+                    0,1,2, 0,2,3, // Bottom
+                    0,4,5, 0,5,1, // Front
+                    1,5,6, 1,6,2, // Right
+                    2,6,7, 2,7,3, // Back
+                    3,7,4, 3,4,0  // Left
+                ];
+            } else if (type === 'octa') {
+                // Octahedron resting on a face (Triangular Antiprism style)
+                // Remove top face
+                const r = 1.5;
+                const h = 1.2;
+                // Top Triangle (y=h) - Rotated 0, 120, 240
+                const t0 = [r*Math.cos(0), h, r*Math.sin(0)];
+                const t1 = [r*Math.cos(2*Math.PI/3), h, r*Math.sin(2*Math.PI/3)];
+                const t2 = [r*Math.cos(4*Math.PI/3), h, r*Math.sin(4*Math.PI/3)];
+
+                // Bottom Triangle (y=-h) - Rotated 60, 180, 300
+                const b0 = [r*Math.cos(Math.PI/3), -h, r*Math.sin(Math.PI/3)];
+                const b1 = [r*Math.cos(Math.PI), -h, r*Math.sin(Math.PI)];
+                const b2 = [r*Math.cos(5*Math.PI/3), -h, r*Math.sin(5*Math.PI/3)];
+
+                vertices = [t0, t1, t2, b0, b1, b2]; // 0,1,2 top; 3,4,5 bottom
+
+                // Edges: Top Ring, Bottom Ring, ZigZag
+                edges = [
+                    [0,1], [1,2], [2,0], // Top ring
+                    [3,4], [4,5], [5,3], // Bottom ring
+                    [0,3], [0,5], // Top 0 connects to Bot 3, 5
+                    [1,3], [1,4], // Top 1 connects to Bot 3, 4
+                    [2,4], [2,5]  // Top 2 connects to Bot 4, 5
+                ];
+
+                // Faces: Bottom (1), Sides (6). Remove Top (0,1,2).
+                facesIndices = [
+                    3,5,4, // Bottom (order for normal down/out)
+                    0,3,5, // Side
+                    0,5,2, // Side
+                    2,5,4, // Side
+                    2,4,1, // Side
+                    1,4,3, // Side
+                    1,3,0  // Side
+                ];
+            }
+
+            // Material Settings
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 });
+            if(type === 'octa') edgeMat.color.setHex(0xa855f7);
+
+            // Create Edges (Thinner: radius 0.016)
+            edges.forEach(pair => {
+                const v1 = new THREE.Vector3(...vertices[pair[0]]);
+                const v2 = new THREE.Vector3(...vertices[pair[1]]);
+                const distance = v1.distanceTo(v2);
+                const cylinder = new THREE.CylinderGeometry(0.016, 0.016, distance, 8); // Approx 1/3 of previous 0.05
+                const mesh = new THREE.Mesh(cylinder, edgeMat);
+
+                // Position and Rotate Cylinder
+                const mid = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+                mesh.position.copy(mid);
+                mesh.lookAt(v2);
+                mesh.rotateX(Math.PI / 2);
+                mesh.castShadow = true;
+                group.add(mesh);
+            });
+
+            // Create Vertices (Spheres)
+            // Radius increased to 0.1 (approx 3x larger than 0.033)
+            const vertexGeo = new THREE.SphereGeometry(0.1, 16, 16);
+            vertices.forEach(v => {
+                const mesh = new THREE.Mesh(vertexGeo, edgeMat);
+                mesh.position.set(...v);
+                mesh.castShadow = true;
+                group.add(mesh);
+            });
+
+            // Create Transparent Faces
+            const geom = new THREE.BufferGeometry();
+            const positions = [];
+            vertices.forEach(v => positions.push(...v));
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geom.setIndex(facesIndices);
+            geom.computeVertexNormals();
+
+            const faceMat = new THREE.MeshPhongMaterial({
+                color: type === 'cube' ? 0x60a5fa : 0xc084fc,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                shininess: 100
+            });
+            const faceMesh = new THREE.Mesh(geom, faceMat);
+            // Faces do NOT cast shadow, letting light pass through to form the graph
+            faceMesh.castShadow = false;
+            faceMesh.receiveShadow = false;
+            group.add(faceMesh);
+
+            scene.add(group);
+
+            // Lights
+            // Ambient light (soft fill)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // The Projection Lamp (PointLight)
+            // Positioned centrally above the "missing face" (top)
+            const lamp = new THREE.PointLight(0xfde047, 0, 100); // Start intensity 0
+            lamp.position.set(0, 1.5, 0); // Just inside/above top face
+            lamp.castShadow = true;
+            lamp.shadow.mapSize.width = 1024;
+            lamp.shadow.mapSize.height = 1024;
+            lamp.shadow.bias = -0.001; // Reduce artifacts
+            scene.add(lamp);
+
+            // Store ref
+            scenes[type].light = lamp;
+
+            // Helper for the lamp position (Visual glowing orb)
+            const bulbGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.copy(lamp.position);
+            scene.add(bulb);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+
+                // Slow rotation until first interaction
+                if(!userInteracted) {
+                    group.rotation.y += 0.002;
+                }
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                renderer.setSize(w, h);
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+            });
+        }
+
+        function toggleLight(type) {
+            const container = document.getElementById(type === 'cube' ? 'box-cube' : 'box-octa');
+            container.classList.toggle('lit');
+
+            const isLit = container.classList.contains('lit');
+            scenes[type].isActive = isLit;
+
+            // Animate light intensity
+            const target = isLit ? 1.5 : 0;
+            const light = scenes[type].light;
+
+            // Simple GSAP-like tween
+            let start = light.intensity;
+            let startTime = null;
+            function fade(time) {
+                if (!startTime) startTime = time;
+                let progress = (time - startTime) / 500; // 500ms duration
+                if (progress > 1) progress = 1;
+
+                light.intensity = start + (target - start) * progress;
+
+                if (progress < 1) requestAnimationFrame(fade);
+            }
+            requestAnimationFrame(fade);
+        }
+
+        // Initialize on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initScene('canvas-cube', 'cube');
+            initScene('canvas-octa', 'octa');
+        });
+
+    </script>
+</body>
+</html>

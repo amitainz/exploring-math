@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #f4f4f9;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+        /* LAYOUT GRID */
+        .simulation-wrapper {
+            display: flex;
+            gap: 20px;
+            padding-bottom: 40px;
+            border-bottom: 2px dashed #ccc;
+            margin-bottom: 40px;
+        }
+        .simulation-wrapper:last-child { border-bottom: none; margin-bottom: 0; }
+
+        /* COLUMNS */
+        .col-left {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .col-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .card-sim {
+            display: block;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            height: 500px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .intro-text { line-height: 1.6; color: #444; margin: 0; font-size: 15px; }
+
+        /* BUTTONS */
+        .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+
+        button {
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+            font-weight: bold;
+            transition: opacity 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        button:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        button:active { transform: translateY(2px); }
+        button:hover:not(:disabled) { opacity: 0.9; }
+
+        .btnCapture { background-color: #007bff; color: white; }
+        .btnMark { background-color: #28a745; color: white; }
+        .btnAutopilot { background-color: #6610f2; color: white; margin-bottom: 15px; }
+        .btnCompute { background-color: #6c757d; color: white; width: auto; padding: 8px 15px; margin-left: 10px; font-size: 14px; }
+        .btnCaptureNext { background-color: #007bff; color: white; display: none; margin-top: 20px; }
+
+        /* STATUS BOX */
+        .status-box {
+            background: #eee;
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* INPUTS */
+        .input-group { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; font-size: 16px; margin-top: 10px; }
+        input[type="number"] { padding: 8px; width: 70px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+
+        .feedbackMsg { font-weight: bold; margin-left: 10px; }
+        .feedbackMsg.success { color: #28a745; }
+        .feedbackMsg.error { color: #dc3545; }
+
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; border: 1px solid #ccc; }
+        table { border-collapse: collapse; width: 100%; }
+        th { background-color: #333; color: white; text-align: right; padding: 10px 15px; position: sticky; left: 0; border-right: 2px solid #999; white-space: nowrap; width: 150px; z-index: 10; font-size: 13px; }
+        td { padding: 10px 20px; text-align: center; border: 1px solid #ddd; font-size: 13px; }
+        .row-recaptured td { background-color: #ffe6f2; color: #cc0066; font-weight: bold; }
+        .row-marked td { background-color: #e6f2ff; color: #004080; }
+        .row-cumulative td { background-color: #e8f5e9; color: #1b5e20; font-weight: bold; border-top: 2px solid #ccc; }
+
+        /* VISUALIZATION */
+        canvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        .sim-label { position: absolute; top: 10px; font-weight: bold; color: #999; pointer-events: none; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; z-index: 2; }
+        .lbl-wild { left: 20px; }
+        .lbl-trap { right: 20px; }
+
+        /* ANALYSIS SECTION */
+        .analysis-section { display: none; border-top: 1px solid #eee; margin-top: 20px; padding-top: 20px; }
+        .results-list { margin-top: 15px; font-weight: bold; color: #555; letter-spacing: 0.5px; font-family: monospace; font-size: 13px; word-break: break-all; max-height: 100px; overflow-y: auto; background: #fafafa; padding: 5px; border: 1px solid #eee; }
+        .summation-text { margin-top: 15px; color: #333; font-style: italic; }
+        .average-section { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ccc; display: none; }
+
+        /* FLIP CARD - Now positioned absolutely inside the sim container */
+        .flip-card {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            /* Occupy the "Wild Population" area (approx 60% of width minus margins) */
+            width: 55%;
+            bottom: 40px; /* Stretch height */
+            perspective: 1000px;
+            cursor: pointer;
+            z-index: 10; /* Above canvas */
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            border-radius: 12px;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .flip-card-front {
+            background-color: #343a40;
+            color: white;
+            border: 4px solid #fff;
+        }
+        .flip-card-back {
+            background-color: #28a745;
+            color: white;
+            transform: rotateY(180deg);
+            border: 4px solid #fff;
+        }
+        .card-subtext {
+            font-size: 16px;
+            font-weight: normal;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sim1" class="simulation-wrapper">
+        <div class="col-left">
+            <div class="card">
+                <p class="intro-text">
+                    <strong>Phase 1: The Known Population</strong><br><br>
+                    Our goal is to get a good estimate for the size of a population of birds.
+                    To help you discover how this works, let's start with a <em>known</em> population size of 1000 birds.
+                </p>
+            </div>
+            <div class="card">
+                <div class="controls">
+                    <button class="btnCapture" data-action="capture">Capture 50</button>
+                    <button class="btnMark" data-action="mark" disabled>Mark Captured</button>
+                </div>
+                <div class="status-box">
+                    <span class="statusMsg">System Ready.</span>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:10px;">
+                        <span>Total Marked:</span>
+                        <strong class="totalMarkedDisplay" style="font-size:1.2em">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-right">
+            <div class="card card-sim sim-container">
+                <span class="sim-label lbl-wild">Wild Population (1000)</span>
+                <span class="sim-label lbl-trap">Inspection</span>
+                <canvas></canvas>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="historyTable">
+                        <tbody>
+                            <tr class="rowAttempts"><th>Attempt #</th></tr>
+                            <tr class="rowMarked" style="background-color: #e6f2ff; color: #004080;"><th>Marked (In Wild)</th></tr>
+                            <tr class="rowRecaptured" style="background-color: #ffe6f2; color: #cc0066; font-weight: bold;"><th>Recaptured (of 50)</th></tr>
+                            <tr class="rowCumulative" style="background-color: #e8f5e9; color: #1b5e20; font-weight: bold; border-top: 2px solid #ccc;"><th>Total Recaptured (Sum)</th></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="sim2" class="simulation-wrapper">
+        <div class="col-left">
+            <div class="card">
+                <p class="intro-text">
+                    <strong>Phase 2: The Average</strong><br><br>
+                    Can you say, <em>on average</em>, how many marked birds you expect to catch given that there are N = 1000 birds?
+                </p>
+
+                <button class="btnAutopilot" data-action="autopilot" style="margin-top:15px;">Run 5 Marking Rounds</button>
+
+                <div class="status-box" style="margin-top:15px;">
+                    <span class="statusMsg">Ready.</span>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:10px;">
+                        <span>Total Marked:</span>
+                        <strong class="totalMarkedDisplay" style="font-size:1.2em">0</strong>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <p>Expectation for next catch:</p>
+                    <div class="input-group">
+                        <span>50 × </span>
+                        <input type="number" class="inputM">
+                        <span> / </span>
+                        <input type="number" class="inputN">
+                        <button class="btnCompute" id="btnExpCompute">Check</button>
+                    </div>
+                    <div class="input-group"><span class="feedbackMsg" id="feedbackExp"></span></div>
+
+                    <button class="btnCaptureNext" data-action="captureNext">25 Counting-not-Marking Rounds</button>
+
+                    <div class="results-list"></div>
+                    <div class="summation-text" id="summationText"></div>
+
+                    <div class="average-section">
+                        <p>Actual Average:</p>
+                        <div class="input-group">
+                            <input type="number" class="inputSum">
+                            <span> / </span>
+                            <input type="number" class="inputCount">
+                            <button class="btnCompute" id="btnAvgCompute">Chk</button>
+                        </div>
+                        <div class="input-group"><span class="feedbackMsg" id="feedbackAvg"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-right">
+            <div class="card card-sim sim-container">
+                <span class="sim-label lbl-wild">Wild Population (1000)</span>
+                <span class="sim-label lbl-trap">Inspection</span>
+                <canvas></canvas>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="historyTable">
+                        <tbody>
+                            <tr class="rowAttempts"><th>Attempt #</th></tr>
+                            <tr class="rowMarked" style="background-color: #e6f2ff; color: #004080;"><th>Marked (In Wild)</th></tr>
+                            <tr class="rowRecaptured" style="background-color: #ffe6f2; color: #cc0066; font-weight: bold;"><th>Recaptured (of 50)</th></tr>
+                            <tr class="rowCumulative" style="background-color: #e8f5e9; color: #1b5e20; font-weight: bold; border-top: 2px solid #ccc;"><th>Total Recaptured (Sum)</th></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="sim3" class="simulation-wrapper">
+        <div class="col-left">
+            <div class="card">
+                <p class="intro-text">
+                    <strong>Phase 3: The Unknown N</strong><br><br>
+                    Now the number of birds is some unknown <strong>N</strong>.
+                    Your job is to run a capture-recapture experiment to discover what it is.
+
+
+                </p>
+            </div>
+            <div class="card">
+                <div class="controls">
+                    <button class="btnCapture" data-action="capture">Capture 50</button>
+                    <button class="btnMark" data-action="mark" disabled>Mark Captured</button>
+                </div>
+                <div class="status-box">
+                    <span class="statusMsg">System Ready.</span>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:10px;">
+                        <span>Total Marked:</span>
+                        <strong class="totalMarkedDisplay" style="font-size:1.2em">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-right">
+            <div class="card card-sim sim-container">
+
+                <div class="flip-card" id="popRevealCard">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <div>N = ?</div>
+                            <div class="card-subtext">(Click to Reveal)</div>
+                        </div>
+                        <div class="flip-card-back">
+                            <div>N = <span class="trueNDisplay"></span></div>
+                            <div class="card-subtext">Total Population</div>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="sim-label lbl-trap">Inspection</span>
+                <canvas></canvas>
+            </div>
+            <div class="card">
+                <div class="table-wrapper">
+                    <table class="historyTable">
+                        <tbody>
+                            <tr class="rowAttempts"><th>Attempt #</th></tr>
+                            <tr class="rowMarked" style="background-color: #e6f2ff; color: #004080;"><th>Marked (In Wild)</th></tr>
+                            <tr class="rowRecaptured" style="background-color: #ffe6f2; color: #cc0066; font-weight: bold;"><th>Recaptured (of 50)</th></tr>
+                            <tr class="rowCumulative" style="background-color: #e8f5e9; color: #1b5e20; font-weight: bold; border-top: 2px solid #ccc;"><th>Total Recaptured (Sum)</th></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initSimulation(containerId, config) {
+            const container = document.getElementById(containerId);
+
+            // --- CONFIGURATION ---
+            const POP_SIZE = config.popSize || 1000;
+            const SAMPLE_SIZE = 50;
+            const RENDER_ALL_WILD = config.renderAllWild;
+
+            const GRID_COLS = 35;
+            const ANIM_SPEED_NORMAL = 0.25;
+            const ANIM_SPEED_FAST = 0.8;
+
+            // --- STATE ---
+            const population = new Uint8Array(POP_SIZE);
+            let birds = [];
+            let currentBatchIndices = [];
+            let totalMarkedCount = 0;
+            let cumulativeRecapturedCount = 0;
+            let attemptCount = 0;
+
+            let autopilotRounds = 0;
+            let isAutopilot = false;
+            let isAnimating = false;
+            let birdState = 'home';
+
+            let isMultiRoundMode = false;
+            let multiRoundCounter = 0;
+            let multiRoundTotal = 25;
+            let multiRoundResults = [];
+
+            let width, height, wildWidth;
+
+            // --- DOM ELEMENTS ---
+            const btnCapture = container.querySelector('.btnCapture');
+            const btnMark = container.querySelector('.btnMark');
+            const btnAutopilot = container.querySelector('.btnAutopilot');
+            const btnCaptureNext = container.querySelector('.btnCaptureNext');
+
+            const statusMsg = container.querySelector('.statusMsg');
+            const totalMarkedDisplay = container.querySelector('.totalMarkedDisplay');
+
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            const simWrapper = container.querySelector('.sim-container');
+
+            const analysisSection = container.querySelector('.analysis-section');
+            const inputM = container.querySelector('.inputM');
+            const inputN = container.querySelector('.inputN');
+            const btnExpCompute = container.querySelector('#btnExpCompute');
+            const feedbackExp = container.querySelector('#feedbackExp');
+            const resultsList = container.querySelector('.results-list');
+            const summationText = container.querySelector('#summationText');
+            const averageSection = container.querySelector('.average-section');
+            const inputSum = container.querySelector('.inputSum');
+            const inputCount = container.querySelector('.inputCount');
+            const btnAvgCompute = container.querySelector('#btnAvgCompute');
+            const feedbackAvg = container.querySelector('#feedbackAvg');
+
+            // Note: Flip Card is now inside .sim-container (col-right)
+            const flipCard = container.querySelector('.flip-card');
+            const trueNDisplay = container.querySelector('.trueNDisplay');
+
+            const rowAttempts = container.querySelector('.rowAttempts');
+            const rowMarked = container.querySelector('.rowMarked');
+            const rowRecaptured = container.querySelector('.rowRecaptured');
+            const rowCumulative = container.querySelector('.rowCumulative');
+            const tableWrapper = container.querySelector('.table-wrapper');
+
+
+            // --- INIT ---
+            function init() {
+                if (config.unknownN && trueNDisplay) {
+                    trueNDisplay.innerText = POP_SIZE.toLocaleString();
+                    if(flipCard) {
+                        flipCard.addEventListener('click', () => {
+                            flipCard.classList.toggle('flipped');
+                        });
+                    }
+                }
+
+                const visualCount = RENDER_ALL_WILD ? POP_SIZE : SAMPLE_SIZE;
+
+                for(let i = 0; i < visualCount; i++) {
+                    birds.push({
+                        visualId: i,
+                        logicalId: -1,
+                        x: 0, y: 0,
+                        homeX: 0, homeY: 0,
+                        targetX: 0, targetY: 0,
+                        // --- FIX: Noise is now a property of the bird, not the grid ---
+                        noiseX: (Math.random() - 0.5) * 2.0, // Pre-calculate noise
+                        noiseY: (Math.random() - 0.5) * 2.0,
+                        state: 'home',
+                        color: '#007bff',
+                        visible: RENDER_ALL_WILD
+                    });
+                }
+
+                window.addEventListener('resize', resize);
+
+                if (btnCapture) btnCapture.addEventListener('click', onCaptureClick);
+                if (btnMark) btnMark.addEventListener('click', onMarkClick);
+                if (btnAutopilot) btnAutopilot.addEventListener('click', runAutopilot);
+                if (btnCaptureNext) btnCaptureNext.addEventListener('click', startMultiRounds);
+
+                if (btnExpCompute) btnExpCompute.addEventListener('click', handleExpCompute);
+                if (btnAvgCompute) btnAvgCompute.addEventListener('click', handleAvgCompute);
+
+                resize();
+            }
+
+            function resize() {
+                if (simWrapper.offsetWidth === 0) return;
+
+                width = canvas.width = simWrapper.offsetWidth;
+                height = canvas.height = simWrapper.offsetHeight;
+                wildWidth = width * 0.6;
+
+                calcGridPositions();
+
+                if(!isAnimating) {
+                    birds.forEach(b => {
+                          if(b.state === 'home') {
+                              b.x = b.homeX;
+                              b.y = b.homeY;
+                          }
+                     });
+                    draw();
+                }
+            }
+
+            function calcGridPositions() {
+                const padding = 20;
+                const availableW = wildWidth - (padding * 2);
+                const countToGrid = RENDER_ALL_WILD ? POP_SIZE : SAMPLE_SIZE;
+
+                const rows = Math.ceil(countToGrid / GRID_COLS);
+                let gap = availableW / GRID_COLS;
+                if (gap > 30) gap = 30;
+
+                const gridHeight = rows * gap;
+                const startY = (height - gridHeight) / 2;
+
+                birds.forEach((b, i) => {
+                    const col = i % GRID_COLS;
+                    const row = Math.floor(i / GRID_COLS);
+
+                    // --- FIX: Use stored noise so birds don't jitter on resize ---
+                    // Scaled by gap size to keep it proportional
+                    b.homeX = padding + (col * gap) + (gap/2) + (b.noiseX * (gap * 0.1));
+                    b.homeY = startY + (row * gap) + (gap/2) + (b.noiseY * (gap * 0.1));
+
+                    if (b.state === 'home') {
+                        b.targetX = b.homeX;
+                        b.targetY = b.homeY;
+                    }
+                });
+            }
+
+            function resetAnalysisUI() {
+                if (!analysisSection) return;
+                analysisSection.style.display = 'none';
+                if(inputM) { inputM.value = ""; inputM.disabled = false; }
+                if(inputN) { inputN.value = ""; inputN.disabled = false; }
+                if(btnExpCompute) btnExpCompute.disabled = false;
+                if(feedbackExp) { feedbackExp.innerText = ""; feedbackExp.className = "feedbackMsg"; }
+                if(btnCaptureNext) btnCaptureNext.style.display = 'none';
+
+                if(feedbackAvg) { feedbackAvg.className = "feedbackMsg"; feedbackAvg.innerText = ""; }
+                if(inputSum) { inputSum.value = ""; inputSum.disabled = false; }
+                if(inputCount) { inputCount.value = ""; inputCount.disabled = false; }
+                if(btnAvgCompute) btnAvgCompute.disabled = false;
+                if(averageSection) averageSection.style.display = 'none';
+            }
+
+            function onCaptureClick() {
+                if(isAnimating) return;
+                if(btnMark) btnMark.disabled = true;
+                if (birdState === 'holding') {
+                    performReturn(() => performCapture());
+                } else {
+                    performCapture();
+                }
+            }
+
+            function onMarkClick() {
+                if(isAnimating || birdState !== 'holding') return;
+                if(btnMark) btnMark.disabled = true;
+
+                let markedFound = 0;
+                let newlyMarked = 0;
+
+                currentBatchIndices.forEach((popIdx, i) => {
+                    if (population[popIdx] === 1) {
+                        markedFound++;
+                    } else {
+                        population[popIdx] = 1;
+                        newlyMarked++;
+                        if(RENDER_ALL_WILD) {
+                            birds[popIdx].color = '#dc3545';
+                        } else {
+                            birds[i].color = '#dc3545';
+                        }
+                    }
+                });
+
+                let priorTotal = totalMarkedCount;
+                totalMarkedCount += newlyMarked;
+                // cumulativeRecapturedCount += markedFound; // REMOVED: Prevent double counting
+
+                if(totalMarkedDisplay) totalMarkedDisplay.innerText = totalMarkedCount.toLocaleString();
+                if(statusMsg) statusMsg.innerText = `Marked ${newlyMarked} birds. Total: ${totalMarkedCount}.`;
+
+                draw();
+            }
+
+            function runAutopilot() {
+                if(isAnimating) return;
+                isAutopilot = true;
+                autopilotRounds = 5;
+                multiRoundResults = []; // Marking starts a fresh setup
+
+                resetAnalysisUI(); // Consolidate UI reset
+
+                if(btnAutopilot) btnAutopilot.disabled = true;
+                if(btnCapture) btnCapture.disabled = true;
+                if(btnMark) btnMark.disabled = true;
+                performCapture();
+            }
+
+            function startMultiRounds() {
+                if(isAnimating) return;
+                isMultiRoundMode = true;
+                multiRoundCounter = 0;
+
+                // Do NOT reset the whole UI. Only clear the "Actual Average" section
+                // so the user can calculate the new cumulative average.
+                if(feedbackAvg) { feedbackAvg.className = "feedbackMsg"; feedbackAvg.innerText = ""; }
+                if(inputSum) { inputSum.value = ""; inputSum.disabled = false; }
+                if(inputCount) { inputCount.value = ""; inputCount.disabled = false; }
+                if(btnAvgCompute) btnAvgCompute.disabled = false;
+
+                btnCaptureNext.disabled = true;
+                if(btnCapture) btnCapture.disabled = true;
+                performCapture();
+            }
+
+            function performCapture() {
+                isAnimating = true;
+                birdState = 'capturing';
+                attemptCount++;
+
+                currentBatchIndices = [];
+                const uniqueSet = new Set();
+                while (uniqueSet.size < SAMPLE_SIZE) {
+                    let r = Math.floor(Math.random() * POP_SIZE);
+                    uniqueSet.add(r);
+                }
+                currentBatchIndices = Array.from(uniqueSet);
+
+                if (!RENDER_ALL_WILD) {
+                    currentBatchIndices.forEach((popIdx, i) => {
+                        birds[i].logicalId = popIdx;
+                        birds[i].visible = true;
+                        birds[i].color = (population[popIdx] === 1) ? '#dc3545' : '#007bff';
+                        birds[i].x = birds[i].homeX;
+                        birds[i].y = birds[i].homeY;
+                    });
+                }
+
+                let markedFound = 0;
+                currentBatchIndices.forEach(idx => { if (population[idx] === 1) markedFound++; });
+
+                if(statusMsg) statusMsg.innerText = `Attempt ${attemptCount}: Capturing... Found ${markedFound} marked.`;
+
+                // --- CHANGED: Always update table and cumulative count ---
+                addTableColumn(attemptCount, totalMarkedCount, markedFound, cumulativeRecapturedCount + markedFound);
+                cumulativeRecapturedCount += markedFound;
+
+                // Only if in MultiRound mode (Counting Phase), we store the results for the average calculation
+                if (isMultiRoundMode) {
+                   multiRoundResults.push(markedFound);
+                }
+
+                const trapXStart = wildWidth;
+                const trapW = width - wildWidth;
+
+                const birdsToMove = RENDER_ALL_WILD
+                    ? currentBatchIndices.map(idx => birds[idx])
+                    : birds;
+
+                birdsToMove.forEach(b => {
+                    b.state = 'moving_out';
+                    b.targetX = trapXStart + 40 + Math.random() * (trapW - 80);
+                    b.targetY = 40 + Math.random() * (height - 80);
+                });
+
+                animate();
+            }
+
+            function performReturn(onCompleteCallback) {
+                isAnimating = true;
+                birdState = 'returning';
+
+                const birdsToMove = RENDER_ALL_WILD
+                    ? currentBatchIndices.map(idx => birds[idx])
+                    : birds;
+
+                birdsToMove.forEach(b => {
+                    b.state = 'moving_back';
+                    b.targetX = b.homeX;
+                    b.targetY = b.homeY;
+                });
+
+                if(statusMsg) statusMsg.innerText = `Releasing...`;
+                performReturn.callback = onCompleteCallback;
+                animate();
+            }
+
+            function addTableColumn(attempt, priorTotal, found, cumulativeFound) {
+                const c1 = rowAttempts.insertCell(-1);
+                const c2 = rowMarked.insertCell(-1);
+                const c3 = rowRecaptured.insertCell(-1);
+                const c4 = rowCumulative.insertCell(-1);
+
+                c1.innerText = attempt;
+                c2.innerText = priorTotal.toLocaleString();
+                c3.innerText = found;
+                c4.innerText = cumulativeFound;
+                tableWrapper.scrollLeft = tableWrapper.scrollWidth;
+            }
+
+            function handleExpCompute() {
+                const mVal = parseInt(inputM.value);
+                const nVal = parseInt(inputN.value);
+                if (isNaN(mVal) || isNaN(nVal)) {
+                    feedbackExp.className = "feedback error"; feedbackExp.innerText = "Please enter numbers."; return;
+                }
+                if (mVal === totalMarkedCount && nVal === POP_SIZE) {
+                    const expected = (50 * (mVal / nVal)).toFixed(1);
+                    feedbackExp.className = "feedback success"; feedbackExp.innerText = `= ${expected}`;
+                    inputM.disabled = true; inputN.disabled = true; btnExpCompute.disabled = true;
+                    if(btnCaptureNext) { btnCaptureNext.style.display = 'block'; btnCaptureNext.disabled = false; }
+                } else {
+                    feedbackExp.className = "feedback error"; feedbackExp.innerText = "Try again";
+                }
+            }
+
+            function handleAvgCompute() {
+                let userSum = parseInt(inputSum.value);
+                let userCount = parseInt(inputCount.value);
+                if(isNaN(userSum) || isNaN(userCount)) {
+                    feedbackAvg.className = "feedback error"; feedbackAvg.innerText = "Fill all fields"; return;
+                }
+                let actualSum = multiRoundResults.reduce((a,b)=>a+b, 0);
+                if (userSum === actualSum && userCount === multiRoundResults.length) {
+                    let avg = (actualSum / multiRoundResults.length).toFixed(1);
+                    feedbackAvg.className = "feedback success"; feedbackAvg.innerText = `= ${avg}`;
+                    inputSum.disabled = true; inputCount.disabled = true; btnAvgCompute.disabled = true;
+                } else {
+                    feedbackAvg.className = "feedback error"; feedbackAvg.innerText = "Try again";
+                }
+            }
+
+            function animate() {
+                let activeBirds = 0;
+                let speed = (isAutopilot || isMultiRoundMode) ? ANIM_SPEED_FAST : ANIM_SPEED_NORMAL;
+
+                birds.forEach(b => {
+                    if (!b.visible) return;
+
+                    if (b.state === 'moving_out' || b.state === 'moving_back') {
+                        const dx = b.targetX - b.x;
+                        const dy = b.targetY - b.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+
+                        if (dist < 1) {
+                            b.x = b.targetX;
+                            b.y = b.targetY;
+                            if (b.state === 'moving_out') b.state = 'holding';
+                            if (b.state === 'moving_back') {
+                                b.state = 'home';
+                                if(!RENDER_ALL_WILD) b.visible = false;
+                            }
+                        } else {
+                            b.x += dx * speed;
+                            b.y += dy * speed;
+                            activeBirds++;
+                        }
+                    }
+                });
+
+                draw();
+
+                if (activeBirds > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isAnimating = false;
+                    onAnimationStepComplete();
+                }
+            }
+
+            function onAnimationStepComplete() {
+                if (currentBatchIndices.length === 0) return;
+
+                if (birdState === 'capturing') {
+                    birdState = 'holding';
+
+                    if (isMultiRoundMode) {
+                        // Multi-Round: Capture -> Wait -> Return (No Marking)
+                        setTimeout(() => {
+                            performReturn(() => {
+                                multiRoundCounter++;
+                                if (multiRoundCounter < multiRoundTotal) {
+                                    performCapture();
+                                } else {
+                                    isMultiRoundMode = false;
+                                    finishMultiRound();
+                                }
+                            });
+                        }, 100);
+
+                    } else if (isAutopilot) {
+                        // Autopilot: Capture -> Mark -> Wait -> Return
+                        onMarkClick();
+                        setTimeout(() => {
+                            performReturn(() => {
+                                autopilotRounds--;
+                                if(autopilotRounds > 0) {
+                                    performCapture();
+                                } else {
+                                    isAutopilot = false;
+                                    finishAutopilot();
+                                }
+                            });
+                        }, 150);
+
+                    } else {
+                        // Manual: User decides next step
+                        if(btnMark) btnMark.disabled = false;
+                        if(statusMsg) statusMsg.innerText += " Click Mark Captured to mark the unmarked. Click Capture to release & capture a new sample.";
+                    }
+
+                } else if (birdState === 'returning') {
+                    birdState = 'home';
+                    if(performReturn.callback) {
+                        let cb = performReturn.callback;
+                        performReturn.callback = null;
+                        cb();
+                    }
+                }
+            }
+
+            function finishAutopilot() {
+                if(btnCapture) btnCapture.disabled = false;
+                if(btnAutopilot) btnAutopilot.disabled = false;
+                if(analysisSection) analysisSection.style.display = 'block';
+            }
+
+            function finishMultiRound() {
+                if(btnCapture) btnCapture.disabled = false;
+                btnCaptureNext.disabled = false;
+                if(analysisSection) analysisSection.style.display = 'block';
+                btnCaptureNext.innerText = "Run 25 capture-without-marking rounds";
+                if(resultsList) {
+                    resultsList.innerText = "Results: " + multiRoundResults.join(", ");
+                    let sum = multiRoundResults.reduce((a,b)=>a+b, 0);
+                    summationText.innerHTML = `Total Accumulated: <strong>${multiRoundResults.length}</strong> samples.<br>Sum of marked birds found = <strong>${sum}</strong>.`;
+                    averageSection.style.display = "block";
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(wildWidth, 20);
+                ctx.lineTo(wildWidth, height - 20);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                birds.forEach(b => {
+                    if(!b.visible) return;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = b.color;
+                    ctx.fill();
+
+                    if (b.state === 'moving_out' || b.state === 'holding') {
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                        ctx.moveTo(b.homeX, b.homeY);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            init();
+
+            setTimeout(() => { resize(); draw(); }, 100);
+        }
+
+        // --- INSTANTIATE ---
+
+        initSimulation('sim1', { popSize: 1000, renderAllWild: true });
+        initSimulation('sim2', { popSize: 1000, renderAllWild: true });
+
+        // Sim 3: Unknown N
+        const b = 10.0 + Math.random() * 3;
+        const randomN = Math.floor(Math.pow(2, b));
+        initSimulation('sim3', { popSize: randomN, renderAllWild: false, unknownN: true });
+
+    </script>
+</body>
+</html>

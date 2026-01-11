@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cinzel Decorative', serif; margin: 0; padding: 0; background-color: #1a1a1a; height: 100vh; display: flex; align-items: center; justify-content: center; color: #eee; overflow: hidden; }
+
+        #vault-panel {
+            width: 880px; height: 850px;
+            background: linear-gradient(145deg, #333, #111);
+            border: 12px solid #444; border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: inset 0 0 50px #000, 0 50px 100px rgba(0,0,0,0.7);
+            position: relative; transition: transform 2s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+
+        .top-left-controls { position: absolute; top: 25px; left: 40px; }
+
+        .start-btn {
+            background-color: #28a745; color: white; border: none; padding: 12px 20px;
+            font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer;
+            font-family: sans-serif; transition: background 0.2s; box-shadow: 0 4px #1e7e34;
+        }
+        .start-btn:active { transform: translateY(2px); box-shadow: 0 2px #1e7e34; }
+        .start-btn.active { background-color: #dc3545; box-shadow: 0 4px #a71d2a; }
+
+        .terminal-screen {
+            background: #fff; width: 800px; height: 400px;
+            margin-top: 80px; border: 8px solid #222; border-radius: 5px;
+            position: relative; box-shadow: 0 0 20px rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* Senior, I added the play frame and solid triangle here */
+        .play-btn-frame {
+            position: absolute; left: 15px; top: 320px;
+            width: 45px; height: 35px; background: #eee;
+            border: 2px solid #ccc; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 100; transition: background 0.2s;
+        }
+        .play-btn-frame:hover { background: #ddd; }
+        .play-triangle-solid {
+            width: 0; height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 14px solid #444;
+            margin-left: 3px;
+        }
+
+        #alert-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(220, 53, 69, 0.3);
+            pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 50;
+        }
+        #alert-overlay.flash { opacity: 1; }
+
+        .vault-handle {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, #777, #333);
+            border: 6px solid #111; margin: 15px 0;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #000; box-shadow: 0 8px 0 #111; z-index: 10;
+        }
+        .vault-handle:active { transform: translateY(5px); box-shadow: 0 3px 0 #111; }
+
+        .led-strip { display: flex; gap: 10px; margin-bottom: 20px; }
+        .led-digit {
+            width: 100px; height: 60px; background: #000;
+            border: 3px solid #333; display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', sans-serif; color: #0f0; font-size: 1.2em;
+            text-shadow: 0 0 10px #0f0;
+        }
+        .led-digit.empty { color: #1a331a; text-shadow: none; }
+
+        #cheatInput { position: fixed; top: 10px; right: 10px; z-index: 9999; width: 70px; background: rgba(255,255,255,0.5); border: 1px solid #ccc; }
+
+        #finalScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #200; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        .envelope-wrapper { position: relative; width: 300px; height: 200px; background: #d1b894; cursor: pointer; border: 2px solid #a38b6d; }
+        .envelope-wrapper::after { content: "Last Digit"; position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2em; color: #5d4d37; font-weight: bold; z-index: 20; background: #d1b894; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, 50% 50%, 0 0); }
+        .flap { position: absolute; top: 0; left: 0; width: 0; height: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 100px solid #a38b6d; transform-origin: top; transition: 0.4s; z-index: 30; }
+        .letter { position: absolute; top: 10px; left: 10%; width: 80%; height: 85%; background: #fffef0; border: 1px solid #ddd; transition: 0.8s; display: flex; align-items: center; justify-content: center; z-index: 5; visibility: hidden; }
+        .letter span { font-size: 5em; font-weight: 900; color: #333; }
+        .envelope-wrapper.open .flap { transform: rotateX(180deg); }
+        .envelope-wrapper.open .letter { visibility: visible; transform: translateY(-140px); z-index: 40; }
+    </style>
+</head>
+<body>
+
+    <input type="text" id="cheatInput" placeholder="...">
+
+    <div id="vault-panel">
+        <div class="top-left-controls">
+            <button id="btnStart" class="start-btn">RECORDING ON / OFF</button>
+        </div>
+
+        <div class="terminal-screen" id="screen">
+            <div id="alert-overlay"></div>
+            <canvas id="waveCanvas" width="800" height="200"></canvas>
+            <canvas id="staffCanvas" width="800" height="200"></canvas>
+
+            <div class="play-btn-frame" id="btnPlay">
+                <div class="play-triangle-solid"></div>
+            </div>
+        </div>
+
+        <div class="vault-handle" id="btnCheck">CHECK</div>
+
+        <div class="led-strip">
+            <div id="led0" class="led-digit empty">---</div>
+            <div id="led1" class="led-digit empty">---</div>
+            <div id="led2" class="led-digit empty">---</div>
+            <div id="led3" class="led-digit empty">---</div>
+            <div id="led4" class="led-digit empty">---</div>
+            <div id="led5" class="led-digit empty">---</div>
+        </div>
+    </div>
+
+    <div id="finalScreen">
+        <h2 style="color:gold; font-size:3.5em;"></h2>
+        <div class="envelope-wrapper" id="envelope">
+            <div class="flap"></div>
+            <div class="letter"><span>9</span></div>
+        </div>
+    </div>
+
+<script>
+    const btnStart = document.getElementById('btnStart'),
+          btnCheck = document.getElementById('btnCheck'),
+          btnPlay = document.getElementById('btnPlay'),
+          waveCanvas = document.getElementById('waveCanvas'),
+          ctx = waveCanvas.getContext('2d'), staffCanvas = document.getElementById('staffCanvas'),
+          ctxStaff = staffCanvas.getContext('2d'), finalScreen = document.getElementById('finalScreen'),
+          envelope = document.getElementById('envelope'), cheatInput = document.getElementById('cheatInput'),
+          alertOverlay = document.getElementById('alert-overlay');
+
+    let audioCtx, analyser, microphone, dataArray, isListening = false, animationId;
+
+    const margin = { top: 20, right: 120, bottom: 30, left: 80 },
+          width = waveCanvas.width - margin.left - margin.right,
+          height = waveCanvas.height - margin.top - margin.bottom, plotTime = 0.02;
+
+    const maxPressureVar = 0.00002;
+    const GLOBAL_P_SCALE = height / (maxPressureVar * 2);
+
+    let smoothedFreq = 440, smoothedAmp = 0, gameMode = 'warmup', currentNoteIndex = 0, capturedNotes = [];
+
+    const melody = [
+        { freq: 392.00, type: 'eighth', note: 'G4', dur: 0.3 }, { freq: 392.00, type: 'eighth', note: 'G4', dur: 0.3 },
+        { freq: 440.00, type: 'quarter', note: 'A4', dur: 0.6 }, { freq: 392.00, type: 'quarter', note: 'G4', dur: 0.6 },
+        { freq: 523.25, type: 'quarter', note: 'C5', dur: 0.6 }, { freq: 493.88, type: 'half', note: 'B4', dur: 1.2 }
+    ];
+
+    btnStart.addEventListener('click', async () => {
+        if (!isListening) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                microphone = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
+                dataArray = new Float32Array(analyser.fftSize);
+                microphone.connect(analyser);
+                isListening = true; gameMode = 'playing'; btnStart.classList.add('active'); draw();
+            } catch (err) { alert("Mic access denied."); }
+        } else { location.reload(); }
+    });
+
+    btnCheck.addEventListener('click', () => { if (gameMode === 'playing') checkPitch(); });
+
+    btnPlay.addEventListener('click', () => {
+        if (!audioCtx || capturedNotes.length === 0) return;
+        let now = audioCtx.currentTime;
+        capturedNotes.forEach(n => {
+            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            osc.frequency.value = n.freq; g.gain.setValueAtTime(0.2, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + n.dur);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + n.dur); now += n.dur;
+        });
+    });
+
+    envelope.addEventListener('click', () => { envelope.classList.add('open'); });
+    cheatInput.addEventListener('input', (e) => { if (e.target.value.toLowerCase() === 'gouje') triggerWinSequence(); });
+
+    function triggerWinSequence() {
+        if (audioCtx) audioCtx.close();
+        document.getElementById('vault-panel').style.transform = "translateY(-120vh) rotate(5deg)";
+        setTimeout(() => { finalScreen.style.display = 'flex'; }, 800);
+    }
+
+    function generateSignal(freq, amp) {
+        const points = []; const steps = 300;
+        for(let i=0; i<=steps; i++) {
+            let t = (i/steps) * plotTime;
+            let p = Math.sin(2 * Math.PI * freq * t);
+            points.push({t: t, p: p * amp});
+        }
+        return points;
+    }
+
+    function renderWave(data, targetCtx, box, color) {
+        targetCtx.save(); targetCtx.beginPath(); targetCtx.strokeStyle = color; targetCtx.lineWidth = 3;
+        targetCtx.rect(box.x, box.y, box.w, box.h); targetCtx.clip();
+        data.forEach((pt, i) => {
+            let px = box.x + (pt.t / plotTime) * box.w;
+            let py = (box.y + box.h/2) - (pt.p * GLOBAL_P_SCALE);
+            if (i === 0) targetCtx.moveTo(px, py); else targetCtx.lineTo(px, py);
+        });
+        targetCtx.stroke(); targetCtx.restore();
+    }
+
+    function autoCorrelate(buf, sampleRate) {
+        let SIZE = buf.length, rms = 0;
+        for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.005) return { freq: -1, volume: rms };
+        let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+        for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+        for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE-i]) < thres) { r2 = SIZE-i; break; }
+        buf = buf.slice(r1, r2); SIZE = buf.length;
+        let c = new Array(SIZE).fill(0);
+        for (let i = 0; i < SIZE; i++) for (let j = 0; j < SIZE - i; j++) c[i] = c[i] + buf[j] * buf[j + i];
+        let d = 0; while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < SIZE; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+        let T0 = maxpos; let x1 = c[T0-1], x2 = c[T0], x3 = c[T0+1];
+        let a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
+        if (a) T0 = T0 - b / (2 * a);
+        return { freq: sampleRate / T0, volume: rms };
+    }
+
+    function checkPitch() {
+        const target = melody[currentNoteIndex].freq;
+        if (Math.abs(smoothedFreq - target) / target <= 0.05) {
+            const led = document.getElementById(`led${currentNoteIndex}`);
+            led.textContent = Math.round(target);
+            led.classList.remove('empty');
+            capturedNotes.push({...melody[currentNoteIndex]});
+            currentNoteIndex++;
+            drawStaff();
+            if (currentNoteIndex >= melody.length) setTimeout(triggerWinSequence, 1000);
+        } else {
+            alertOverlay.classList.add('flash');
+            setTimeout(() => { alertOverlay.classList.remove('flash'); }, 500);
+        }
+    }
+
+    function drawStaticGrid() {
+        ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+        ctx.save(); ctx.translate(margin.left, margin.top);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, height); ctx.lineTo(width, height);
+        ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.font = "12px sans-serif"; ctx.fillStyle = "#333"; ctx.textAlign = "center";
+        ctx.fillText("Time", width/2, -10);
+        for (let i = 0; i <= 4; i++) {
+            let x = (i / 4) * width; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.strokeStyle = "#eee"; ctx.stroke();
+            ctx.fillText(((i/4)*plotTime).toFixed(3), x, height + 15);
+        }
+        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.fillText((1 + maxPressureVar).toFixed(5), width + 10, 0); ctx.fillText("atmosphere", width + 10, 10);
+        ctx.fillText("1.00000", width + 10, height/2); ctx.fillText("atmosphere", width + 10, height/2 + 10);
+        ctx.fillText((1 - maxPressureVar).toFixed(5), width + 10, height); ctx.fillText("atmosphere", width + 10, height + 10);
+        ctx.restore();
+    }
+
+    function getNoteY(note) {
+        const center = 70, s = 8;
+        if (note === 'C5') return center - 1*s; if (note === 'B4') return center;
+        if (note === 'A4') return center + 1*s; if (note === 'G4') return center + 2*s;
+        return center;
+    }
+
+    function drawStaff() {
+        ctxStaff.clearRect(0, 0, staffCanvas.width, staffCanvas.height);
+        const staffTop = 40; ctxStaff.strokeStyle = '#333'; ctxStaff.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+            ctxStaff.beginPath(); ctxStaff.moveTo(margin.left, staffTop + i*16); ctxStaff.lineTo(staffCanvas.width - margin.right, staffTop + i*16); ctxStaff.stroke();
+        }
+        ctxStaff.font = "80px serif"; ctxStaff.fillStyle = "#333"; ctxStaff.textBaseline = "middle";
+        ctxStaff.fillText("𝄞", margin.left - 20, staffTop + 35);
+        const spacing = (width - 50) / 6;
+        capturedNotes.forEach((n, i) => {
+            const x = margin.left + 50 + i*spacing, y = getNoteY(n.note);
+            ctxStaff.fillStyle = "black"; ctxStaff.beginPath(); ctxStaff.ellipse(x, y, 5, 4, -0.2, 0, 2*Math.PI);
+            ctxStaff.fill();
+            const sH = 25; ctxStaff.beginPath(); ctxStaff.lineWidth = 1.5; ctxStaff.moveTo(x + 5, y); ctxStaff.lineTo(x + 5, y - sH); ctxStaff.stroke();
+
+            if (n.type === 'eighth') {
+                if (i === 0 && (capturedNotes.length < 2 || capturedNotes[1].type !== 'eighth')) {
+                    ctxStaff.beginPath(); ctxStaff.moveTo(x + 5, y - sH); ctxStaff.bezierCurveTo(x + 12, y - sH + 5, x + 12, y - sH + 15, x + 5, y - sH + 10); ctxStaff.stroke();
+                } else if (i === 1 && capturedNotes[0].type === 'eighth') {
+                    ctxStaff.beginPath(); ctxStaff.lineWidth = 4;
+                    ctxStaff.moveTo(margin.left + 50 + 5, getNoteY(capturedNotes[0].note) - sH); ctxStaff.lineTo(x + 5, y - sH); ctxStaff.stroke();
+                }
+            }
+        });
+    }
+
+    function draw() {
+        animationId = requestAnimationFrame(draw); analyser.getFloatTimeDomainData(dataArray);
+        const res = autoCorrelate(dataArray, audioCtx.sampleRate);
+        if (res.freq !== -1) { smoothedFreq += (res.freq - smoothedFreq)*0.1; smoothedAmp += (res.volume - smoothedAmp)*0.1; }
+        else smoothedAmp *= 0.9;
+        drawStaticGrid();
+        if (gameMode === 'playing') {
+            renderWave(generateSignal(melody[currentNoteIndex].freq, 0.000004), ctx, {x: margin.left, y: margin.top, w: width, h: height}, "#ff6b6b");
+            renderWave(generateSignal(smoothedFreq, smoothedAmp * 0.00004), ctx, {x: margin.left, y: margin.top, w: width, h: height}, "#007bff");
+        }
+    }
+    drawStaticGrid(); drawStaff();
+</script>
+</body>
+</html>

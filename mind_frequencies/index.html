@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <title>Mind Frequencies</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cinzel Decorative', serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .main-layout {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+        }
+
+        /* --- Left Scrollable Area --- */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scroll-content {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+            scroll-behavior: smooth;
+        }
+
+        /* --- API Key Panel (Dark Theme) --- */
+        .api-bar {
+            background: #1f2937;
+            border-bottom: 1px solid #111827;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            font-family: sans-serif;
+            font-size: 12px;
+            flex-shrink: 0;
+            color: #f3f4f6;
+        }
+        .api-bar input {
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 3px;
+            padding: 4px 8px;
+            width: 150px;
+            font-size: 11px;
+            color: white;
+        }
+        .api-bar label {
+            color: #d1d5db;
+            font-weight: bold;
+        }
+        .api-bar a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin-left: 5px;
+            transition: color 0.2s;
+        }
+        .api-bar a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        /* --- Right Fixed Area --- */
+        .right-panel {
+            width: 400px;
+            padding: 30px;
+            background-color: #ffffff;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+        }
+
+        /* Flex container for the input rows */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            height: 60px;
+            font-family: monospace;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .input-row textarea {
+            flex: 1;
+            width: auto;
+            margin-bottom: 0;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            height: 60px;
+            white-space: nowrap;
+        }
+
+        .btn-play { background-color: #007bff; width: 120px; }
+        .btn-play:hover { background-color: #0056b3; }
+
+        .btn-green { background-color: #28a745; width: 100%; height: auto; padding: 12px; margin-bottom: 30px;}
+        .btn-green:hover { background-color: #218838; }
+
+        .text-label {
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .question {
+            text-align: center;
+            margin: 20px 0 40px 0;
+            color: #555;
+        }
+
+        .question-bold {
+            font-weight: bold;
+        }
+
+        /* --- Bot Section Styles --- */
+        .bot-container {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 30px;
+            font-family: sans-serif;
+        }
+
+        .bot-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bot-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-check {
+            background-color: #4f46e5;
+            height: auto;
+            padding: 0 20px;
+        }
+        .btn-check:hover { background-color: #4338ca; }
+        .btn-check:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+        .bot-response {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: none;
+        }
+        .bot-response.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; display: block; }
+        .bot-response.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; display: block; }
+        .bot-response.thinking { background: #f3f4f6; color: #4b5563; font-style: italic; display: block; }
+
+
+        .calculator-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calc-image-pane {
+            flex: 1;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            overflow: hidden;
+        }
+
+        .calc-image-pane img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .calc-iframe-pane {
+            flex: 1.2;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        hr { border: 0; border-top: 1px solid #ddd; margin: 30px 0; }
+
+        /* --- Wave Section Styles --- */
+        .wave-container {
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        canvas {
+            width: 100%;
+            height: 250px; /* Increased to fit labels */
+            display: block;
+        }
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #eee;
+            border-radius: 4px;
+        }
+        .slider-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .slider-group label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+        .value-display {
+            font-size: 0.8rem;
+            color: #555;
+            font-family: monospace;
+            margin-top: 4px;
+        }
+
+        /* --- Big Ben Challenge Styles --- */
+        .bb-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            font-family: sans-serif;
+        }
+        .bb-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            text-align: center;
+        }
+        .bb-input.correct {
+            border-color: #10b981;
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .bb-input.wrong {
+            border-color: #ef4444;
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .bb-static {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #333;
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+
+        /* --- Likeness Check Styles --- */
+        .likeness-header {
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 15px;
+            margin-bottom: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #555;
+            font-family: sans-serif;
+            text-align: right;
+            line-height: 1.2;
+            transition: opacity 0.3s ease;
+        }
+        .likeness-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-left: 15px;
+            margin-right: 25px;
+            transition: opacity 0.3s ease;
+        }
+        .likeness-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+            margin-bottom: 40px;
+            padding: 0 15px;
+        }
+        .likeness-instruction {
+            flex: 1;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95em;
+        }
+        .perception-insight {
+            color: #333;
+            padding: 15px 0;
+            margin-top: 15px;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            display: none;
+        }
+        .reaction-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        .btn-reaction {
+            height: 40px;
+            padding: 0 20px;
+            font-size: 14px;
+        }
+        .btn-grey { background-color: #6c757d; }
+        .btn-grey:hover { background-color: #5a6268; }
+        .btn-grey:disabled { cursor: default; }
+
+        /* --- Staged Flow Styles --- */
+        .stage {
+            transition: all 0.6s ease-in-out;
+            margin-bottom: 50px;
+        }
+        .stage.locked {
+            opacity: 0.15;
+            pointer-events: none;
+            user-select: none;
+            filter: blur(1.5px);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        .stage-2-locked-checkboxes .likeness-checkbox,
+        .stage-2-locked-checkboxes .likeness-header {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+
+            <!-- 1. Fixed API Bar -->
+            <div class="api-bar">
+                <label for="groqKey">Groq API Key:</label>
+                <input type="password" id="groqKey" placeholder="gsk_..." onchange="saveKey()">
+                <a href="https://console.groq.com/keys" target="_blank">get groq api key (it's free)</a>
+            </div>
+
+            <!-- 2. Scrollable Content -->
+            <div class="scroll-content">
+
+                <!-- STAGE 1: Sensory Observation -->
+                <div id="stage-1" class="stage">
+                    <div class="question">The frequency of a wave is the number of times the wave pattern repeats every second. The amplitude of a wave is the maximum variation, or "height" of the wave.</div>
+
+                    <!-- WAVE PLOT SECTION -->
+                    <div class="wave-container">
+                        <canvas id="waveCanvas" width="600" height="250"></canvas>
+                    </div>
+
+                    <div class="controls-row">
+                        <div class="slider-group">
+                            <label for="ampSlider">Amplitude</label>
+                            <input type="range" id="ampSlider" min="0" max="1" step="0.01" value="0.5">
+                            <div class="value-display" id="ampValue">~94 dB SPL</div>
+                        </div>
+                        <div class="slider-group">
+                            <label for="freqSlider">Frequency</label>
+                            <input type="range" id="freqSlider" min="100" max="1000" step="10" value="440">
+                            <div class="value-display" id="freqValue">440 Hz</div>
+                        </div>
+                        <button class="btn-play" id="btnWavePlay" style="height: 50px;">Play Tone</button>
+                    </div>
+
+                    <div class="question">Play with the sliders above.</div>
+
+                    <div class="question question-bold" style="margin-bottom: 40px;">How does changing the amplitude and the frequency affect your perception of the sound?</div>
+
+                    <!-- Amp/Freq Bot Interaction -->
+                    <div class="bot-container">
+                        <div class="bot-controls">
+                            <input type="text" id="botInput-ampFreq" class="bot-input" placeholder="Type your observation here..." onkeydown="if(event.key==='Enter') checkAnswer('ampFreq')">
+                            <button class="btn-check" id="botBtn-ampFreq" onclick="checkAnswer('ampFreq')">Check</button>
+                        </div>
+                        <div id="botResponse-ampFreq" class="bot-response"></div>
+                    </div>
+                </div>
+
+                <!-- STAGE 2: Mathematical Deduction -->
+                <div id="stage-2" class="stage locked stage-2-locked-checkboxes">
+                    <div class="text-label" style="text-align: center; margin-bottom: 20px;">Here are the frequencies for "Twinkle, Twinkle, Little Star":</div>
+
+                    <div class="input-row">
+                        <textarea id="twinkleOrig" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('twinkleOrig')">play twinkle twinkle</button>
+                        <div style="width: 60px;"></div>
+                    </div>
+
+                    <div class="question question-bold">Below, we did something to the frequencies. Can you say what we did?</div>
+
+                    <!-- Header for Checkboxes -->
+                    <div class="likeness-header">
+                        Sounds like<br>the original
+                    </div>
+
+                    <!-- 1. Plus 100 -->
+                    <div class="input-row">
+                        <textarea id="twinklePlus100" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('twinklePlus100')">Play</button>
+                        <input type="checkbox" id="chk-plus100" class="likeness-checkbox">
+                    </div>
+                    <div class="bot-container">
+                        <div class="bot-controls">
+                            <input type="text" id="botInput-plus100" class="bot-input" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter') checkAnswer('plus100')">
+                            <button class="btn-check" id="botBtn-plus100" onclick="checkAnswer('plus100')">Check</button>
+                        </div>
+                        <div id="botResponse-plus100" class="bot-response"></div>
+                    </div>
+
+                    <!-- 2. Minus 100 -->
+                    <div class="input-row">
+                        <textarea id="twinkleMinus100" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('twinkleMinus100')">Play</button>
+                        <input type="checkbox" id="chk-minus100" class="likeness-checkbox">
+                    </div>
+                    <div class="bot-container">
+                        <div class="bot-controls">
+                            <input type="text" id="botInput-minus100" class="bot-input" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter') checkAnswer('minus100')">
+                            <button class="btn-check" id="botBtn-minus100" onclick="checkAnswer('minus100')">Check</button>
+                        </div>
+                        <div id="botResponse-minus100" class="bot-response"></div>
+                    </div>
+
+                    <!-- 3. Times 3 -->
+                    <div class="input-row">
+                        <textarea id="twinkleTimes3" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('twinkleTimes3')">Play</button>
+                        <input type="checkbox" id="chk-times3" class="likeness-checkbox">
+                    </div>
+                    <div class="bot-container">
+                        <div class="bot-controls">
+                            <input type="text" id="botInput-times3" class="bot-input" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter') checkAnswer('times3')">
+                            <button class="btn-check" id="botBtn-times3" onclick="checkAnswer('times3')">Check</button>
+                        </div>
+                        <div id="botResponse-times3" class="bot-response"></div>
+                    </div>
+
+                    <!-- 4. Div 2 -->
+                    <div class="input-row">
+                        <textarea id="twinkleDiv2" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('twinkleDiv2')">Play</button>
+                        <input type="checkbox" id="chk-div2" class="likeness-checkbox">
+                    </div>
+                    <div class="bot-container">
+                        <div class="bot-controls">
+                            <input type="text" id="botInput-div2" class="bot-input" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter') checkAnswer('div2')">
+                            <button class="btn-check" id="botBtn-div2" onclick="checkAnswer('div2')">Check</button>
+                        </div>
+                        <div id="botResponse-div2" class="bot-response"></div>
+                    </div>
+                </div>
+
+                <!-- STAGE 3: The Musical Insight -->
+                <div id="stage-3" class="stage locked">
+                    <div class="likeness-controls">
+                        <div class="likeness-instruction">Mark which of these variations sounds like the original (only higher / lower)</div>
+                        <button class="btn-check" id="btnLikenessCheck" onclick="checkLikeness()">Check Markings</button>
+                    </div>
+
+                    <div id="perceptionInsight" class="perception-insight">
+                        <div>We see that our audio perception recognizes melodies as being "the same" if we multiply or divide all the frequencies by the same number - but NOT if we add or subtract the same number! It seems our ear "knows" - and likes - to multiply and divide.</div>
+                        <div class="reaction-row" id="insightReactionRow">
+                            <button class="btn-reaction btn-grey" id="btnSoCool" onclick="handleInsightReaction('cool')">So Cool!</button>
+                            <button class="btn-reaction btn-grey" id="btnMeh" onclick="handleInsightReaction('meh')">Meh</button>
+                            <span id="reactionFeedback" style="margin-left: 10px; font-weight: bold;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STAGE 4: Practical Application -->
+                <div id="stage-4" class="stage locked">
+                    <div class="question">Here's the Big Ben melody, in the key of A Major:</div>
+                    <hr>
+
+                    <div class="input-row">
+                        <textarea id="presetArea" readonly></textarea>
+                        <button class="btn-play" onclick="playSequence('presetArea')">Play Big Ben (in A)</button>
+                         <div style="width: 60px;"></div>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-label" style="text-align: center; margin-bottom: 20px; line-height: 1.6;">
+                        The real Big Ben melody is actually in the key of <strong>C</strong> Major, so the last note ("the tonic") has a frequency of 261.63 Hz.
+                    </div>
+
+                    <div class="text-label">Melody Sandbox</div>
+                    <textarea id="userArea" placeholder="Type frequencies here... separate phrases into lines to introduce pauses"></textarea>
+                    <button class="btn-green" onclick="playSequence('userArea')">Play</button>
+
+                    <div class="question question-bold" style="margin-top: 40px;">
+                        Can you write the sequence of frequencies for the "true" Big Ben melody in C Major?
+                    </div>
+
+                    <div class="bb-grid">
+                        <input type="text" class="bb-input" id="bb1" placeholder="?">
+                        <input type="text" class="bb-input" id="bb2" placeholder="?">
+                        <input type="text" class="bb-input" id="bb3" placeholder="?">
+                        <input type="text" class="bb-input" id="bb4" placeholder="?">
+
+                        <input type="text" class="bb-input" id="bb5" placeholder="?">
+                        <input type="text" class="bb-input" id="bb6" placeholder="?">
+                        <input type="text" class="bb-input" id="bb7" placeholder="?">
+                        <div class="bb-static" id="bbTargetLabel"></div>
+                    </div>
+
+                    <button class="btn-check" style="width: 100%; margin-bottom: 30px;" onclick="checkBigBen()">Check</button>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- FIXED RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="text-label" style="text-align: center; font-weight: bold;">Standard Calculator</div>
+            <div class="calculator-container">
+                <div class="calc-image-pane">
+                    <img src="girl_1.png" alt="Reference Image">
+                </div>
+                <div class="calc-iframe-pane">
+                    <iframe src="https://www.desmos.com/scientific?embed" title="Scientific Calculator"></iframe>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="imageOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; cursor:pointer;" onclick="this.style.display='none'">
+        <img src="listening_bliss.png" style="max-width:90%; max-height:90%; object-fit:contain;">
+    </div>
+
+<script>
+    function getFreq(i) {
+        const val = 440 * Math.pow(2, i / 12);
+        return Math.round(val * 100) / 100;
+    }
+
+    function add100(f) { return (parseFloat(f) + 100).toFixed(2); }
+    function sub100(f) { return (parseFloat(f) - 100).toFixed(2); }
+    function times3(f) { return (parseFloat(f) * 3).toFixed(2); }
+    function div2(f) { return (parseFloat(f) / 2).toFixed(2); }
+
+    function generateSequenceStr(indices, transformFn = null, breakAfter = 0) {
+        const freqs = indices.map(i => {
+            let f = getFreq(i);
+            if (transformFn) {
+                return transformFn(f);
+            }
+            return f.toFixed(2);
+        });
+
+        if (breakAfter > 0) {
+            let result = "";
+            for (let i = 0; i < freqs.length; i++) {
+                result += freqs[i];
+                if ((i + 1) % breakAfter === 0 && i !== freqs.length - 1) {
+                    result += "\n";
+                } else if (i !== freqs.length - 1) {
+                    result += " ";
+                }
+            }
+            return result;
+        }
+        return freqs.join(" ");
+    }
+
+    function generateContent() {
+        const twinkleIndices = [-9, -9, -2, -2, 0, 0, -2, -4, -4, -5, -5, -7, -7, -9];
+        document.getElementById('twinkleOrig').value = generateSequenceStr(twinkleIndices, null, 7);
+        document.getElementById('twinklePlus100').value = generateSequenceStr(twinkleIndices, add100, 7);
+        document.getElementById('twinkleMinus100').value = generateSequenceStr(twinkleIndices, sub100, 7);
+        document.getElementById('twinkleTimes3').value = generateSequenceStr(twinkleIndices, times3, 7);
+        document.getElementById('twinkleDiv2').value = generateSequenceStr(twinkleIndices, div2, 7);
+
+    }
+
+    function saveKey() {
+        const key = document.getElementById('groqKey').value;
+        localStorage.setItem('groqApiKey', key);
+    }
+
+    window.onload = function() {
+        const storedKey = localStorage.getItem('groqApiKey');
+        if (storedKey) {
+            document.getElementById('groqKey').value = storedKey;
+        }
+        drawWave();
+        generateContent();
+    }
+
+    let audioCtx;
+
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    const ampSlider = document.getElementById('ampSlider');
+    const freqSlider = document.getElementById('freqSlider');
+    const ampValueDisplay = document.getElementById('ampValue');
+    const freqValueDisplay = document.getElementById('freqValue');
+    const btnWavePlay = document.getElementById('btnWavePlay');
+
+    const plotTime = 0.02;
+    const margin = { top: 40, right: 100, bottom: 60, left: 80 }; // Adjusted for right side labels
+    const width = canvas.width - margin.left - margin.right;
+    const height = canvas.height - margin.top - margin.bottom;
+
+    function updateDisplays() {
+        const freq = parseFloat(freqSlider.value);
+        const amp = parseFloat(ampSlider.value);
+        freqValueDisplay.textContent = `${freq} Hz`;
+        if (amp === 0) {
+            ampValueDisplay.textContent = "-∞ dB (Silence)";
+        } else {
+            const db = 100 + (20 * Math.log10(amp));
+            ampValueDisplay.textContent = `~${db.toFixed(1)} dB SPL`;
+        }
+    }
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(margin.left, margin.top);
+
+        // Draw axis lines
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, height);
+        ctx.lineTo(width, height);
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#333";
+        ctx.textAlign = "center";
+
+        // "Time" above the plot
+        ctx.fillText("Time", width/2, -20);
+
+        const xSteps = 4;
+        for (let i = 0; i <= xSteps; i++) {
+            const xVal = (i / xSteps) * plotTime;
+            const xPos = (i / xSteps) * width;
+
+            // Grid lines
+            ctx.beginPath();
+            ctx.moveTo(xPos, 0);
+            ctx.lineTo(xPos, height);
+            ctx.strokeStyle = "#eee";
+            ctx.stroke();
+
+            // Ticks
+            ctx.beginPath();
+            ctx.moveTo(xPos, height);
+            ctx.lineTo(xPos, height + 5);
+            ctx.strokeStyle = "#333";
+            ctx.stroke();
+
+            // Time Labels
+            ctx.fillText(xVal.toFixed(3), xPos, height + 15);
+            ctx.fillText("second", xPos, height + 25);
+        }
+
+        const yCenter = height / 2;
+        const maxPressureVariation = 0.00002;
+
+        // Pressure values on the RIGHT
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+
+        // Top value
+        ctx.fillText((1 + maxPressureVariation).toFixed(5), width + 10, 0);
+        ctx.fillText("atmosphere", width + 10, 12);
+
+        // Center value
+        ctx.fillText("1.00000", width + 10, yCenter);
+        ctx.fillText("atmosphere", width + 10, yCenter + 12);
+
+        // Bottom value
+        ctx.fillText((1 - maxPressureVariation).toFixed(5), width + 10, height);
+        ctx.fillText("atmosphere", width + 10, height + 12);
+
+        // "Pressure" on the LEFT
+        ctx.save();
+        ctx.rotate(-Math.PI/2);
+        ctx.textAlign = "center";
+        ctx.fillText("Pressure", -height/2, -60);
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    function drawWave() {
+        drawGrid();
+        updateDisplays();
+        const amp = parseFloat(ampSlider.value);
+        const freq = parseFloat(freqSlider.value);
+
+        ctx.save();
+        ctx.translate(margin.left, margin.top);
+        const centerY = height / 2;
+
+        ctx.beginPath();
+        for (let xPixel = 0; xPixel <= width; xPixel++) {
+            const t = (xPixel / width) * plotTime;
+            const val = Math.sin(2 * Math.PI * freq * t);
+            const yPixel = centerY - (val * amp * (height/2));
+            if (xPixel === 0) ctx.moveTo(xPixel, yPixel);
+            else ctx.lineTo(xPixel, yPixel);
+        }
+
+        ctx.strokeStyle = "#007bff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    ampSlider.addEventListener('input', drawWave);
+    freqSlider.addEventListener('input', drawWave);
+
+    btnWavePlay.addEventListener('click', () => {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const freq = parseFloat(freqSlider.value);
+        const amp = parseFloat(ampSlider.value);
+        const now = audioCtx.currentTime + 0.05;
+        playTone(freq, now, 1.0, amp);
+    });
+
+    function playTone(freq, startTime, duration, volume = 0.5) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0;
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.05);
+        gainNode.gain.linearRampToValueAtTime(volume, startTime + duration - 0.05);
+        gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+    }
+
+    function playSequence(elementId) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const text = document.getElementById(elementId).value;
+        const lines = text.split('\n');
+        let currentTime = audioCtx.currentTime + 0.1;
+        const noteDur = 0.5;
+        lines.forEach(line => {
+            const freqs = line.split(/[\s,]+/).map(parseFloat).filter(n => !isNaN(n));
+            if (freqs.length > 0) {
+                freqs.forEach(freq => {
+                    playTone(freq, currentTime, noteDur, 0.5);
+                    currentTime += noteDur;
+                });
+                currentTime += noteDur;
+            }
+        });
+    }
+
+    // --- STAGE NAVIGATION LOGIC ---
+    function unlockStage(n) {
+        const stage = document.getElementById(`stage-${n}`);
+        if (stage) {
+            stage.classList.remove('locked');
+            if (n === 3) {
+                document.getElementById('stage-2').classList.remove('stage-2-locked-checkboxes');
+            }
+            stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function checkLikeness() {
+        const p100 = document.getElementById('chk-plus100').checked;
+        const m100 = document.getElementById('chk-minus100').checked;
+        const t3 = document.getElementById('chk-times3').checked;
+        const d2 = document.getElementById('chk-div2').checked;
+
+        const btn = document.getElementById('btnLikenessCheck');
+        const insight = document.getElementById('perceptionInsight');
+
+        if (!p100 && !m100 && t3 && d2) {
+            btn.style.backgroundColor = '#10b981';
+            btn.textContent = "Correct!";
+            btn.disabled = true;
+            document.querySelectorAll('.likeness-checkbox').forEach(c => c.disabled = true);
+            insight.style.display = 'block';
+        } else {
+            const originalColor = btn.style.backgroundColor;
+            btn.style.backgroundColor = '#ef4444';
+            btn.textContent = "Try again";
+            setTimeout(() => {
+                btn.style.backgroundColor = originalColor || '#4f46e5';
+                btn.textContent = "Check Markings";
+            }, 1000);
+        }
+    }
+
+    function handleInsightReaction(choice) {
+        const feedback = document.getElementById('reactionFeedback');
+        const btnCool = document.getElementById('btnSoCool');
+        const btnMeh = document.getElementById('btnMeh');
+
+        if (choice === 'meh') {
+            feedback.textContent = "try again";
+            feedback.style.color = "#ef4444";
+            setTimeout(() => {
+                feedback.textContent = "";
+            }, 2000);
+        } else {
+            feedback.textContent = "";
+            document.getElementById('imageOverlay').style.display = 'flex';
+        }
+    }
+
+    const botStates = {
+        'ampFreq': { attempts: 0, history: [], completed: false },
+        'plus100': { attempts: 0, history: [], completed: false },
+        'minus100': { attempts: 0, history: [], completed: false },
+        'times3': { attempts: 0, history: [], completed: false },
+        'div2': { attempts: 0, history: [], completed: false }
+    };
+
+    function checkStage2Completion() {
+        const allDone = botStates.plus100.completed && botStates.minus100.completed &&
+                        botStates.times3.completed && botStates.div2.completed;
+        if (allDone) {
+            unlockStage(3);
+        }
+    }
+
+    async function checkAnswer(id) {
+        const inputField = document.getElementById(`botInput-${id}`);
+        const btn = document.getElementById(`botBtn-${id}`);
+        const responseDiv = document.getElementById(`botResponse-${id}`);
+        const apiKey = document.getElementById('groqKey').value.trim();
+
+        const userInput = inputField.value.trim();
+        if (!userInput) return;
+
+        const state = botStates[id];
+
+        // Cheat code check
+        if (userInput.toLowerCase().includes("gouje")) {
+            responseDiv.textContent = "✅ Correct (Cheat activated)";
+            responseDiv.className = "bot-response success";
+            inputField.disabled = true;
+            inputField.style.backgroundColor = "#dcfce7";
+            btn.style.display = 'none';
+            state.completed = true;
+            if (id === 'ampFreq') {
+                unlockStage(2);
+            } else {
+                checkStage2Completion();
+            }
+            return;
+        }
+
+        if (!apiKey) {
+            responseDiv.textContent = "Please enter your Groq API Key at the top of the page.";
+            responseDiv.className = "bot-response error";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Checking...";
+        responseDiv.textContent = "Thinking...";
+        responseDiv.className = "bot-response thinking";
+
+        const historyText = state.history.length > 0 ? state.history.map((ans, i) => `Attempt ${i+1}: "${ans}"`).join('\n') : "None";
+
+        let promptText = "";
+
+        if (id === 'ampFreq') {
+            promptText = `You are a physics tutor. The user is experimenting with a sound wave simulation.
+
+CONTEXT:
+The user has just played with sliders changing Frequency and Amplitude.
+They were asked: "How does changing the amplitude and the frequency affect your perception of the sound?"
+
+CURRENT USER ANSWER: "${userInput}"
+
+YOUR TASK:
+Return a JSON object with 'verdict' (boolean) and 'response_to_user' (string).
+
+VERDICT RULES:
+- If the input is gibberish, irrelevant, or too short to be meaningful (e.g., "adsf", "idk"), Verdict = FALSE.
+- If the input is a genuine attempt to describe sound, even if partial (e.g., "it gets louder", "it gets higher"), Verdict = TRUE.
+
+RESPONSE RULES:
+- If Verdict is FALSE: Ask them politely to describe what they hear when they move the sliders.
+- If Verdict is TRUE:
+  1. Start by affirming what they noticed in a friendly way (not submissive, just constructive).
+  2. Deliver this critical bottom line clearly: "Frequency affects our perception of 'pitch' (how high or low a note sounds), while Amplitude affects the 'loudness' (volume) of the wave."
+  3. Keep the total response to a short, cohesive paragraph.
+
+RETURN ONLY RAW JSON. NO MARKDOWN.`;
+        } else if (id === 'plus100') {
+            promptText = `You are a physics tutor.
+
+CONTEXT DATA:
+The student is looking at a list of frequencies where 100 Hz was ADDED to each value.
+Original: 261.63 -> Modified: 361.63
+Original: 392.00 -> Modified: 492.00
+Original: 440.00 -> Modified: 540.00
+
+PREVIOUS STUDENT ATTEMPTS (Failures):
+${historyText}
+
+CURRENT STUDENT ANSWER: "${userInput}"
+CURRENT FAILED ATTEMPTS COUNT: ${state.attempts}
+
+YOUR TASK:
+Analyze the answer and return a JSON object.
+
+RULES FOR "analysis" (text)
+write a short essay dissecting what the user understood, and what they did not understand. Discuss specifically the following questions (and write evidence to support your decision on each)
+
+1. did the user recognize that all the frequencies increased?
+
+2. did they recognize that they all increased by the same value?
+
+3. did their answer reflect an understanding that the same operation was applied ot each and every frequency in the sequence?
+
+4. Based on your answers to (1) - (3), would you say they wrote a complete, precise answer?
+
+EXAMPLES:
+- "We added 100 to the frequency." -> No (Singular scope).
+- "All frequencies got bigger." -> No (Vague math, missing the '100').
+- "You added 100 to the frequencies." -> Yes (Plural scope + Specific math).
+- "Added 100 to all." -> No (Fragment).
+- "You added 100 Hz to each one." -> Yes.
+
+5. if the answer to (4) is NO, what would be the most helpful response? take into account CURRENT FAILED ATTEMPTS COUNT. If it's low (at most 3) just direct them to look at the first frequency (quote the change). if their answer is in the right direction, but missing some aspect, encourage them to be more precise and complete, and explain what happens to all of the frequencies if they didn't. 
+Important: if CURRENT FAILED ATTEMPTS COUNT is high (4 or more) and their answers do not seem to be converging to anything, suggest to look at which value was added to the original frequency to get to the new frequency (quote the numbers).
+
+RULES FOR "verdict" (Boolean):
+
+Return TRUE *only* if the answer to question (4) in the analysis above is positive.
+
+RULES for "response_to_user" (String):
+if verdict is "True" be brief ("well done!" or "correct.")
+otherwise, use your answer to question (5) to formulate a brief (one sentence) response.
+
+  - If Math is correct but Scope is singular: "You said 'the frequency' (singular). Did we change just one, or all of them?"
+  - If Math is correct but Sentence is fragment: "Please write a complete sentence."
+  - If Math is vague (got bigger/changed): "Can you be more specific? By how much?"
+  - If Math is wrong/unclear: Use hints based on attempt count (Attempt ${state.attempts}).
+
+Do not reference the attempt number in your response.
+
+RETURN ONLY RAW JSON. NO MARKDOWN.`;
+        } else if (id === 'minus100') {
+             promptText = `You are a physics tutor.
+
+CONTEXT DATA:
+The student is looking at a list of frequencies where 100 Hz was SUBTRACTED from each value.
+Original: 261.63 -> Modified: 161.63
+Original: 392.00 -> Modified: 292.00
+Original: 440.00 -> Modified: 340.00
+
+PREVIOUS STUDENT ATTEMPTS (Failures):
+${historyText}
+
+CURRENT STUDENT ANSWER: "${userInput}"
+CURRENT FAILED ATTEMPTS COUNT: ${state.attempts}
+
+YOUR TASK:
+Analyze the answer and return a JSON object.
+
+RULES FOR "analysis" (text)
+write a short essay dissecting what the user understood, and what they did not understand. Discuss specifically the following questions (and write evidence to support your decision on each)
+
+1. did the user recognize that all the frequencies decreased?
+
+2. did they recognize that they all decreased by the same value?
+
+3. did their answer reflect an understanding that the same operation was applied ot each and every frequency in the sequence?
+
+4. Based on your answers to (1) - (3), would you say they wrote a complete, precise answer?
+
+EXAMPLES:
+- "We subtracted 100 from the frequency." -> No (Singular scope).
+- "All frequencies got smaller." -> No (Vague math, missing the '100').
+- "You subtracted 100 from the frequencies." -> Yes (Plural scope + Specific math).
+- "Subtracted 100 from all." -> No (Fragment).
+- "You subtracted 100 Hz from each one." -> Yes.
+
+5. if the answer to (4) is NO, what would be the most helpful response? take into account CURRENT FAILED ATTEMPTS COUNT. If it's low (at most 3) just direct them to look at the first frequency (quote the change). if their answer is in the right direction, but missing some aspect, encourage them to be more precise and complete, and explain what happens to all of the frequencies if they didn't. 
+Important: if CURRENT FAILED ATTEMPTS COUNT is high (4 or more) and their answers do not seem to be converging to anything, suggest to look at which value was subtracted from the original frequency to get to the new frequency (quote the numbers).
+
+RULES FOR "verdict" (Boolean):
+
+Return TRUE *only* if the answer to question (4) in the analysis above is positive.
+
+RULES for "response_to_user" (String):
+if verdict is "True" be brief ("well done!" or "correct.")
+otherwise, use your answer to question (5) to formulate a brief (one sentence) response.
+
+  - If Math is correct but Scope is singular: "You said 'the frequency' (singular). Did we change just one, or all of them?"
+  - If Math is correct but Sentence is fragment: "Please write a complete sentence."
+  - If Math is vague (got smaller/changed): "Can you be more specific? By how much?"
+  - If Math is wrong/unclear: Use hints based on attempt count (Attempt ${state.attempts}).
+
+Do not reference the attempt number in your response.
+
+RETURN ONLY RAW JSON. NO MARKDOWN.`;
+        } else if (id === 'times3') {
+             promptText = `You are a physics tutor.
+
+CONTEXT DATA:
+The student is looking at a list of frequencies where each value was MULTIPLIED by 3.
+Original: 261.63 -> Modified: 784.89
+Original: 392.00 -> Modified: 1176.00
+Original: 440.00 -> Modified: 1320.00
+
+PREVIOUS STUDENT ATTEMPTS (Failures):
+${historyText}
+
+CURRENT STUDENT ANSWER: "${userInput}"
+CURRENT FAILED ATTEMPTS COUNT: ${state.attempts}
+
+YOUR TASK:
+Analyze the answer and return a JSON object.
+
+RULES FOR "analysis" (text)
+write a short essay dissecting what the user understood, and what they did not understand. Discuss specifically the following questions (and write evidence to support your decision on each)
+
+1. did the user recognize that all the frequencies increased?
+
+2. did they recognize that they all increased by the same factor (tripled)?
+
+3. did their answer reflect an understanding that the same operation was applied ot each and every frequency in the sequence?
+
+4. Based on your answers to (1) - (3), would you say they wrote a complete, precise answer?
+
+EXAMPLES:
+- "We multiplied the frequency by 3." -> No (Singular scope).
+- "All frequencies got bigger." -> No (Vague math).
+- "You multiplied the frequencies by 3." -> Yes (Plural scope + Specific math).
+- "Tripled all of them." -> Yes (Implies *3).
+- "Multiplied all by 3." -> No (Fragment).
+- "You multiplied each one by 3." -> Yes.
+
+5. if the answer to (4) is NO, what would be the most helpful response? take into account CURRENT FAILED ATTEMPTS COUNT. If it's low (at most 3) just direct them to look at the first frequency (quote the change). if their answer is in the right direction, but missing some aspect, encourage them to be more precise and complete, and explain what happens to all of the frequencies if they didn't. 
+Important: if CURRENT FAILED ATTEMPTS COUNT is high (4 or more) and their answers do not seem to be converging to anything, suggest to look at which factor was used to multiply the original frequency to get to the new frequency (quote the numbers).
+
+RULES FOR "verdict" (Boolean):
+
+Return TRUE *only* if the answer to question (4) in the analysis above is positive.
+
+RULES for "response_to_user" (String):
+if verdict is "True" be brief ("well done!" or "correct.")
+otherwise, use your answer to question (5) to formulate a brief (one sentence) response.
+
+  - If Math is correct but Scope is singular: "You said 'the frequency' (singular). Did we change just one, or all of them?"
+  - If Math is correct but Sentence is fragment: "Please write a complete sentence."
+  - If Math is vague (got bigger/changed): "Can you be more specific? By how much?"
+  - If Math is wrong/unclear: Use hints based on attempt count (Attempt ${state.attempts}).
+
+Do not reference the attempt number in your response.
+
+RETURN ONLY RAW JSON. NO MARKDOWN.`;
+        } else if (id === 'div2') {
+             promptText = `You are a physics tutor.
+
+CONTEXT DATA:
+The student is looking at a list of frequencies where each value was DIVIDED by 2.
+Original: 261.63 -> Modified: 130.82
+Original: 392.00 -> Modified: 196.00
+Original: 440.00 -> Modified: 220.00
+
+PREVIOUS STUDENT ATTEMPTS (Failures):
+${historyText}
+
+CURRENT STUDENT ANSWER: "${userInput}"
+CURRENT FAILED ATTEMPTS COUNT: ${state.attempts}
+
+YOUR TASK:
+Analyze the answer and return a JSON object.
+
+RULES FOR "analysis" (text)
+write a short essay dissecting what the user understood, and what they did not understand. Discuss specifically the following questions (and write evidence to support your decision on each)
+
+1. did the user recognize that all the frequencies decreased?
+
+2. did they recognize that they all decreased by the same factor?
+
+3. did their answer reflect an understanding that the same operation was applied ot each and every frequency in the sequence?
+
+4. Based on your answers to (1) - (3), would you say they wrote a complete, precise answer?
+
+EXAMPLES:
+- "We divided the frequency by 2." -> No (Singular scope).
+- "All frequencies got smaller." -> No (Vague math).
+- "You divided the frequencies by 2." -> Yes (Plural scope + Specific math).
+- "Divided all by 2." -> No (Fragment).
+- "You divided each one by 2." -> Yes.
+
+5. if the answer to (4) is NO, what would be the most helpful response? take into account CURRENT FAILED ATTEMPTS COUNT. If it's low (at most 3) just direct them to look at the first frequency (quote the change). if their answer is in the right direction, but missing some aspect, encourage them to be more precise and complete, and explain what happens to all of the frequencies if they didn't. 
+Important: if CURRENT FAILED ATTEMPTS COUNT is high (4 or more) and their answers do not seem to be converging to anything, suggest to look at which value was subtracted from the original frequency to get to the new frequency (quote the numbers).
+
+RULES FOR "verdict" (Boolean):
+
+Return TRUE *only* if the answer to question (4) in the analysis above is positive.
+
+RULES for "response_to_user" (String):
+if verdict is "True" be brief ("well done!" or "correct.")
+otherwise, use your answer to question (5) to formulate a brief (one sentence) response.
+
+  - If Math is correct but Scope is singular: "You said 'the frequency' (singular). Did we change just one, or all of them?"
+  - If Math is correct but Sentence is fragment: "Please write a complete sentence."
+  - If Math is vague (got smaller/changed): "Can you be more specific? By how much?"
+  - If Math is wrong/unclear: Use hints based on attempt count (Attempt ${state.attempts}).
+
+Do not reference the attempt number in your response.
+
+RETURN ONLY RAW JSON. NO MARKDOWN.`;
+        }
+
+        try {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "user", content: promptText }
+                    ],
+                    response_format: { type: "json_object" }
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "API Error");
+            }
+
+            const data = await response.json();
+            let rawText = data.choices?.[0]?.message?.content || "{}";
+            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const result = JSON.parse(rawText);
+
+            if (result.verdict === true) {
+                responseDiv.textContent = "✅ " + result.response_to_user;
+                responseDiv.className = "bot-response success";
+                inputField.disabled = true;
+                inputField.style.backgroundColor = "#dcfce7";
+                btn.style.display = 'none';
+
+                state.completed = true;
+                if (id === 'ampFreq') {
+                    unlockStage(2);
+                } else {
+                    checkStage2Completion();
+                }
+            } else {
+                responseDiv.textContent = "🤔 " + result.response_to_user;
+                responseDiv.className = "bot-response error";
+                state.attempts++;
+                state.history.push(userInput);
+            }
+
+        } catch (error) {
+            console.error(error);
+            responseDiv.textContent = "Error: " + error.message;
+            responseDiv.className = "bot-response error";
+        } finally {
+            if (!responseDiv.classList.contains('success')) {
+                btn.disabled = false;
+                btn.textContent = "Check";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

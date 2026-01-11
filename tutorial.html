@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stranded</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; background: #1a1a1a; overflow: hidden; }
+        #tutorial-pane { width: 33.33vw; background: #f8f9fa; border-right: 2px solid #444; display: flex; flex-direction: column; height: 100vh; }
+        #tool-container { width: 66.66vw; height: 100vh; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .content { padding: 20px; flex: 1; overflow-y: auto; color: #333; }
+        .stage { display: none; margin-bottom: 20px; }
+        .stage.active { display: block; }
+        .para-wrap { display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; }
+        .img-right { width: 120px; height: auto; border: 1px solid #ccc; background: #eee; }
+        .check-btn { background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* Modal Overlay */
+        #success-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #success-modal img {
+            max-width: 80%;
+            max-height: 80%;
+            border: 5px solid white;
+        }
+
+        #feedback { margin-top: 15px; font-weight: bold; min-height: 20px; }
+        .error { color: #c0392b; }
+        .success { color: #27ae60; }
+        #dev-section { background: #1e1e1e; color: #00ff00; padding: 15px; height: 35vh; border-top: 4px solid #444; display: none; flex-direction: column; }
+        #dev-output { font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; overflow-y: auto; flex: 1; background: #000; padding: 10px; border: 1px solid #00ff00; }
+        .toggle-label { font-weight: bold; font-size: 11px; color: #d35400; cursor: pointer; }
+
+        /* Refined Inline Icon Styles */
+        .inline-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin: 0 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .icon-parallel { width: 18px; height: 18px; position: relative; display: block; margin: 2px auto; }
+        .icon-parallel::before, .icon-parallel::after {
+            content: ''; position: absolute; width: 16px; height: 2px; background: #555; left: 1px;
+        }
+        .icon-parallel::before { top: 5px; transform: rotate(-15deg); }
+        .icon-parallel::after { top: 11px; transform: rotate(-15deg); background: #e74c3c; }
+        .icon-parallel .dot {
+            position: absolute; width: 3px; height: 3px; background: blue; border-radius: 50%;
+            top: 8px; left: 7px; border: 0.5px solid black; z-index: 2;
+        }
+        .icon-line-tool { width: 18px; height: 18px; position: relative; display: inline-block; }
+        .icon-line-tool::before {
+            content: ''; position: absolute; width: 18px; height: 1px; background: black;
+            top: 9px; left: 0; transform: rotate(-30deg);
+        }
+        .icon-line-tool .dot {
+            position: absolute; width: 4px; height: 4px; background: blue; border-radius: 50%;
+            border: 0.5px solid black; z-index: 2;
+        }
+        .icon-line-tool .d1 { top: 10px; left: 3px; }
+        .icon-line-tool .d2 { top: 4px; left: 10px; }
+        .icon-move-tool {
+            width: 0 !important; height: 0 !important;
+            border-left: 5px solid transparent; border-right: 5px solid transparent;
+            border-bottom: 14px solid black; transform: rotate(-30deg);
+            display: inline-block;
+            margin-left: -4px; margin-top: -2px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="tutorial-pane">
+    <div class="content">
+        <label class="toggle-label">
+            <input type="checkbox" id="dev-toggle" onchange="toggleDevMode()"> 🛠 ENABLE DEV INSPECTOR
+        </label>
+
+        <div id="stage-1" class="stage active">
+            <h2>Stage 1: Drawing a Line of Bearing</h2>
+            <div class="para-wrap">
+                <div style="flex: 1;">
+                    <p>Fixing your positions by taking azimuth is an important navigational skill, whether they're
+                        trekking through the Sahara or parachuting off in the middle of the night, this is something
+                        out agents need to know.
+                        </p>
+                    <p>
+                        Let the training begin.
+                    </p>
+                    <p>
+                        Your boat has just run aground, somewhere in the river Forth in Scotland.
+                        The fog has set in and someone has sabotaged your electrical system. Fortunately,
+                        you've managed to dig up an old paper map which you can use.
+
+                        You can just make out buoys with your compass-binoculars:
+                    </p>
+                    <div style="display: flex; gap: 10px; margin: 10px 0;">
+                        <img src="A_through_327_viewfinder.png" style="width: 45%; height: auto; border: 1px solid #ccc;">
+                        <img src="buoy_B_in_viewfinder.png" style="width: 45%; height: auto; border: 1px solid #ccc;">
+                    </div>
+                    <p>
+                        you find the left, red light buoy on the map and mark it as point A.
+                        You find the right, yellow light buoy on the map and mark it B.
+                        The people who can help you are at point C. But where are YOU?
+                    </p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <img src="girl_3.png" class="img-right">
+                    <img src="binocs_only.png" class="img-right">
+                </div>
+            </div>
+            <p>The left azimuth reading tells you what angle you're seeing buoy A relative to the
+                <emph>magnetic</emph> north.
+                Use the /line tool to draw a "Line of Bearing" which captures this angle.
+                Since it just represents a direction, it can be drawn <emph>anywhere</emph> on the map.
+                It just has to be the right angle relative to the magnetic north. Can you figure out how to do this? (hint: can you find
+                a place on the map where it is especially convenient to measure such angles?)
+            </p>
+            <p>
+                TIPS:
+                <ul>
+                <li>You can use the scroller of the mouse to zoom in and out - that's really important if you
+                want to draw things accurately. If your mouse doesn't have a scroller,
+                    there's a slider at the bottom right for zooming.</li>
+                <li>After you click /line, you need to click on two points on the map and the tool will draw a line through them.
+                    Don't worry if you don't get it just right the first time. The /move tool
+                    allows you to drag most things you see: if you drag a point on a line, the line rotates. If you drag a line somewhere where's no point,
+                it "slides" parallel to itself. You can also drag the map itself to pan the view.
+                <li>Play with it a little, and see how you can combine it
+                    with zooming to perfect your accuracy. When you feel you've got the Line of Bearing just right, click on the button below to check.
+            </p>
+            <button class="check-btn" onclick="validateStage1()">Check Angle of Line</button>
+            <div id="feedback-s1" class="feedback-area"></div>
+        </div>
+
+        <div id="stage-2" class="stage">
+            <hr>
+            <h2>Stage 2: "Walking the Ruler" to a Line of Position</h2>
+            <p>
+                Now, we want to draw a line that has the same direction as before, but passes through the point A
+                on the map, which is the buoy we're seeing. This is a crucial step - the points that see Buoy A
+                with bearing 327 are <emph>all</emph> on that line, so we know our position is somewhere along this
+                line! Can you figure out how to move the line so it passes through point A, without changing
+                the angle?
+            </p>
+
+            <button class="check-btn" onclick="validateStage2()">Check First Line of Position</button>
+            <div id="feedback-s2" class="feedback-area"></div>
+        </div>
+
+        <div id="stage-3" class="stage">
+            <hr>
+            <h2>Stage 3: Crossing Lines to Take a Fix</h2>
+            <p>
+                Great. Now get another line of position, from point B.
+                Our position has to be on both of those lines... can you find it?
+            </p>
+
+            TIPS:
+            <ul>
+                <li>If you click the /intersect tool and select two lines, it will plot their intersection for you.</li>
+                <li>
+                    If you think doing this twice in tedious, its worth bearing (;-) in mind that professionals take at least three lines of position.
+                    Can you guess why?
+                </li>
+            </ul>
+            <button class="check-btn" onclick="validateStage3()">Check Point</button>
+            <div id="feedback-s3"></div>
+        </div>
+
+        <div id="stage-4" class="stage">
+            <hr>
+            <h2>Stage 4: Almost there?</h2>
+            <p>
+                Well done! we now know where our boat is stranded. We can't radio our position though,
+                since it's a top secret mission (and anyway, our electricity is shot). We should waddle through the
+                mud to point C where we have a safe house. But how far is it?
+            </p>
+            <p>
+                Use the /divider tool to draw a circle centered on point C that goes through our position.
+            </p>
+            <button class="check-btn" onclick="validateStage4()">Check Circle</button>
+            <div id="feedback-s4"></div>
+        </div>
+
+        <div id="stage-5" class="stage">
+            <hr>
+            <h2>Stage 5: Almost there!</h2>
+            <p>
+                If the Line of Bearing captured a direction, and you could move it around as long as you
+                didn't change the angle, the circle you've drawn captures a distance - and you can move
+                it around as long as you don't change its size.
+                But what <emph>is</emph> that distance? how far do we actually have to walk from our boat to get
+                to C?
+                You can use the /move tool to drag the circle around. Is there something on the map that can
+                help you read off the distance this circle represents, in meters?
+            </p>
+            <input type="number" id="stage-5-input" placeholder="Enter meters from point C">
+            <button class="check-btn" onclick="validateStage5()">Let's Go!</button>
+            <div id="feedback-s5"></div>
+        </div>
+
+        <div id="stage-success" class="stage"></div>
+    </div>
+
+    <div id="dev-section">
+        <strong style="font-size: 10px;">PROCESSED SNAPSHOT</strong>
+        <div id="dev-output">Waiting for data...</div>
+    </div>
+</div>
+
+<div id="tool-container">
+    <iframe src="./draw.html" id="map-frame"></iframe>
+</div>
+
+<div id="success-modal" onclick="this.style.display='none'">
+    <img src="happy_muddy.png">
+</div>
+
+<script>
+    // --- GLOBAL CONFIGURATION ---
+    const STAGE_1_ANGLE_TOLERANCE_DEGS = 2;
+    const STAGE_1_TARGET_ANGLE_DEGS = -139.3841421062601;
+    const STAGE_2_TARGET_POINT = { x: 35458, y: 18264 };
+    const STAGE_3_TARGET_POINT = {x: 39457, y: 21656};
+    const STAGE_4_MODEL_CIRCLE = {x: 39230, y: 22409, r: 797};
+    const STAGE_2_THRESHOLD_PXS = 150;
+    const STAGE_3_THRESHOLD_PXS = 150;
+    const STAGE_4_THRESHOLD_RADIUS_PXS = 150;
+    const STAGE_5_TARGET_DISTANCE_METERS = 330;
+    const STAGE_5_TOLERANCE_METERS = 50;
+
+    let currentData = null;
+
+    // Cheat code: type 'gouje()' in console to skip a step
+    window.gouje = function() {
+        const stages = Array.from(document.querySelectorAll('.stage'));
+        let lastActiveIndex = -1;
+        
+        stages.forEach((stage, index) => {
+            if (stage.classList.contains('active')) lastActiveIndex = index;
+        });
+
+        if (lastActiveIndex !== -1 && lastActiveIndex < stages.length - 1) {
+            stages[lastActiveIndex + 1].classList.add('active');
+            console.log("Stage skipped. Good luck, Agent.");
+        }
+    };
+
+    function toggleDevMode() {
+        document.getElementById('dev-section').style.display = document.getElementById('dev-toggle').checked ? 'flex' : 'none';
+    }
+
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === 'GEOMETRY_UPDATE') {
+            const raw = event.data.data;
+            currentData = {
+                pts: raw.points.map(p => ({ 
+                    id: p.id, x: p.x, y: p.y,
+                    dev_dist_to_S3_pt: Math.sqrt(Math.pow(p.x - STAGE_3_TARGET_POINT.x, 2) + Math.pow(p.y - STAGE_3_TARGET_POINT.y, 2))
+                })),
+                lns: raw.lines.map(l => {
+                    const angle = l.computedAngle;
+                    const p1 = raw.points.find(p => p.id === l.pointsOnLine[0]);
+
+                    let dist = 99999;
+                    if (p1) {
+                        const rad = angle * Math.PI / 180;
+                        dist = Math.abs((p1.x - STAGE_2_TARGET_POINT.x) * Math.sin(rad) - (p1.y - STAGE_2_TARGET_POINT.y) * Math.cos(rad));
+                    }
+
+                    return {
+                        ...l,
+                        angle_mod_180: angle,
+                        dev_angle_diff_S1: ((90 + angle - STAGE_1_TARGET_ANGLE_DEGS) % 180 + 180) % 180 - 90,
+                        dev_dist_to_S2_pt: dist
+                    };
+                }).sort((a, b) => a.id.localeCompare(b.id)),
+                circs: raw.circles.map(c => ({ 
+                    id: c.id, x: c.x, y: c.y, r: c.radius,
+                    dev_radius_gap: c.radius - STAGE_4_MODEL_CIRCLE.r
+                })).sort((a, b) => a.id.localeCompare(b.id))
+            };
+            document.getElementById('dev-output').innerText = JSON.stringify(currentData, null, 2);
+        }
+    });
+
+    function validateStage1() {
+        const feedback = document.getElementById('feedback-s1');
+        if (!currentData || currentData.lns.length === 0) {
+            feedback.innerHTML = '<span class="error">try again</span>';
+            return;
+        }
+
+        const l = currentData.lns[currentData.lns.length - 1]; // Last line
+        if (Math.abs(l.dev_angle_diff_S1) < STAGE_1_ANGLE_TOLERANCE_DEGS) {
+            feedback.innerHTML = '<span class="success">well done</span>';
+            document.getElementById('stage-2').classList.add('active');
+        } else {
+            feedback.innerHTML = '<span class="error">try again</span>';
+        }
+    }
+
+    function validateStage3() {
+        const feedback = document.getElementById('feedback-s3');
+        if (!currentData || currentData.pts.length === 0) { feedback.innerHTML = '<span class="error">try again</span>'; return; }
+        
+        const sortedPts = [...currentData.pts].sort((a, b) => a.id.localeCompare(b.id));
+        const lastPt = sortedPts[sortedPts.length - 1];
+
+        if (lastPt.dev_dist_to_S3_pt < STAGE_3_THRESHOLD_PXS) {
+            feedback.innerHTML = '<span class="success">well done</span>';
+            document.getElementById('stage-4').classList.add('active');
+        } else {
+            feedback.innerHTML = '<span class="error">try again. if you\'re seeing this even though you found the intersection, maybe you need to improve the accuracy of your lines of position a bit - pay special attention to the second one.</span>';
+        }
+    }
+
+    function validateStage4() {
+        const feedback = document.getElementById('feedback-s4');
+        if (!currentData || currentData.circs.length === 0) { feedback.innerHTML = '<span class="error">try again 222</span>'; return; }
+        
+        const c = currentData.circs[currentData.circs.length - 1];
+        if (Math.abs(c.dev_radius_gap) < STAGE_4_THRESHOLD_RADIUS_PXS) {
+            feedback.innerHTML = '<span class="success">well done</span>';
+            document.getElementById('stage-5').classList.add('active');
+        } else {
+            feedback.innerHTML = '<span class="error">try again</span>';
+        }
+    }
+
+    function validateStage5() {
+        const feedback = document.getElementById('feedback-s5');
+        const val = parseFloat(document.getElementById('stage-5-input').value);
+        
+        if (!isNaN(val) && Math.abs(val - STAGE_5_TARGET_DISTANCE_METERS) < STAGE_5_TOLERANCE_METERS) {
+            feedback.innerHTML = '<span class="success">Great!</span>';
+            document.getElementById('stage-success').classList.add('active');
+            document.getElementById('success-modal').style.display = 'flex';
+        } else {
+            feedback.innerHTML = '<span class="error">try again</span>';
+        }
+    }
+
+    function validateStage2() {
+        const feedback = document.getElementById('feedback-s2');
+        if (!currentData || currentData.lns.length === 0) {
+            feedback.innerHTML = '<span class="error">try again</span>';
+            return;
+        }
+
+        const l = currentData.lns[currentData.lns.length - 1]; // Last line
+
+        const anglePass = Math.abs(l.dev_angle_diff_S1) < STAGE_1_ANGLE_TOLERANCE_DEGS;
+        const distPass = l.dev_dist_to_S2_pt < STAGE_2_THRESHOLD_PXS;
+
+        if (anglePass && distPass) {
+            feedback.innerHTML = '<span class="success">well done</span>';
+            document.getElementById('stage-3').classList.add('active');
+        } else {
+            let msg = "try again...";
+            if (!anglePass) msg += " (Angle incorrect)";
+            if (!distPass) msg += " (Line too far from target point)";
+            feedback.innerHTML = `<span class="error">${msg}</span>`;
+        }
+    }
+
+    // --- ICON REPLACEMENT LOGIC ---
+    function injectIcons() {
+        const iconMap = {
+            '/move': `<span class="inline-icon"><span class="icon-move-tool"></span></span>`,
+            '/point': `<span class="inline-icon"><span class="material-icons">fiber_manual_record</span></span>`,
+            '/line': `<span class="inline-icon"><span class="icon-line-tool"><span class="dot d1"></span><span class="dot d2"></span></span></span>`,
+            '/parallel': `<span class="inline-icon"><span class="icon-parallel"><span class="dot"></span></span></span>`,
+            '/intersect': `<span class="inline-icon"><span class="material-icons">close</span></span>`,
+            '/divider': `<span class="inline-icon"><span class="material-icons">radio_button_unchecked</span></span>`,
+            '/clear': `<span class="inline-icon"><span class="material-icons" style="color:#c0392b">delete</span></span>`
+        };
+
+        const content = document.querySelector('.content');
+        let html = content.innerHTML;
+
+        Object.keys(iconMap).forEach(key => {
+            const regex = new RegExp(key, 'g');
+            html = html.replace(regex, iconMap[key]);
+        });
+
+        content.innerHTML = html;
+    }
+
+    // Run after the DOM is fully loaded
+    window.addEventListener('DOMContentLoaded', injectIcons);
+</script>
+</body>
+</html>

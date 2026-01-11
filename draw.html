@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic Map Geometry Pro</title>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: sans-serif; }
+        #container { background-color: #fdf6e3; }
+/*        #container {*/
+/*    background-color: #fdf6e3;*/
+/*    filter: sepia(0.4) contrast(1.1);*/
+/*    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");*/
+/*}*/
+        .toolbar {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+            background: #ffffff; padding: 8px; border-radius: 4px;
+            display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        }
+        .tool-btn {
+            cursor: pointer; width: 44px; height: 44px; border: 1px solid #ddd;
+            background: #fff; display: flex; align-items: center; justify-content: center;
+            border-radius: 4px; position: relative;
+        }
+        .tool-btn:hover { background: #f8f9fa; }
+        .tool-btn.active { background: #e8f0fe; border: 2px solid #4285f4; color: #4285f4; }
+
+        .icon-parallel { width: 24px; height: 24px; position: relative; }
+        .icon-parallel::before, .icon-parallel::after {
+            content: ''; position: absolute; width: 20px; height: 2px; background: #555; left: 2px;
+        }
+        .icon-parallel::before { top: 6px; transform: rotate(-15deg); }
+        .icon-parallel::after { top: 14px; transform: rotate(-15deg); background: #e74c3c; }
+        .icon-parallel .dot {
+            position: absolute; width: 4px; height: 4px; background: blue; border-radius: 50%;
+            top: 11px; left: 10px; border: 1px solid black; z-index: 2;
+        }
+
+        .icon-line-tool { width: 24px; height: 24px; position: relative; }
+        .icon-line-tool::before {
+            content: ''; position: absolute; width: 24px; height: 1px; background: black;
+            top: 11px; left: 0; transform: rotate(-30deg);
+        }
+        .icon-line-tool .dot {
+            position: absolute; width: 5px; height: 5px; background: blue; border-radius: 50%;
+            border: 0.5px solid black; z-index: 2;
+        }
+        .icon-line-tool .d1 { top: 12px; left: 5px; }
+        .icon-line-tool .d2 { top: 6px; left: 14px; }
+
+        .icon-move-tool {
+            width: 0; height: 0;
+            border-left: 7px solid transparent; border-right: 7px solid transparent;
+            border-bottom: 18px solid black; transform: rotate(-30deg);
+            position: relative; top: -2px; left: -2px;
+        }
+
+        .hint {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 30px;
+            font-size: 14px; pointer-events: none; z-index: 100;
+        }
+
+        .zoom-ctrl {
+            position: absolute; bottom: 20px; right: 20px; z-index: 100;
+            background: white; padding: 10px; border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .zoom-ctrl input { cursor: pointer; width: 120px; }
+        .zoom-ctrl .material-icons { font-size: 18px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button id="btn-move" class="tool-btn active" onclick="setMode('move')" title="Move">
+        <div class="icon-move-tool"></div>
+    </button>
+    <button id="btn-point" class="tool-btn" onclick="setMode('point')" title="Point">
+        <span class="material-icons">fiber_manual_record</span>
+    </button>
+    <button id="btn-line" class="tool-btn" onclick="setMode('line')" title="Line">
+        <div class="icon-line-tool"><div class="dot d1"></div><div class="dot d2"></div></div>
+    </button>
+    <button id="btn-parallel" class="tool-btn" onclick="setMode('parallel')" title="Parallel Line">
+        <div class="icon-parallel"><div class="dot"></div></div>
+    </button>
+    <button id="btn-intersect" class="tool-btn" onclick="setMode('intersect')" title="Intersection">
+        <span class="material-icons">close</span>
+    </button>
+    <button id="btn-divider" class="tool-btn" onclick="setMode('divider')" title="Divider">
+        <span class="material-icons">radio_button_unchecked</span>
+    </button>
+    <hr style="width:100%; border:0; border-top:1px solid #eee;">
+    <button class="tool-btn" onclick="clearGeometry()" title="Clear All">
+        <span class="material-icons" style="color:#c0392b">delete</span>
+    </button>
+</div>
+
+<div class="zoom-ctrl">
+    <span class="material-icons">zoom_out</span>
+    <input type="range" id="zoom-slider" min="0.01" max="1" step="0.01" value="0.05">
+    <span class="material-icons">zoom_in</span>
+</div>
+
+<div id="status" class="hint">Select a tool to begin</div>
+<div id="container"></div>
+
+<script>
+    // --- CONSTANTS ---
+    const LINE_STROKE = 25, POINT_RADIUS = 50, LABEL_SIZE = 54;
+    const COLOR_LINE = '#e74c3c', COLOR_HIGHLIGHT = '#9b59b6';
+
+    let mode = 'move', clickQueue = [], pointCount = 0, lineCount = 0, circleCount = 0;
+    let previewGroup = null;
+
+    const INITIAL_SCALE = 0.03;
+    const stage = new Konva.Stage({ 
+        container: 'container', 
+        width: window.innerWidth, 
+        height: window.innerHeight, 
+        draggable: true,
+        scaleX: INITIAL_SCALE,
+        scaleY: INITIAL_SCALE,
+        // x: (window.innerWidth * (1 - INITIAL_SCALE)) / 2,
+        // y: (window.innerHeight * (1 - INITIAL_SCALE)) / 2
+    });
+    const mapLayer = new Konva.Layer(), lineLayer = new Konva.Layer(), pointLayer = new Konva.Layer();
+    stage.add(mapLayer, lineLayer, pointLayer);
+
+    const imageObj = new Image();
+    imageObj.onload = () => {
+        console.log("H1 Check - Dimensions:", imageObj.width, "x", imageObj.height);
+        
+        const w = imageObj.width;
+        const h = imageObj.height;
+        const mapWidthInKonva = 50000;
+        const rescaling = mapWidthInKonva / w;
+        const mapHeightInKonva = rescaling * imageObj.height;
+        const mapImg = new Konva.Image({
+            image: imageObj,
+            x: 0,
+            y: 0,
+            width: mapWidthInKonva,
+            height: mapHeightInKonva
+        });
+        mapLayer.add(mapImg);
+
+        try {
+            stage.x((window.innerWidth - mapWidthInKonva * INITIAL_SCALE) / 2);
+            stage.y((window.innerHeight - mapHeightInKonva * INITIAL_SCALE) / 2);
+            mapLayer.draw();
+            console.log("H3 Check - Render attempted at scale 1.0");
+        } catch (e) {
+            console.error("H2 Check - Canvas Taint/Security Error:", e.message);
+        }
+    };
+    imageObj.onerror = (err) => {
+        console.error("H2 Check - File Load Error. Path or CORS block:", imageObj.src);
+    };
+    imageObj.src = 'optimized.svg';
+
+    const pointRegistry = new Map(), lineRegistry = new Map(), circleRegistry = new Map();
+
+    function syncToTutorial() {
+        if (!window.parent) return;
+        const payload = {
+            points: Array.from(pointRegistry.values()).map(pt => ({
+                id: pt.id, x: Math.round(pt.group.x()), y: Math.round(pt.group.y()), isIntersect: pt.isIntersect
+            })),
+            lines: Array.from(lineRegistry.values()).map(ln => ({
+                id: ln.id, 
+                type: ln.type, 
+                pointsOnLine: Array.from(ln.pointsOnLine),
+                refLineId: ln.refLine ? ln.refLine.id : null,
+                computedAngle: (function() {
+                    const pts = ln.group.findOne('.line-path').points();
+                    return Math.atan2(pts[3] - pts[1], pts[2] - pts[0]) * 180 / Math.PI;
+                })()
+            })),
+            circles: Array.from(circleRegistry.values()).map(c => ({
+                id: c.id, x: Math.round(c.group.x()), y: Math.round(c.group.y()),
+                radius: Math.round(c.group.findOne('.circle-path').radius())
+            }))
+        };
+        window.parent.postMessage({ type: 'GEOMETRY_UPDATE', data: payload }, "*");
+    }
+
+    function getLabel(type) {
+        if (type === 'point') return String.fromCharCode(65 + (pointCount++ % 26)) + (Math.floor(pointCount/26) || '');
+        if (type === 'circle') return 'c' + (++circleCount);
+        return 'l' + (++lineCount);
+    }
+
+    function getSnapPosition(pos) {
+        const hit = stage.getIntersection(pos);
+        if (hit && hit.name() === 'point-target') return hit.getParent().position();
+        if (hit && hit.name() === 'line-path') {
+            const lGroup = hit.getParent(), l = lGroup.findOne('.line-path'), pts = l.points(), t = lGroup.getTransform();
+            const a = t.point({x: pts[0], y: pts[1]}), b = t.point({x: pts[2], y: pts[3]});
+            const lenSq = Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2);
+            const u = ((pos.x - a.x) * (b.x - a.x) + (pos.y - a.y) * (b.y - a.y)) / lenSq;
+            return { x: a.x + u * (b.x - a.x), y: a.y + u * (b.y - a.y) };
+        }
+        return pos;
+    }
+
+    function createPoint(pos, label = null, isDependent = false) {
+        const name = label || getLabel('point');
+        const group = new Konva.Group({ x: pos.x, y: pos.y, draggable: !isDependent, name: 'pointGroup', id: name });
+        const dot = new Konva.Circle({ radius: POINT_RADIUS, fill: '#3498db', stroke: 'white', strokeWidth: 4, name: 'point-target' });
+        const text = new Konva.Text({ text: name, fontSize: LABEL_SIZE, fontStyle: 'bold', fill: 'blue', x: POINT_RADIUS + 5, y: -POINT_RADIUS - 20 });
+        group.add(dot, text);
+
+        const ptObj = {
+            id: name, group: group, incidentLines: new Set(),
+            isIntersect: isDependent, parentLines: []
+        };
+
+        group.on('dragmove', () => {
+            ptObj.incidentLines.forEach(lId => {
+                const line = lineRegistry.get(lId);
+                const pivotId = Array.from(line.pointsOnLine).find(pid => pid !== ptObj.id);
+                line.sync(ptObj.id, pivotId ? pointRegistry.get(pivotId) : null);
+            });
+            updateIntersections();
+            lineLayer.batchDraw();
+        });
+        group.on('dragend', syncToTutorial);
+
+        pointLayer.add(group);
+        pointRegistry.set(name, ptObj);
+        pointLayer.draw();
+        syncToTutorial();
+        return ptObj;
+    }
+
+    function createLine(p1, p2, type = 'std', refLine = null) {
+        const id = getLabel('line');
+        const group = new Konva.Group({ draggable: true, name: 'lineGroup', id: id });
+        const path = new Konva.Line({ stroke: COLOR_LINE, strokeWidth: LINE_STROKE, lineCap: 'round', name: 'line-path', hitStrokeWidth: 80 });
+        group.add(path);
+
+        const lineObj = {
+            id, group, pointsOnLine: new Set([p1.id, p2.id]), type, refLine,
+            sync: function(movedPtId, pivotPt) {
+                const pos1 = p1.group.position(), pos2 = p2.group.position();
+                let angle;
+                if (this.type === 'parallel' && this.refLine) {
+                    const refPath = this.refLine.group.findOne('.line-path'), pts = refPath.points();
+                    angle = Math.atan2(pts[3] - pts[1], pts[2] - pts[0]);
+                } else if (pivotPt) {
+                    const pivPos = pivotPt.group.position(), movPos = pointRegistry.get(movedPtId).group.position();
+                    angle = Math.atan2(movPos.y - pivPos.y, movPos.x - pivPos.x);
+                } else {
+                    angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x);
+                }
+                const len = 2e7;
+                path.points([-Math.cos(angle)*len, -Math.sin(angle)*len, Math.cos(angle)*len, Math.sin(angle)*len]);
+                group.position(pos1);
+            }
+        };
+
+        group.on('dragstart', () => {
+            group._start = group.position();
+            lineObj.pointsOnLine.forEach(pid => pointRegistry.get(pid)._start = pointRegistry.get(pid).group.position());
+        });
+
+        group.on('dragmove', () => {
+            const dx = group.x() - group._start.x, dy = group.y() - group._start.y;
+            lineObj.pointsOnLine.forEach(pid => {
+                const pt = pointRegistry.get(pid);
+                pt.group.position({ x: pt._start.x + dx, y: pt._start.y + dy });
+                pt.incidentLines.forEach(lId => { if(lId !== id) lineRegistry.get(lId).sync(pt.id); });
+            });
+            lineObj.sync();
+            updateIntersections();
+            lineLayer.batchDraw(); pointLayer.batchDraw();
+        });
+        group.on('dragend', syncToTutorial);
+
+        lineRegistry.set(id, lineObj);
+        p1.incidentLines.add(id); p2.incidentLines.add(id);
+        lineObj.sync();
+        lineLayer.add(group);
+        lineLayer.draw();
+        syncToTutorial();
+        return lineObj;
+    }
+
+    function createFixedCircle(centerPos, radiusPos) {
+        const id = getLabel('circle');
+        const radius = Math.sqrt(Math.pow(radiusPos.x - centerPos.x, 2) + Math.pow(radiusPos.y - centerPos.y, 2));
+        const group = new Konva.Group({ x: centerPos.x, y: centerPos.y, draggable: true, name: 'freeCircleGroup', id: id });
+        const centerMark = new Konva.Circle({ radius: 8, fill: 'magenta', stroke: 'black', strokeWidth: 2, name: 'center-mark' });
+        const mainCircle = new Konva.Circle({ radius: radius, stroke: 'magenta', strokeWidth: LINE_STROKE, hitStrokeWidth: 80, name: 'circle-path' });
+        group.add(mainCircle, centerMark);
+        group.on('dragend', syncToTutorial);
+
+        circleRegistry.set(id, { id, group });
+
+        lineLayer.add(group);
+        lineLayer.draw();
+        syncToTutorial();
+    }
+
+    function setMode(m) {
+        lineRegistry.forEach(l => l.group.findOne('.line-path').stroke(COLOR_LINE));
+        if (previewGroup) { previewGroup.destroy(); previewGroup = null; lineLayer.draw(); }
+        mode = m; clickQueue = [];
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + m)?.classList.add('active');
+        stage.draggable(mode === 'move');
+        updateHint();
+    }
+
+    function updateHint() {
+        const hints = {
+            move: "Move Map / Drag Points / Drag Lines",
+            point: "Create Point",
+            line: "Select 2 Pts for Line",
+            parallel: "Select Line then Point",
+            intersect: "Select 2 Lines",
+            divider: "Select Center then Radius"
+        };
+        document.getElementById('status').innerText = hints[mode] || "Select Tool";
+    }
+
+    // --- INTERACTION ---
+    stage.on('click tap', (e) => {
+        if (mode === 'move') return;
+        const relPos = stage.getRelativePointerPosition();
+        const snapPos = getSnapPosition(relPos);
+        const target = e.target;
+
+        let pt = (target.name() === 'point-target') ? pointRegistry.get(target.getParent().id()) : null;
+        let ln = (target.name() === 'line-path') ? lineRegistry.get(target.getParent().id()) : null;
+
+        if (mode === 'point') {
+            createPoint(snapPos);
+        } else if (mode === 'line') {
+            const activePt = pt || createPoint(snapPos);
+            clickQueue.push(activePt);
+            if (clickQueue.length === 2) {
+                createLine(clickQueue[0], clickQueue[1]);
+                setMode('move');
+            }
+        } else if (mode === 'divider') {
+            clickQueue.push(snapPos);
+            if (clickQueue.length === 1) {
+                previewGroup = new Konva.Group({ x: snapPos.x, y: snapPos.y });
+                const centerMark = new Konva.Circle({ radius: 8, fill: 'magenta', stroke: 'black', strokeWidth: 2 });
+                const previewCircle = new Konva.Circle({ radius: 0, stroke: 'magenta', strokeWidth: LINE_STROKE, dash: [20, 10], opacity: 0.5, name: 'preview-circle' });
+                previewGroup.add(previewCircle, centerMark);
+                lineLayer.add(previewGroup);
+                lineLayer.draw();
+            } else if (clickQueue.length === 2) {
+                createFixedCircle(clickQueue[0], clickQueue[1]);
+                setMode('move');
+            }
+        } else if (mode === 'parallel' || mode === 'intersect') {
+            if (clickQueue.length === 0 && ln) {
+                ln.group.findOne('.line-path').stroke(COLOR_HIGHLIGHT);
+                clickQueue.push(ln);
+            } else if (clickQueue.length === 1) {
+                if (mode === 'parallel') {
+                    const anchor = pt || createPoint(snapPos);
+                    createLine(anchor, anchor, 'parallel', clickQueue[0]);
+                } else if (ln) {
+                    const pos = getIntersection(clickQueue[0].group, ln.group);
+                    if (pos) createPoint(pos, null, true).parentLines = [clickQueue[0].group, ln.group];
+                }
+                setMode('move');
+            }
+        }
+        lineLayer.draw(); pointLayer.draw();
+    });
+
+    stage.on('mousemove', () => {
+        const pos = stage.getPointerPosition();
+        const relPos = stage.getRelativePointerPosition();
+        const hit = stage.getIntersection(pos);
+
+        if (mode === 'divider' && clickQueue.length === 1 && previewGroup) {
+            const center = clickQueue[0];
+            const radius = Math.sqrt(Math.pow(relPos.x - center.x, 2) + Math.pow(relPos.y - center.y, 2));
+            const pc = previewGroup.findOne('.preview-circle');
+            if (pc) {
+                pc.radius(radius);
+                lineLayer.batchDraw();
+            }
+        }
+
+        if (hit && (hit.name() === 'point-target' || hit.name() === 'line-path' || hit.name() === 'circle-path' || hit.name() === 'center-mark')) {
+            stage.container().style.cursor = 'pointer';
+        } else if (mode !== 'move') {
+            stage.container().style.cursor = 'crosshair';
+        } else {
+            stage.container().style.cursor = 'default';
+        }
+    });
+
+    function getIntersection(l1g, l2g) {
+        const l1 = l1g.findOne('.line-path'), l2 = l2g.findOne('.line-path');
+        const p1s = l1.points(), t1 = l1g.getTransform(), p1 = t1.point({x: p1s[0], y: p1s[1]}), p2 = t1.point({x: p1s[2], y: p1s[3]});
+        const p2s = l2.points(), t2 = l2g.getTransform(), p3 = t2.point({x: p2s[0], y: p2s[1]}), p4 = t2.point({x: p2s[2], y: p2s[3]});
+        const denom = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
+        if (denom === 0) return null;
+        const ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+        return { x: p1.x + ua * (p2.x - p1.x), y: p1.y + ua * (p2.y - p1.y) };
+    }
+
+    function updateIntersections() {
+        pointRegistry.forEach(pt => {
+            if (pt.isIntersect && pt.parentLines.length === 2) {
+                const pos = getIntersection(pt.parentLines[0], pt.parentLines[1]);
+                if (pos) pt.group.position(pos);
+            }
+        });
+    }
+
+    // Slider Interaction
+    const slider = document.getElementById('zoom-slider');
+    slider.addEventListener('input', (e) => {
+        const newScale = parseFloat(e.target.value);
+        const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        
+        // Zooming towards the center of the screen for the slider
+        const oldScale = stage.scaleX();
+        stage.scale({ x: newScale, y: newScale });
+        stage.position({ 
+            x: center.x - ((center.x - stage.x()) / oldScale) * newScale, 
+            y: center.y - ((center.y - stage.y()) / oldScale) * newScale 
+        });
+        lineLayer.batchDraw(); pointLayer.batchDraw();
+    });
+
+    stage.on('wheel', (e) => {
+        e.evt.preventDefault();
+        const oldScale = stage.scaleX(), pointer = stage.getPointerPosition();
+        const zoom = e.evt.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = oldScale * zoom;
+        
+        // Update slider to match wheel zoom
+        slider.value = newScale;
+
+        stage.scale({ x: newScale, y: newScale });
+        stage.position({ x: pointer.x - ((pointer.x - stage.x()) / oldScale) * newScale, y: pointer.y - ((pointer.y - stage.y()) / oldScale) * newScale });
+        lineLayer.batchDraw(); pointLayer.batchDraw();
+    });
+
+    function clearGeometry() {
+        lineLayer.destroyChildren(); pointLayer.destroyChildren();
+        pointRegistry.clear(); lineRegistry.clear(); circleRegistry.clear();
+        pointCount = 0; lineCount = 0; circleCount = 0;
+        lineLayer.draw(); pointLayer.draw();
+        syncToTutorial();
+    }
+    stage.container().addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>

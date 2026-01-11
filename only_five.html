@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+        .rule-card {
+            border-left: 4px solid #3b82f6;
+            background-color: #eff6ff;
+        }
+        .diagram-box {
+            background-color: #fcfcfc;
+            border: 1px dashed #cbd5e1;
+        }
+        .narrative-text {
+            font-family: Georgia, serif;
+        }
+        .todo-block {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        /* Quiz Styles */
+        .quiz-card {
+            transition: all 0.5s ease;
+        }
+        .quiz-locked {
+            opacity: 0.4;
+            filter: blur(2px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .btn-quiz {
+            transition: all 0.2s;
+        }
+        .btn-quiz:active {
+            transform: scale(0.95);
+        }
+
+        /* Hint Card Styles */
+        .hint-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .hint-card {
+            position: absolute;
+            width: 200px;
+            height: 150px;
+            cursor: pointer;
+            perspective: 1000px;
+            transition: transform 0.3s ease;
+        }
+        .hint-card:hover {
+            z-index: 50;
+            transform: scale(1.05) translateY(-5px) !important;
+        }
+        .hint-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.75rem;
+        }
+        .hint-card.is-flipped .hint-card-inner {
+            transform: rotateY(180deg);
+        }
+        .hint-front, .hint-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        .hint-front {
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .hint-back {
+            background-color: white;
+            color: #334155;
+            transform: rotateY(180deg);
+            font-size: 0.85rem;
+            text-align: left;
+            line-height: 1.25;
+            overflow-y: auto;
+            font-style: italic;
+        }
+
+        /* Polyhedron Styles */
+        .solid-container {
+            background: #fdfdfd;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .lamp-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 20;
+            transition: all 0.3s;
+            background: white;
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .lamp-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #fde047;
+        }
+        .lamp-icon {
+            width: 24px;
+            height: 24px;
+            fill: #475569;
+            transition: fill 0.3s;
+        }
+        .lit .lamp-icon {
+            fill: #eab308;
+        }
+        /* Canvas container */
+        .canvas-wrapper {
+            width: 100%;
+            height: 300px;
+            border-radius: 0.5rem;
+        }
+        .cell-content {
+            transition: all 0.3s ease;
+        }
+        .crossed-out {
+            position: relative;
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: #fee2e2;
+        }
+        .crossed-out::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ef4444;
+            transform: rotate(-15deg);
+        }
+        .crossed-out::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ef4444;
+            transform: rotate(15deg);
+        }
+        canvas {
+            border-radius: 4px;
+            cursor: move;
+            display: block; /* Prevents inline spacing issues */
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Diagonal split for the top-left cell */
+        .diagonal-split {
+            background: linear-gradient(to top right, #f3f4f6 49.5%, #d1d5db 49.5%, #d1d5db 50.5%, #f3f4f6 50.5%);
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-7xl w-full mb-8 space-y-12">
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8 overflow-hidden">
+            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
+                <p>
+                    You've discovered a version of very famous formula, discovered by the great mathematician Euler in the 18th century. Euler discovered that for any polyhedron, we have $V - E + F = 2$.
+                </p>
+
+                <p>
+                    <b class="text-blue-900">Can you prove Euler's formula from the rule you've discovered?</b>
+                </p>
+
+                <p>
+                    imagine the faces are somewhat transperent, remove the ceiling and add a lamp just above it. what would you get?
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
+                    <div class="solid-container p-4 flex flex-col items-center" id="box-cube">
+
+                        <div class="lamp-btn" onclick="toggleLight('cube')">
+                            <svg class="lamp-icon" viewBox="0 0 24 24">
+                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                            </svg>
+                        </div>
+
+                        <div id="canvas-cube" class="canvas-wrapper"></div>
+                    </div>
+
+                    <div class="solid-container p-4 flex flex-col items-center" id="box-octa">
+
+                        <div class="lamp-btn" onclick="toggleLight('octa')">
+                            <svg class="lamp-icon" viewBox="0 0 24 24">
+                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+                            </svg>
+                        </div>
+
+                        <div id="canvas-octa" class="canvas-wrapper"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
+            <header>
+                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">The Only Five Solids</h2>
+            </header>
+
+            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
+                <p>
+                    It was known since the time of the Greeks—and immortalized in the final book of Euclid's <i>Elements</i>—that there are only five possible regular convex solids. But for centuries, the proof relied on complex geometric arguments about interior angles and how they fold together in physical space.
+                </p>
+
+                <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 text-base italic text-slate-600">
+                    <p><b>Side Note on Topology:</b> Leonhard Euler's work marked a massive shift in mathematics. He showed that the precise "shape" (angles, lengths) often matters less than the "connectivity." This insight kicked off the field of <b>Topology</b>, where we treat shapes as if they are made of rubber, focusing on properties that don't change when you stretch them.</p>
+                </div>
+
+                <p>
+                    Euler realized that the regularity of these solids allowed for a beautiful counting proof. Let's see how he derived the <b>Master Equation</b> using only the numbers of parts:
+                </p>
+
+                <div class="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <p>1. In a platonic (or "regular") solid, every face has the same number of sides, $n$, and every vertex has the same number of edges, $m$. This is what it means to be a platonic solid, by definition. </p>
+                    <p>2. Since every edge is incident to precisely two faces and two vertices, we have $nF = 2E$ and $mV = 2E$.</p>
+                    <p>3. We solve for $F$ and $V$:
+                        $$F = \frac{2E}{n} \quad \text{and} \quad V = \frac{2E}{m}$$
+                    </p>
+                    <p>4. We plug these into Euler's formula ($V - E + F = 2$):
+                        $$\frac{2E}{m} - E + \frac{2E}{n} = 2$$
+                    </p>
+                    <p>5. We divide the whole thing by $2E$ and rearrange to get the <b>Master Equation</b>:
+                        $$\frac{1}{n} + \frac{1}{m} = \frac{1}{2} + \frac{1}{E}$$
+                    </p>
+                </div>
+
+                <p>
+                    Because the number of edges $E$ must be a positive integer, the term $\frac{1}{E}$ is always greater than zero. This implies that for a regular solid to exist, the sum $\frac{1}{n} + \frac{1}{m}$ must be <b>strictly greater than $1/2$</b>.
+                </p>
+
+                <div class="w-full max-w-full mx-auto">
+                    <div class="mb-4 text-center">
+                        <p class="text-gray-600 text-sm">
+                            fill in the solutions to the master equation
+                            <span class="font-mono bg-gray-200 px-2 py-1 rounded">1/m + 1/n = 1/2 + 1/E</span>
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto shadow-lg rounded-lg bg-white p-1">
+                        +                        <table class="w-full border-collapse table-fixed min-w-[700px]">
+                            <thead>
+                                <tr>
+                                    <th class="p-0 bg-gray-100 border-b-2 border-gray-200 w-[150px] h-[100px] diagonal-split align-middle">
+                                        +                                        <div class="relative w-full h-full">
+                                            <div class="absolute top-1 right-1 text-right text-[10px] font-semibold text-indigo-700 w-2/3 leading-tight">
+                                                m = edges/vertex
+                                            </div>
+                                            <div class="absolute bottom-1 left-1 text-left text-[10px] font-semibold text-indigo-700 w-2/3 leading-tight">
+                                                n = edges/face
+                                            </div>
+                                        </div>
+                                    </th>
+                                    +                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                +                            </tbody>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const quizSolutions = {
+            1: true,  // Connected
+            2: false, // Disconnected
+            3: true   // Connected (Tricky)
+        };
+
+        function checkAnswer(id, userChoiceIsConnected) {
+            const isCorrect = userChoiceIsConnected === quizSolutions[id];
+            const card = document.getElementById(`q${id}`);
+            const feedback = card.querySelector('.q-feedback');
+            const buttons = card.querySelectorAll('button');
+
+            // Provide visual feedback
+            if (isCorrect) {
+                feedback.textContent = "Correct!";
+                feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-green-600 block";
+                card.classList.add('border-green-300', 'bg-green-50');
+
+                // Disable buttons
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+
+                // Unlock next question if it exists
+                const nextId = id + 1;
+                const nextCard = document.getElementById(`q${nextId}`);
+                if (nextCard) {
+                    setTimeout(() => {
+                        nextCard.classList.remove('quiz-locked');
+                    }, 500);
+                }
+            } else {
+                feedback.textContent = "Not quite. Look closer at the lines.";
+                feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-red-600 block";
+
+                // Shake effect (simple css toggle)
+                card.style.transform = "translateX(5px)";
+                setTimeout(() => card.style.transform = "translateX(0)", 100);
+                setTimeout(() => card.style.transform = "translateX(-5px)", 200);
+                setTimeout(() => card.style.transform = "translateX(0)", 300);
+            }
+        }
+    </script>
+
+    <script>
+        // Global references to lights to toggle them
+        const scenes = {
+            cube: { light: null, isActive: false },
+            octa: { light: null, isActive: false }
+        };
+
+        function initScene(containerId, type) {
+            const container = document.getElementById(containerId);
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene & Camera
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfcfcfc); // Match CSS background
+            scene.fog = new THREE.Fog(0xfcfcfc, 10, 50);
+
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+            camera.position.set(0, 5, 8);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            let userInteracted = false;
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent going below ground
+
+            // Stop auto-rotation when user interacts
+            controls.addEventListener('start', () => {
+                userInteracted = true;
+            });
+
+            // Ground Plane (Receives Shadow)
+            const planeGeometry = new THREE.PlaneGeometry(100, 100);
+            const planeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xdcfce7, // Match grass color
+                roughness: 0.8,
+                metalness: 0.1,
+                side: THREE.DoubleSide
+            });
+            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -2;
+            plane.receiveShadow = true;
+            scene.add(plane);
+
+            // Object Construction
+            const group = new THREE.Group();
+
+            let vertices = [];
+            let edges = [];
+            let facesIndices = [];
+
+            if (type === 'cube') {
+                // Cube vertices
+                // Remove top face (y=1)
+                vertices = [
+                    [-1, -1, 1], [1, -1, 1], [1, -1, -1], [-1, -1, -1], // Bottom ring
+                    [-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1]      // Top ring
+                ];
+                // Connect edges manually for control
+                edges = [
+                    [0,1], [1,2], [2,3], [3,0], // Bottom
+                    [4,5], [5,6], [6,7], [7,4], // Top
+                    [0,4], [1,5], [2,6], [3,7]  // Vertical
+                ];
+                // Face indices for transparent mesh (triangulated)
+                // Bottom, Front, Right, Back, Left. NO TOP.
+                facesIndices = [
+                    0,1,2, 0,2,3, // Bottom
+                    0,4,5, 0,5,1, // Front
+                    1,5,6, 1,6,2, // Right
+                    2,6,7, 2,7,3, // Back
+                    3,7,4, 3,4,0  // Left
+                ];
+            } else if (type === 'octa') {
+                // Octahedron resting on a face (Triangular Antiprism style)
+                // Remove top face
+                const r = 1.5;
+                const h = 1.2;
+                // Top Triangle (y=h) - Rotated 0, 120, 240
+                const t0 = [r*Math.cos(0), h, r*Math.sin(0)];
+                const t1 = [r*Math.cos(2*Math.PI/3), h, r*Math.sin(2*Math.PI/3)];
+                const t2 = [r*Math.cos(4*Math.PI/3), h, r*Math.sin(4*Math.PI/3)];
+
+                // Bottom Triangle (y=-h) - Rotated 60, 180, 300
+                const b0 = [r*Math.cos(Math.PI/3), -h, r*Math.sin(Math.PI/3)];
+                const b1 = [r*Math.cos(Math.PI), -h, r*Math.sin(Math.PI)];
+                const b2 = [r*Math.cos(5*Math.PI/3), -h, r*Math.sin(5*Math.PI/3)];
+
+                vertices = [t0, t1, t2, b0, b1, b2]; // 0,1,2 top; 3,4,5 bottom
+
+                // Edges: Top Ring, Bottom Ring, ZigZag
+                edges = [
+                    [0,1], [1,2], [2,0], // Top ring
+                    [3,4], [4,5], [5,3], // Bottom ring
+                    [0,3], [0,5], // Top 0 connects to Bot 3, 5
+                    [1,3], [1,4], // Top 1 connects to Bot 3, 4
+                    [2,4], [2,5]  // Top 2 connects to Bot 4, 5
+                ];
+
+                // Faces: Bottom (1), Sides (6). Remove Top (0,1,2).
+                facesIndices = [
+                    3,5,4, // Bottom (order for normal down/out)
+                    0,3,5, // Side
+                    0,5,2, // Side
+                    2,5,4, // Side
+                    2,4,1, // Side
+                    1,4,3, // Side
+                    1,3,0  // Side
+                ];
+            }
+
+            // Material Settings
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 });
+            if(type === 'octa') edgeMat.color.setHex(0xa855f7);
+
+            // Create Edges (Thinner: radius 0.016)
+            edges.forEach(pair => {
+                const v1 = new THREE.Vector3(...vertices[pair[0]]);
+                const v2 = new THREE.Vector3(...vertices[pair[1]]);
+                const distance = v1.distanceTo(v2);
+                const cylinder = new THREE.CylinderGeometry(0.016, 0.016, distance, 8); // Approx 1/3 of previous 0.05
+                const mesh = new THREE.Mesh(cylinder, edgeMat);
+
+                // Position and Rotate Cylinder
+                const mid = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+                mesh.position.copy(mid);
+                mesh.lookAt(v2);
+                mesh.rotateX(Math.PI / 2);
+                mesh.castShadow = true;
+                group.add(mesh);
+            });
+
+            // Create Vertices (Spheres)
+            // Radius increased to 0.1 (approx 3x larger than 0.033)
+            const vertexGeo = new THREE.SphereGeometry(0.1, 16, 16);
+            vertices.forEach(v => {
+                const mesh = new THREE.Mesh(vertexGeo, edgeMat);
+                mesh.position.set(...v);
+                mesh.castShadow = true;
+                group.add(mesh);
+            });
+
+            // Create Transparent Faces
+            const geom = new THREE.BufferGeometry();
+            const positions = [];
+            vertices.forEach(v => positions.push(...v));
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geom.setIndex(facesIndices);
+            geom.computeVertexNormals();
+
+            const faceMat = new THREE.MeshPhongMaterial({
+                color: type === 'cube' ? 0x60a5fa : 0xc084fc,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.DoubleSide,
+                shininess: 100
+            });
+            const faceMesh = new THREE.Mesh(geom, faceMat);
+            // Faces do NOT cast shadow, letting light pass through to form the graph
+            faceMesh.castShadow = false;
+            faceMesh.receiveShadow = false;
+            group.add(faceMesh);
+
+            scene.add(group);
+
+            // Lights
+            // Ambient light (soft fill)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // The Projection Lamp (PointLight)
+            // Positioned centrally above the "missing face" (top)
+            const lamp = new THREE.PointLight(0xfde047, 0, 100); // Start intensity 0
+            lamp.position.set(0, 1.5, 0); // Just inside/above top face
+            lamp.castShadow = true;
+            lamp.shadow.mapSize.width = 1024;
+            lamp.shadow.mapSize.height = 1024;
+            lamp.shadow.bias = -0.001; // Reduce artifacts
+            scene.add(lamp);
+
+            // Store ref
+            scenes[type].light = lamp;
+
+            // Helper for the lamp position (Visual glowing orb)
+            const bulbGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.copy(lamp.position);
+            scene.add(bulb);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+
+                // Slow rotation until first interaction
+                if(!userInteracted) {
+                    group.rotation.y += 0.002;
+                }
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                renderer.setSize(w, h);
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+            });
+        }
+
+        function toggleLight(type) {
+            const container = document.getElementById(type === 'cube' ? 'box-cube' : 'box-octa');
+            container.classList.toggle('lit');
+
+            const isLit = container.classList.contains('lit');
+            scenes[type].isActive = isLit;
+
+            // Animate light intensity
+            const target = isLit ? 1.5 : 0;
+            const light = scenes[type].light;
+
+            // Simple GSAP-like tween
+            let start = light.intensity;
+            let startTime = null;
+            function fade(time) {
+                if (!startTime) startTime = time;
+                let progress = (time - startTime) / 500; // 500ms duration
+                if (progress > 1) progress = 1;
+
+                light.intensity = start + (target - start) * progress;
+
+                if (progress < 1) requestAnimationFrame(fade);
+            }
+            requestAnimationFrame(fade);
+        }
+
+        // Initialize on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initScene('canvas-cube', 'cube');
+            initScene('canvas-octa', 'octa');
+        });
+
+    </script>
+
+    <script>
+        // Configuration
+        const nStart = 3, nEnd = 6;
+        const mStart = 3, mEnd = 6;
+
+        function init() {
+            const theadRow = document.querySelector('thead tr');
+            const tbody = document.getElementById('table-body');
+
+            // Generate Headers (m values)
+            for (let m = mStart; m <= mEnd; m++) {
+                const th = document.createElement('th');
+                th.className = "p-2 bg-gray-50 border-b border-gray-200 text-center font-semibold text-gray-700 text-base";
+                th.textContent = `m = ${m}`;
+                theadRow.appendChild(th);
+            }
+
+            // Generate Rows (n values)
+            for (let n = nStart; n <= nEnd; n++) {
+                const tr = document.createElement('tr');
+
+                // Row Header
+                const th = document.createElement('th');
+                th.className = "p-2 bg-gray-50 border-r border-gray-200 text-center font-semibold text-gray-700 text-base align-middle";
+                th.textContent = `n = ${n}`;
+                tr.appendChild(th);
+
+                // Cells
+                for (let m = mStart; m <= mEnd; m++) {
+                    const td = document.createElement('td');
+                    td.className = "border border-gray-200 p-1 align-top h-[180px] bg-white hover:bg-gray-50 transition-colors";
+                    td.id = `cell-${n}-${m}`;
+
+                    const cellContainer = document.createElement('div');
+                    cellContainer.className = "flex flex-col h-full justify-between p-1";
+
+                    // Formula Display
+                    const formulaDiv = document.createElement('div');
+                    formulaDiv.className = "flex flex-row flex-nowrap items-center justify-center mb-1 font-mono text-sm font-medium text-gray-800 whitespace-nowrap";
+                    formulaDiv.innerHTML = `
+                        <span>1/${m} + 1/${n} = 1/2 + 1/</span><input type="number" id="input-${n}-${m}" class="w-10 mx-1 border border-indigo-300 rounded focus:border-indigo-600 outline-none text-center bg-white h-6 text-sm" placeholder="?">
+                    `;
+
+                    // Add Enter key listener
+                    const inputEl = formulaDiv.querySelector('input');
+                    inputEl.addEventListener('keyup', (event) => {
+                        if (event.key === 'Enter') {
+                            checkSolution(n, m);
+                        }
+                    });
+
+                    // Buttons
+                    const btnContainer = document.createElement('div');
+                    btnContainer.className = "flex gap-1 justify-center mt-1";
+
+                    const checkBtn = document.createElement('button');
+                    checkBtn.textContent = "Check";
+                    checkBtn.className = "px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 text-xs font-medium shadow-sm transition";
+                    checkBtn.onclick = () => checkSolution(n, m);
+
+                    const noSolBtn = document.createElement('button');
+                    // Changed button text to show the inequality with m and n plugged in
+                    noSolBtn.innerHTML = `1/${m} + 1/${n} &le; 1/2`;
+                    noSolBtn.className = "px-2 py-0.5 bg-red-400 text-white rounded hover:bg-red-500 text-xs font-medium shadow-sm transition";
+                    noSolBtn.onclick = () => checkNoSolution(n, m);
+
+                    btnContainer.appendChild(checkBtn);
+                    btnContainer.appendChild(noSolBtn);
+
+                    cellContainer.appendChild(formulaDiv);
+                    cellContainer.appendChild(btnContainer);
+                    td.appendChild(cellContainer);
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+        }
+
+        // Logic Helpers
+        function getExpectedE(n, m) {
+            const val = (1/m) + (1/n) - 0.5;
+            if (val <= 0.0001) return null;
+            const E = 1 / val;
+            if (Math.abs(E - Math.round(E)) < 0.001) return Math.round(E);
+            return null;
+        }
+
+        // Action Handlers
+        function checkSolution(n, m) {
+            const input = document.getElementById(`input-${n}-${m}`);
+            const userE = parseInt(input.value);
+            const correctE = getExpectedE(n, m);
+
+            if (!userE) {
+                showAlert("Please enter a value for E.");
+                return;
+            }
+
+            if (correctE !== null && userE === correctE) {
+                render3D(n, m, correctE);
+            } else {
+                showAlert("Try again!");
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function checkNoSolution(n, m) {
+            const correctE = getExpectedE(n, m);
+
+            if (correctE === null) {
+                const cell = document.getElementById(`cell-${n}-${m}`);
+                // Changed displayed text to show the inequality upon success
+                cell.innerHTML = `
+                    <div class="h-full w-full flex items-center justify-center crossed-out">
+                        <span class="text-red-600 font-bold text-base bg-white px-2 z-10 whitespace-nowrap">1/${m} + 1/${n} &le; 1/2</span>
+                    </div>
+                `;
+            } else {
+                showAlert("Try again! A solution exists.");
+            }
+        }
+
+        // UI Helpers
+        function showAlert(msg) {
+            document.getElementById('modal-message').textContent = msg;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Three.js Rendering
+        function render3D(n, m, E) {
+            const cell = document.getElementById(`cell-${n}-${m}`);
+            cell.innerHTML = '';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = "relative w-full h-full flex flex-col items-center justify-center bg-gray-900 rounded overflow-hidden";
+            cell.appendChild(wrapper);
+
+            const info = document.createElement('div');
+            info.className = "absolute top-1 left-1 bg-black bg-opacity-60 text-white text-[10px] p-1 rounded pointer-events-none z-10";
+            info.innerHTML = `<strong>n:${n}, m:${m}</strong><br>E:${E}`;
+            wrapper.appendChild(info);
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111827);
+
+            // Camera tweaks: Reduced FOV (30) and increased distance (8) for less distortion
+            const camera = new THREE.PerspectiveCamera(30, wrapper.clientWidth / wrapper.clientHeight, 0.1, 100);
+            camera.position.z = 8;
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+            // CRITICAL FIX: setSize(w, h, false) prevents Three.js from setting inline pixel styles for width/height.
+            // We then set width/height to 100% via CSS to respect the table layout.
+            renderer.setSize(wrapper.clientWidth, wrapper.clientHeight, false);
+            renderer.domElement.style.width = '100%';
+            renderer.domElement.style.height = '100%';
+
+            wrapper.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = false;
+
+            // Stop auto-rotation when user starts interacting
+            let autoRotate = true;
+            controls.addEventListener('start', () => {
+                autoRotate = false;
+            });
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(2, 2, 5);
+            scene.add(dirLight);
+
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            backLight.position.set(-2, -2, -5);
+            scene.add(backLight);
+
+            let geometry;
+            let color = 0x6366f1;
+            const r = 1.2; // Slightly larger due to camera distance
+
+            if (n === 3 && m === 3) {
+                geometry = new THREE.TetrahedronGeometry(r);
+                color = 0xFCA5A5;
+            } else if (n === 4 && m === 3) {
+                geometry = new THREE.BoxGeometry(r*1.2, r*1.2, r*1.2);
+                color = 0x93C5FD;
+            } else if (n === 3 && m === 4) {
+                geometry = new THREE.OctahedronGeometry(r);
+                color = 0x86EFAC;
+            } else if (n === 5 && m === 3) {
+                geometry = new THREE.DodecahedronGeometry(r);
+                color = 0xFDBA74;
+            } else if (n === 3 && m === 5) {
+                geometry = new THREE.IcosahedronGeometry(r);
+                color = 0xC4B5FD;
+            } else {
+                geometry = new THREE.SphereGeometry(r, 16, 16);
+            }
+
+            const material = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.3,
+                metalness: 0.2,
+                flatShading: true
+            });
+
+            const wireframe = new THREE.LineSegments(
+                new THREE.WireframeGeometry(geometry),
+                new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 })
+            );
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.add(wireframe);
+            scene.add(mesh);
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Slowed down initial rotation & conditional check
+                if (autoRotate) {
+                    mesh.rotation.y += 0.005;
+                    mesh.rotation.x += 0.002;
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            const resizeObserver = new ResizeObserver(() => {
+                if(wrapper.clientWidth > 0 && wrapper.clientHeight > 0) {
+                    camera.aspect = wrapper.clientWidth / wrapper.clientHeight;
+                    camera.updateProjectionMatrix();
+                    // Update internal drawing buffer, but don't touch CSS size
+                    renderer.setSize(wrapper.clientWidth, wrapper.clientHeight, false);
+                }
+            });
+            resizeObserver.observe(wrapper);
+
+            animate();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
