@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Farmer's Fences</title>
+    <title></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
         window.MathJax = {
@@ -21,6 +19,7 @@
     <script type="text/javascript" id="MathJax-script" async
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
     </script>
+
     <style>
         body {
             margin: 0;
@@ -44,22 +43,12 @@
         .narrative-text {
             font-family: Georgia, serif;
         }
-        .todo-block {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #f1f5f9;
-            color: #475569;
-        }
 
         /* Quiz Styles */
         .quiz-card {
             transition: all 0.5s ease;
         }
-        .quiz-locked {
-            opacity: 0.4;
-            filter: blur(2px);
-            pointer-events: none;
-            user-select: none;
-        }
+
         .btn-quiz {
             transition: all 0.2s;
         }
@@ -67,17 +56,53 @@
             transform: scale(0.95);
         }
 
+        /* Interactive Diagram Styles */
+        .interactive-diagram {
+            cursor: crosshair;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .interactive-diagram:hover {
+            background-color: #f0f9ff;
+        }
+        .interactive-diagram.solved {
+            cursor: default;
+            border-color: #86efac; /* green border */
+            background-color: #f0fdf4; /* green background */
+        }
+
+        /* Error Popup Animation */
+        .error-popup {
+            position: fixed;
+            pointer-events: none;
+            color: #ef4444;
+            font-weight: bold;
+            font-family: sans-serif;
+            font-size: 0.9rem;
+            animation: fadeUp 1s forwards;
+            z-index: 100;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(-10px); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
         /* Hint Card Styles */
         .hint-container {
             position: relative;
-            height: 250px;
             width: 100%;
             margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            padding-bottom: 2rem;
         }
         .hint-card {
-            position: absolute;
-            width: 200px;
-            height: 150px;
+            position: relative;
+            width: 300px;
+            height: 250px;
             cursor: pointer;
             perspective: 1000px;
             transition: transform 0.3s ease;
@@ -105,14 +130,13 @@
             height: 100%;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
             border-radius: 0.75rem;
             border: 1px solid #e2e8f0;
         }
         .hint-front {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 800;
             font-size: 1.25rem;
             letter-spacing: 0.1em;
@@ -122,161 +146,173 @@
             background-color: white;
             color: #334155;
             transform: rotateY(180deg);
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             text-align: left;
-            line-height: 1.25;
+            line-height: 1.5;
             overflow-y: auto;
             font-style: italic;
+            padding: 1.5rem;
+            display: block;
         }
 
-        /* Polyhedron Styles */
-        .solid-container {
-            background: #fdfdfd;
-            border: 1px solid #e2e8f0;
-            border-radius: 1rem;
-            position: relative;
-            overflow: hidden;
+        /* Modal Styles */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
         }
-        .lamp-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            z-index: 20;
-            transition: all 0.3s;
-            background: white;
-            border-radius: 50%;
-            padding: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+        .vertical-header {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: center;
+            height: 100px;
+            margin: 0 auto;
         }
-        .lamp-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px #fde047;
+
+        /* --- SKETCH TOOL STYLES (Scoped) --- */
+        .tool-section {
+            font-family: 'Segoe UI', sans-serif;
         }
-        .lamp-icon {
-            width: 24px;
-            height: 24px;
-            fill: #475569;
-            transition: fill 0.3s;
+
+        .tool-section .canvas-wrapper { 
+            width: 100%; height: 400px; position: relative; 
+            border: 1px solid #cbd5e1; background: #fff; 
+            border-radius: 0.5rem; overflow: hidden; 
+            touch-action: none;
         }
-        .lit .lamp-icon {
-            fill: #eab308;
+        .tool-section canvas { 
+            display: block; width: 100%; height: 100%; 
+            cursor: crosshair; touch-action: none;
+            -webkit-user-select: none;
         }
-        /* Canvas container */
-        .canvas-wrapper {
-            width: 100%;
-            height: 300px;
-            border-radius: 0.5rem;
+
+        .tool-section .controls { margin-top: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+        .tool-section button { 
+            padding: 8px 16px; font-size: 0.9rem; border: 1px solid rgba(0,0,0,0.1); 
+            border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .tool-section .btn-primary { 
+            background: linear-gradient(to bottom, #3b82f6, #2563eb); color: white; 
+        }
+        .tool-section .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+        .tool-section .btn-secondary { 
+            background: linear-gradient(to bottom, #f8fafc, #f1f5f9); color: #475569; border: 1px solid #cbd5e1;
+        }
+        .tool-section .btn-secondary:hover { background: #e2e8f0; }
+
+        .tool-section #status { margin-top: 5px; min-height: 20px; color: #ef4444; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <div class="max-w-7xl w-full mb-8 space-y-12">
+
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-8 items-start">
+
+            <div class="flex-1 space-y-6">
+                <p class="text-slate-700 leading-relaxed">
+                    A farmer is considering different designs for his fences. Here are the steps he uses to draw a fence diagram.
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-xl tracking-tight">Step 1: Draw the Fences</h2>
+                        <p class="text-slate-600 mt-1">You can draw any number of lines - straight or curved. There's just one rule:</p>
+                    </div>
+
+                    <div class="rule-card p-4 rounded-r-lg">
+                        <h3 class="font-bold text-blue-900 text-lg">
+                            Fences Are Connected
+                        </h3>
+                        <p class="text-blue-800 text-sm mt-1 leading-snug">
+                            You should be able to get between any two fences by walking along the fences only.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-4 mt-4">
+                        <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                Connected (Good)
+                            </span>
+                            <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M30 60 C 40 20, 70 30, 80 50 S 120 10, 140 40" />
+                                <path d="M80 50 L 60 90 C 70 110, 100 100, 110 80 S 130 50, 100 45" />
+                                <path d="M60 90 L 20 100" />
+                                <path d="M140 40 L 150 25" />
+                            </svg>
+                        </div>
+
+                        <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                                Not Connected (Bad)
+                            </span>
+                            <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M20 60 C 20 10, 140 10, 140 60 S 20 110, 20 60" />
+                                <path d="M140 60 L 150 75" />
+                                <path d="M60 55 C 70 40, 90 40, 100 55 S 80 80, 60 55" />
+                                <path d="M80 65 L 85 85" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/3 shrink-0">
+                <img src="Farmer.png" alt="Farmer" class="w-full h-auto rounded-lg object-cover shadow-sm">
+            </div>
+
+        </section>
+
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-            <p class="text-slate-700 leading-relaxed">
-                A farmer is considering different designs for his fences. Here are the steps he uses to draw a fence diagram.
-            </p>
-
-            <div class="space-y-4">
-                <div>
-                    <h2 class="font-bold text-slate-800 text-xl tracking-tight">Step 1: Draw the Fences</h2>
-                    <p class="text-slate-600 mt-1">You can draw any number of lines - straight or curved. There's just one rule:</p>
-                </div>
-
-                <div class="rule-card p-4 rounded-r-lg">
-                    <h3 class="font-bold text-blue-900 text-lg">
-                        Fences Are Connected
-                    </h3>
-                    <p class="text-blue-800 text-sm mt-1 leading-snug">
-                        You should be able to get between any two fences by walking along the fences only.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                        <span class="text-xs font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            <div class="pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="quiz-container">
+                    <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q1">
+                        <div class="mb-4">
+                            <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M 40 60 C 40 20, 120 20, 120 60 S 40 100, 40 60" />
+                                <path d="M 20 60 L 140 60" />
                             </svg>
-                            Connected (Good)
-                        </span>
-                        <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                            <path d="M30 60 C 40 20, 70 30, 80 50 S 120 10, 140 40" />
-                            <path d="M80 50 L 60 90 C 70 110, 100 100, 110 80 S 130 50, 100 45" />
-                            <path d="M60 90 L 20 100" />
-                            <path d="M140 40 L 150 25" />
-                        </svg>
+                        </div>
+                        <div class="w-full flex flex-col gap-2 q-controls">
+                            <button onclick="checkAnswer(1, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                            <button onclick="checkAnswer(1, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                        </div>
+                        <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                     </div>
-
-                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                        <span class="text-xs font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q2">
+                        <div class="mb-4">
+                            <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M 50 60 m -25, 0 a 25,25 0 1,0 50,0 a 25,25 0 1,0 -50,0" />
+                                <path d="M 130 60 m -20, 0 a 20,20 0 1,0 40,0 a 20,20 0 1,0 -40,0" />
                             </svg>
-                            Not Connected (Bad)
-                        </span>
-                        <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                            <path d="M20 60 C 20 10, 140 10, 140 60 S 20 110, 20 60" />
-                            <path d="M140 60 L 150 75" />
-                            <path d="M60 55 C 70 40, 90 40, 100 55 S 80 80, 60 55" />
-                            <path d="M80 65 L 85 85" />
-                        </svg>
+                        </div>
+                        <div class="w-full flex flex-col gap-2 q-controls">
+                            <button onclick="checkAnswer(2, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                            <button onclick="checkAnswer(2, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                        </div>
+                        <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
+                    </div>
+                    <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q3">
+                        <div class="mb-4">
+                            <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M 30 90 C 30 30, 90 30, 90 60 S 50 80, 50 60 S 80 40, 100 40 S 130 80, 130 100" />
+                                <path d="M 130 100 L 140 110" />
+                            </svg>
+                        </div>
+                        <div class="w-full flex flex-col gap-2 q-controls">
+                            <button onclick="checkAnswer(3, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                            <button onclick="checkAnswer(3, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                        </div>
+                        <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                     </div>
                 </div>
-
-                <div class="mt-8 border-t border-slate-100 pt-6">
-                    <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
-                        <span>🧪</span> Quick Check: Are these valid?
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="quiz-container">
-
-                        <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q1">
-                            <div class="mb-4">
-                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                                    <path d="M 40 60 C 40 20, 120 20, 120 60 S 40 100, 40 60" />
-                                    <path d="M 20 60 L 140 60" />
-                                </svg>
-                            </div>
-                            <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(1, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(1, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
-                            </div>
-                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
-                        </div>
-
-                        <div class="quiz-card quiz-locked bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q2">
-                            <div class="mb-4">
-                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                                    <path d="M 50 60 m -25, 0 a 25,25 0 1,0 50,0 a 25,25 0 1,0 -50,0" />
-                                    <path d="M 130 60 m -20, 0 a 20,20 0 1,0 40,0 a 20,20 0 1,0 -40,0" />
-                                </svg>
-                            </div>
-                            <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(2, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(2, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
-                            </div>
-                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
-                        </div>
-
-                        <div class="quiz-card quiz-locked bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q3">
-                            <div class="mb-4">
-                                <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                                    <path d="M 30 90 C 30 30, 90 30, 90 60 S 50 80, 50 60 S 80 40, 100 40 S 130 80, 130 100" />
-                                    <path d="M 130 100 L 140 110" />
-                                </svg>
-                            </div>
-                            <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(3, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(3, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
-                            </div>
-                            <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
-                        </div>
-
-                    </div>
-                </div>
-
             </div>
 
             <hr class="border-slate-100">
@@ -296,60 +332,67 @@
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                <div class="mt-4">
+                    <p class="text-slate-700 mb-4">
+                        Here's a good diagram. The next diagrams are missing one or more posts. Click to add posts and fix the diagram.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                Correct
+                            </span>
+                            <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                                <path d="M20 20 L 100 80" fill="none" />
+                                <path d="M100 20 L 20 80" fill="none" />
+                                <circle cx="20" cy="20" r="3.5" />
+                                <circle cx="100" cy="80" r="3.5" />
+                                <circle cx="100" cy="20" r="3.5" />
+                                <circle cx="20" cy="80" r="3.5" />
+                                <circle cx="60" cy="50" r="3.5" />
+                                <circle cx="40" cy="35" r="3.5" />
                             </svg>
-                            Correct
-                        </span>
-                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                            <path d="M20 20 L 100 80" fill="none" />
-                            <path d="M100 20 L 20 80" fill="none" />
-                            <circle cx="20" cy="20" r="3.5" />
-                            <circle cx="100" cy="80" r="3.5" />
-                            <circle cx="100" cy="20" r="3.5" />
-                            <circle cx="20" cy="80" r="3.5" />
-                            <circle cx="60" cy="50" r="3.5" />
-                            <circle cx="40" cy="35" r="3.5" />
-                        </svg>
+                        </div>
+
+                        <div class="diagram-box interactive-diagram p-4 rounded-lg flex flex-col items-center justify-center" id="diag-trident" onclick="handleFixClick(event, 'trident', 'diag-trident')">
+                            <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                                <line x1="60" y1="90" x2="60" y2="50" />
+                                <line x1="60" y1="50" x2="20" y2="20" />
+                                <line x1="60" y1="50" x2="100" y2="20" />
+                                <line x1="60" y1="50" x2="60" y2="10" />
+                                <circle cx="60" cy="90" r="3.5" />
+                                <circle cx="60" cy="50" r="3.5" />
+                                <circle cx="60" cy="10" r="3.5" />
+                            </svg>
+                        </div>
+
+                        <div class="diagram-box interactive-diagram p-4 rounded-lg flex flex-col items-center justify-center" id="diag-envelope" onclick="handleFixClick(event, 'envelope', 'diag-envelope')">
+                            <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                                <rect x="20" y="20" width="80" height="60" fill="none" />
+                                <line x1="20" y1="20" x2="100" y2="80" />
+                                <line x1="100" y1="20" x2="20" y2="80" />
+                                <circle cx="20" cy="20" r="3.5" />
+                                <circle cx="100" cy="20" r="3.5" />
+                                <circle cx="100" cy="80" r="3.5" />
+                                <circle cx="20" cy="80" r="3.5" />
+                            </svg>
+                        </div>
                     </div>
 
-                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1 text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                            Missing End Post
-                        </span>
-                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                            <path d="M20 20 L 100 80" fill="none" />
-                            <path d="M100 20 L 20 80" fill="none" />
-                            <circle cx="20" cy="20" r="3.5" />
-                            <circle cx="100" cy="80" r="3.5" />
-                            <circle cx="100" cy="20" r="3.5" />
-                            <circle cx="60" cy="50" r="3.5" />
-                            <circle cx="40" cy="35" r="3.5" />
-                        </svg>
-                    </div>
-
-                    <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1 text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                            Missing Intersection
-                        </span>
-                        <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                            <path d="M20 20 L 100 80" fill="none" />
-                            <path d="M100 20 L 20 80" fill="none" />
-                            <circle cx="20" cy="20" r="3.5" />
-                            <circle cx="100" cy="80" r="3.5" />
-                            <circle cx="100" cy="20" r="3.5" />
-                            <circle cx="20" cy="80" r="3.5" />
-                            <circle cx="40" cy="35" r="3.5" />
-                        </svg>
+                    <div class="mt-8 space-y-4">
+                        <p class="text-slate-700">
+                            The following diagram is also not ok, because a circle is not a simple segment with a post on either side. How can you fix it?
+                        </p>
+                        <div class="flex justify-center">
+                            <div class="diagram-box interactive-diagram p-6 rounded-lg flex flex-col items-center justify-center" id="diag-circle" onclick="handleFixClick(event, 'circle', 'diag-circle')">
+                                <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
+                                    <circle cx="60" cy="50" r="30" fill="none" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -362,17 +405,18 @@
                     <p class="text-slate-600 mt-1">A field is any region of the diagram that is "fenced in" from all sides. The fences determine the fields - unlike with the posts, there's no choice involved in this step. But you can choose a nice set of colors to shade the fields with ;)</p>
                 </div>
 
-                <div class="flex justify-center mt-6">
+                <div class="flex flex-col-reverse md:flex-row gap-6 items-center justify-center mt-6">
+
+                     <div class="flex justify-center items-center">
+                        <img src="girl_2.png" alt="Girl Image" class="max-h-[350px] w-auto rounded-lg shadow-sm border border-slate-100">
+                    </div>
+
                     <div class="diagram-box p-6 rounded-xl flex flex-col items-center max-w-sm w-full">
                         <svg viewBox="0 0 1000 1000" class="stroke-slate-800 stroke-[5] fill-none stroke-linecap-round stroke-linejoin-round" style="width: 100%; height: auto; max-height: 400px;">
                             <path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
-
                             <path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
-
                             <path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480 L 820 280" fill="#ffffba" stroke="none" />
-
                             <path d="M 480 700 Q 580 580 680 680 Q 580 750 480 700 Z" fill="#baffc9" stroke="none" />
-
                             <path d="M 50 200 Q 150 150 300 350" />
                             <path d="M 300 350 C 180 300 180 480 300 350" />
                             <path d="M 300 350 Q 375 335 450 320" />
@@ -394,7 +438,6 @@
                             <path d="M 480 700 Q 400 800 350 850" />
                             <path d="M 680 680 Q 750 780 800 850" />
                             <path d="M 480 700 Q 530 800 550 880" />
-
                             <g fill="black" stroke="none">
                                 <circle cx="50" cy="200" r="9" />
                                 <circle cx="300" cy="350" r="9" />
@@ -428,192 +471,135 @@
 
             <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
                 <p>
-                    The farmer decided to count how many posts, fence segments, and fields each diagram has.
+                    The farmer started drawing many of these diagrams, counting how many posts, fence segments, and fields each diagram has.
                 </p>
-
-                <div class="todo-block p-4 rounded-lg border border-slate-300 text-sm">
-                    &lt;here would come diagrams and queries to the user involving counting - leave this as a TODO in some other font.&gt;
-                </div>
-
                 <p>
-                    One day, the farmer decided to see if he could design a farm with 5 fields, using only one post. He noticed that the only way he could do that was if he used 5 fences, with a kind of flower. Though you could let some of the pedals be inside each other, you would always end up using 5 fence segments.
+                    For example, he wanted to see if he could design a farm with 5 fields, using only one post. He could produce various kinds of flower configurations: some
+                    "petals" could lie next to each other, or inside each other. But if he wanted to get to 5 fields with only one post he always had to use 5 fence segments.
                 </p>
 
                 <p>
-                    He thought that was curious, but what was even striking was that a similar thing happened now matter the number of posts and fields he tried to get. For example, if he had 3 posts and wanted to produced 3 fields, that always involved 5 fence segments. In fact, it seemed any two of the three quantities determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd never get any fields. And you couldn't draw any fence diagram with 5 posts and 3 diagrams (unless you started allowing disconnected diagrams).
+                    He thought that was curious, but what was even more striking was that a similar thing happened no matter what the number of posts and fields he decided to get to.
+                    In fact, it seemed that <emph>any</emph> two of the three quantities (posts and fences, posts and edges, edges and fences) determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd always get 0 fields. And you couldn't draw any fence diagram with 5 posts and 3 fence segments
+                    without making the diagram disconnected.
                 </p>
 
                 <p>
                     The farmer was sure there was some rule, some formula that would allow one to compute any quantity from the other two. But he couldn't put his finger on it.
+                    Can you figure out what the rule is? Start by taking a piece of paper and doodling some diagrams according to the rules,
+                    counting the number of posts, segments and fields, and adding each triplet of numbers to the table. You can use the doodling app to save some
+                    time, but check it's diagrams are really valid and that it counted everything correctly - it can make mistakes.
                 </p>
+
+                <p>
+                    if you think you have found the rule - check it again, maybe even try to prove it - and then talk to one of the guides.
+                </p>
+                <div class="flex justify-center">
+                    <div class="overflow-hidden rounded-lg border border-slate-200">
+                        <table class="text-slate-500" id="stats-table">
+                            <thead class="bg-white">
+                                <tr>
+                                    <th class="vertical-header w-12 bg-red-100 text-red-900 uppercase text-xs tracking-wider border-b border-red-200">Posts</th>
+                                    <th class="vertical-header w-12 bg-blue-100 text-blue-900 uppercase text-xs tracking-wider border-b border-blue-200">Segments</th>
+                                    <th class="vertical-header w-12 bg-green-100 text-green-900 uppercase text-xs tracking-wider border-b border-green-200">Fields</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                                <tr class="border-b last:border-0 border-slate-200">
+                                    <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">18</td>
+                                    <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">21</td>
+                                    <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">4</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="p-3 text-center bg-slate-50 border-t border-slate-200">
+                                        <button onclick="openModal()" class="whitespace-nowrap inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-md font-semibold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                                            New example
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <p class="text-center my-4 text-gray-400"></p>
+
+                <div class="tool-section bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-6">
+                    <div class="canvas-wrapper">
+                        <canvas id="canvas"></canvas>
+                    </div>
+
+                    <div class="controls flex flex-wrap items-center gap-4 mt-4">
+                        <div class="flex gap-2">
+                            <button class="btn-secondary" onclick="clearCanvas()">Clear</button>
+                            <button class="btn-primary" onclick="processStrokes()">Make Fence Diagram</button>
+                        </div>
+                        <div id="tally-container" class="text-slate-700 text-lg font-medium opacity-0 transition-opacity duration-300 w-full mt-2">
+                            I hope I've captured this accurately - I seem to have produced a diagram with <span id="tally-posts" class="font-bold text-slate-900">-</span> Posts, <span id="tally-segs" class="font-bold text-slate-900">-</span> Segments and <span id="tally-fields" class="font-bold text-slate-900">-</span> Fields. But don't believe me - check!
+                        </div>
+                    </div>
+
+                    <div id="status"></div>
+                </div>
+
 
                 <p class="font-bold text-blue-900">Can you help?</p>
             </div>
 
             <div class="hint-container">
-                <div class="hint-card" style="left: 5%; top: 20px; transform: rotate(-5deg);" onclick="this.classList.toggle('is-flipped')">
+                <div class="hint-card" style="transform: rotate(-3deg);" onclick="this.classList.toggle('is-flipped')">
                     <div class="hint-card-inner">
                         <div class="hint-front bg-[#a5f3fc] text-[#0e7490]">HINT</div>
                         <div class="hint-back">If you find you're stuck, it's always nice to draw more diagrams, and add more triplets of numbers you can stare at, and look for patterns in.</div>
                     </div>
                 </div>
 
-                <div class="hint-card" style="left: 35%; top: 50px; transform: rotate(3deg);" onclick="this.classList.toggle('is-flipped')">
-                    <div class="hint-card-inner">
-                        <div class="hint-front bg-[#bfdbfe] text-[#1d4ed8]">HINT</div>
-                        <div class="hint-back">which pairs of posts and fence-segment counts are impossible? what's common to all of the impossible ones? start with an impossible pair. what's the minimal change you need in the number of posts to make it possible? what's the minimal change in the number of fence segments? what's the number of fields you get when you make these two minimal changes?</div>
-                    </div>
-                </div>
-
-                <div class="hint-card" style="right: 5%; top: 10px; transform: rotate(-2deg);" onclick="this.classList.toggle('is-flipped')">
+                <div class="hint-card" style="transform: rotate(2deg);" onclick="this.classList.toggle('is-flipped')">
                     <div class="hint-card-inner">
                         <div class="hint-front bg-[#e9d5ff] text-[#7e22ce]">HINT</div>
                         <div class="hint-back">Think of ways you can modify a given diagram slightly - maybe adding a post, or adding a single fence segment. how does that affect the count?</div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8 overflow-hidden">
-            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
-                <p>
-                    You've discovered a version of very famous formula, discovered by the great mathematician Euler in the 18th century. Euler discovered that for any polyhedron, we have $V - E + F = 2$.
-                </p>
-
-                <p>
-                    <b class="text-blue-900">Can you prove Euler's formula from the rule you've discovered?</b>
-                </p>
-
-                <p>
-                    imagine the faces are somewhat transperent, remove the ceiling and add a lamp just above it. what would you get?
-                </p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
-                    <div class="solid-container p-4 flex flex-col items-center" id="box-cube">
-
-                        <div class="lamp-btn" onclick="toggleLight('cube')">
-                            <svg class="lamp-icon" viewBox="0 0 24 24">
-                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-                            </svg>
-                        </div>
-
-                        <div id="canvas-cube" class="canvas-wrapper"></div>
+                <div class="hint-card" style="transform: rotate(-1deg);" onclick="this.classList.toggle('is-flipped')">
+                    <div class="hint-card-inner">
+                        <div class="hint-front bg-[#bfdbfe] text-[#1d4ed8]">HINT</div>
+                        <div class="hint-back">which pairs of posts and fence-segment counts are impossible? what's common to all of the impossible ones? start with an impossible pair. what's the minimal change you need in the number of posts to make it possible? what's the minimal change in the number of fence segments? what's the number of fields you get when you make these two minimal changes?</div>
                     </div>
-
-                    <div class="solid-container p-4 flex flex-col items-center" id="box-octa">
-
-                        <div class="lamp-btn" onclick="toggleLight('octa')">
-                            <svg class="lamp-icon" viewBox="0 0 24 24">
-                                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-                            </svg>
-                        </div>
-
-                        <div id="canvas-octa" class="canvas-wrapper"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
-            <header>
-                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">The Only Five Solids</h2>
-            </header>
-
-            <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
-                <p>
-                    It was known since the time of the Greeks—and immortalized in the final book of Euclid's <i>Elements</i>—that there are only five possible regular convex solids. But for centuries, the proof relied on complex geometric arguments about interior angles and how they fold together in physical space.
-                </p>
-
-                <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 text-base italic text-slate-600">
-                    <p><b>Side Note on Topology:</b> Leonhard Euler's work marked a massive shift in mathematics. He showed that the precise "shape" (angles, lengths) often matters less than the "connectivity." This insight kicked off the field of <b>Topology</b>, where we treat shapes as if they are made of rubber, focusing on properties that don't change when you stretch them.</p>
-                </div>
-
-                <p>
-                    Euler realized that the regularity of these solids allowed for a beautiful counting proof. Let's see how he derived the <b>Master Equation</b> using only the numbers of parts:
-                </p>
-
-                <div class="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <p>1. In a platonic (or "regular") solid, every face has the same number of sides, $n$, and every vertex has the same number of edges, $m$. This is what it means to be a platonic solid, by definition. </p>
-                    <p>2. Since every edge is incident to precisely two faces and two vertices, we have $nF = 2E$ and $mV = 2E$.</p>
-                    <p>3. We solve for $F$ and $V$:
-                        $$F = \frac{2E}{n} \quad \text{and} \quad V = \frac{2E}{m}$$
-                    </p>
-                    <p>4. We plug these into Euler's formula ($V - E + F = 2$):
-                        $$\frac{2E}{m} - E + \frac{2E}{n} = 2$$
-                    </p>
-                    <p>5. We divide the whole thing by $2E$ and rearrange to get the <b>Master Equation</b>:
-                        $$\frac{1}{n} + \frac{1}{m} = \frac{1}{2} + \frac{1}{E}$$
-                    </p>
-                </div>
-
-                <p>
-                    Because the number of edges $E$ must be a positive integer, the term $\frac{1}{E}$ is always greater than zero. This implies that for a regular solid to exist, the sum $\frac{1}{n} + \frac{1}{m}$ must be <b>strictly greater than $1/2$</b>.
-                </p>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-slate-500 border-collapse">
-                        <thead class="text-xs text-slate-700 uppercase bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 border">Sides per Face ($n$)</th>
-                                <th class="px-4 py-3 border">At Vertex ($m$)</th>
-                                <th class="px-4 py-3 border">Calculation</th>
-                                <th class="px-4 py-3 border">Conclusion</th>
-                            </tr>
-                        </thead>
-                        <tbody class="todo-block">
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border">$1/3 + 1/3 = 2/3 > 1/2$</td>
-                                <td class="px-4 py-3 border font-bold text-green-600 italic">Possible (Tetrahedron)</td>
-                            </tr>
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-center font-bold">4</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                            </tr>
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-center font-bold">5</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                            </tr>
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">4</td>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                            </tr>
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">5</td>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                            </tr>
-                            <tr>
-                                <td class="px-4 py-3 border text-center font-bold">6</td>
-                                <td class="px-4 py-3 border text-center font-bold">3</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                                <td class="px-4 py-3 border text-slate-400">...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="todo-block p-4 rounded-lg border border-slate-300 text-sm mt-8">
-                    TODO: consider making the table interactive with sliders to control the paramters and showing the appropriate solid when the master equation is fulfilled
                 </div>
             </div>
         </section>
     </div>
 
+    <div id="modal-overlay" class="modal-overlay fixed inset-0 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm mx-4 transform transition-all">
+            <div class="space-y-3">
+                <div>
+                    <input type="number" id="in-posts" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Posts">
+                </div>
+                <div>
+                    <input type="number" id="in-segments" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Segments">
+                </div>
+                <div>
+                    <input type="number" id="in-fields" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Fields">
+                </div>
+            </div>
+
+            <div id="modal-error" class="text-red-600 font-bold text-sm mt-3 hidden bg-red-50 p-2 rounded">
+                Are you sure you counted correctly, and followed all the rules?
+            </div>
+
+            <div class="flex gap-3 mt-6 justify-end">
+                <button onclick="addEntry()" class="px-4 py-2 bg-blue-600 text-white rounded font-medium text-sm hover:bg-blue-700 shadow-sm">Add</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const quizSolutions = {
-            1: true,  // Connected
-            2: false, // Disconnected
-            3: true   // Connected (Tricky)
-        };
+        // --- QUIZ LOGIC ---
+        const quizSolutions = { 1: true, 2: false, 3: true };
 
         function checkAnswer(id, userChoiceIsConnected) {
             const isCorrect = userChoiceIsConnected === quizSolutions[id];
@@ -621,295 +607,344 @@
             const feedback = card.querySelector('.q-feedback');
             const buttons = card.querySelectorAll('button');
 
-            // Provide visual feedback
             if (isCorrect) {
                 feedback.textContent = "Correct!";
                 feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-green-600 block";
                 card.classList.add('border-green-300', 'bg-green-50');
-
-                // Disable buttons
-                buttons.forEach(btn => {
-                    btn.disabled = true;
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
-                });
-
-                // Unlock next question if it exists
-                const nextId = id + 1;
-                const nextCard = document.getElementById(`q${nextId}`);
-                if (nextCard) {
-                    setTimeout(() => {
-                        nextCard.classList.remove('quiz-locked');
-                    }, 500);
-                }
+                buttons.forEach(btn => { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); });
             } else {
                 feedback.textContent = "Not quite. Look closer at the lines.";
                 feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-red-600 block";
-
-                // Shake effect (simple css toggle)
                 card.style.transform = "translateX(5px)";
                 setTimeout(() => card.style.transform = "translateX(0)", 100);
                 setTimeout(() => card.style.transform = "translateX(-5px)", 200);
                 setTimeout(() => card.style.transform = "translateX(0)", 300);
             }
         }
-    </script>
 
-    <script>
-        // Global references to lights to toggle them
-        const scenes = {
-            cube: { light: null, isActive: false },
-            octa: { light: null, isActive: false }
-        };
+        // --- INTERACTIVE DIAGRAM LOGIC (STEP 2) ---
+        const state = { trident: { found1: false, found2: false } };
 
-        function initScene(containerId, type) {
+        function handleFixClick(event, type, containerId) {
             const container = document.getElementById(containerId);
-            const width = container.clientWidth;
-            const height = container.clientHeight;
+            if (container.classList.contains('solved')) return;
 
-            // Scene & Camera
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xfcfcfc); // Match CSS background
-            scene.fog = new THREE.Fog(0xfcfcfc, 10, 50);
+            const svg = container.querySelector('.diagram-svg');
+            let point = svg.createSVGPoint();
+            point.x = event.clientX;
+            point.y = event.clientY;
+            let svgP = point.matrixTransform(svg.getScreenCTM().inverse());
 
-            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-            camera.position.set(0, 5, 8);
-            camera.lookAt(0, 0, 0);
+            let success = false, snapX, snapY;
 
-            // Renderer
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(width, height);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            container.appendChild(renderer.domElement);
-
-            // Controls
-            let userInteracted = false;
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2 - 0.1; // Prevent going below ground
-
-            // Stop auto-rotation when user interacts
-            controls.addEventListener('start', () => {
-                userInteracted = true;
-            });
-
-            // Ground Plane (Receives Shadow)
-            const planeGeometry = new THREE.PlaneGeometry(100, 100);
-            const planeMaterial = new THREE.MeshStandardMaterial({
-                color: 0xdcfce7, // Match grass color
-                roughness: 0.8,
-                metalness: 0.1,
-                side: THREE.DoubleSide
-            });
-            const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            plane.rotation.x = -Math.PI / 2;
-            plane.position.y = -2;
-            plane.receiveShadow = true;
-            scene.add(plane);
-
-            // Object Construction
-            const group = new THREE.Group();
-
-            let vertices = [];
-            let edges = [];
-            let facesIndices = [];
-
-            if (type === 'cube') {
-                // Cube vertices
-                // Remove top face (y=1)
-                vertices = [
-                    [-1, -1, 1], [1, -1, 1], [1, -1, -1], [-1, -1, -1], // Bottom ring
-                    [-1, 1, 1], [1, 1, 1], [1, 1, -1], [-1, 1, -1]      // Top ring
-                ];
-                // Connect edges manually for control
-                edges = [
-                    [0,1], [1,2], [2,3], [3,0], // Bottom
-                    [4,5], [5,6], [6,7], [7,4], // Top
-                    [0,4], [1,5], [2,6], [3,7]  // Vertical
-                ];
-                // Face indices for transparent mesh (triangulated)
-                // Bottom, Front, Right, Back, Left. NO TOP.
-                facesIndices = [
-                    0,1,2, 0,2,3, // Bottom
-                    0,4,5, 0,5,1, // Front
-                    1,5,6, 1,6,2, // Right
-                    2,6,7, 2,7,3, // Back
-                    3,7,4, 3,4,0  // Left
-                ];
-            } else if (type === 'octa') {
-                // Octahedron resting on a face (Triangular Antiprism style)
-                // Remove top face
-                const r = 1.5;
-                const h = 1.2;
-                // Top Triangle (y=h) - Rotated 0, 120, 240
-                const t0 = [r*Math.cos(0), h, r*Math.sin(0)];
-                const t1 = [r*Math.cos(2*Math.PI/3), h, r*Math.sin(2*Math.PI/3)];
-                const t2 = [r*Math.cos(4*Math.PI/3), h, r*Math.sin(4*Math.PI/3)];
-
-                // Bottom Triangle (y=-h) - Rotated 60, 180, 300
-                const b0 = [r*Math.cos(Math.PI/3), -h, r*Math.sin(Math.PI/3)];
-                const b1 = [r*Math.cos(Math.PI), -h, r*Math.sin(Math.PI)];
-                const b2 = [r*Math.cos(5*Math.PI/3), -h, r*Math.sin(5*Math.PI/3)];
-
-                vertices = [t0, t1, t2, b0, b1, b2]; // 0,1,2 top; 3,4,5 bottom
-
-                // Edges: Top Ring, Bottom Ring, ZigZag
-                edges = [
-                    [0,1], [1,2], [2,0], // Top ring
-                    [3,4], [4,5], [5,3], // Bottom ring
-                    [0,3], [0,5], // Top 0 connects to Bot 3, 5
-                    [1,3], [1,4], // Top 1 connects to Bot 3, 4
-                    [2,4], [2,5]  // Top 2 connects to Bot 4, 5
-                ];
-
-                // Faces: Bottom (1), Sides (6). Remove Top (0,1,2).
-                facesIndices = [
-                    3,5,4, // Bottom (order for normal down/out)
-                    0,3,5, // Side
-                    0,5,2, // Side
-                    2,5,4, // Side
-                    2,4,1, // Side
-                    1,4,3, // Side
-                    1,3,0  // Side
-                ];
-            }
-
-            // Material Settings
-            const edgeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 });
-            if(type === 'octa') edgeMat.color.setHex(0xa855f7);
-
-            // Create Edges (Thinner: radius 0.016)
-            edges.forEach(pair => {
-                const v1 = new THREE.Vector3(...vertices[pair[0]]);
-                const v2 = new THREE.Vector3(...vertices[pair[1]]);
-                const distance = v1.distanceTo(v2);
-                const cylinder = new THREE.CylinderGeometry(0.016, 0.016, distance, 8); // Approx 1/3 of previous 0.05
-                const mesh = new THREE.Mesh(cylinder, edgeMat);
-
-                // Position and Rotate Cylinder
-                const mid = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
-                mesh.position.copy(mid);
-                mesh.lookAt(v2);
-                mesh.rotateX(Math.PI / 2);
-                mesh.castShadow = true;
-                group.add(mesh);
-            });
-
-            // Create Vertices (Spheres)
-            // Radius increased to 0.1 (approx 3x larger than 0.033)
-            const vertexGeo = new THREE.SphereGeometry(0.1, 16, 16);
-            vertices.forEach(v => {
-                const mesh = new THREE.Mesh(vertexGeo, edgeMat);
-                mesh.position.set(...v);
-                mesh.castShadow = true;
-                group.add(mesh);
-            });
-
-            // Create Transparent Faces
-            const geom = new THREE.BufferGeometry();
-            const positions = [];
-            vertices.forEach(v => positions.push(...v));
-            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            geom.setIndex(facesIndices);
-            geom.computeVertexNormals();
-
-            const faceMat = new THREE.MeshPhongMaterial({
-                color: type === 'cube' ? 0x60a5fa : 0xc084fc,
-                transparent: true,
-                opacity: 0.15,
-                side: THREE.DoubleSide,
-                shininess: 100
-            });
-            const faceMesh = new THREE.Mesh(geom, faceMat);
-            // Faces do NOT cast shadow, letting light pass through to form the graph
-            faceMesh.castShadow = false;
-            faceMesh.receiveShadow = false;
-            group.add(faceMesh);
-
-            scene.add(group);
-
-            // Lights
-            // Ambient light (soft fill)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
-            // The Projection Lamp (PointLight)
-            // Positioned centrally above the "missing face" (top)
-            const lamp = new THREE.PointLight(0xfde047, 0, 100); // Start intensity 0
-            lamp.position.set(0, 1.5, 0); // Just inside/above top face
-            lamp.castShadow = true;
-            lamp.shadow.mapSize.width = 1024;
-            lamp.shadow.mapSize.height = 1024;
-            lamp.shadow.bias = -0.001; // Reduce artifacts
-            scene.add(lamp);
-
-            // Store ref
-            scenes[type].light = lamp;
-
-            // Helper for the lamp position (Visual glowing orb)
-            const bulbGeo = new THREE.SphereGeometry(0.2, 16, 16);
-            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-            bulb.position.copy(lamp.position);
-            scene.add(bulb);
-
-            // Animation Loop
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-
-                // Slow rotation until first interaction
-                if(!userInteracted) {
-                    group.rotation.y += 0.002;
+            if (type === 'trident') {
+                if (!state.trident.found1 && Math.hypot(svgP.x - 20, svgP.y - 20) < 15) { success = true; snapX = 20; snapY = 20; state.trident.found1 = true; }
+                else if (!state.trident.found2 && Math.hypot(svgP.x - 100, svgP.y - 20) < 15) { success = true; snapX = 100; snapY = 20; state.trident.found2 = true; }
+            } else if (type === 'envelope') {
+                if (Math.hypot(svgP.x - 60, svgP.y - 50) < 15) { success = true; snapX = 60; snapY = 50; }
+            } else if (type === 'circle') {
+                if (Math.hypot(svgP.x - 60, svgP.y - 50) > 20 && Math.hypot(svgP.x - 60, svgP.y - 50) < 40) {
+                    success = true;
+                    const angle = Math.atan2(svgP.y - 50, svgP.x - 60);
+                    snapX = 60 + 30 * Math.cos(angle);
+                    snapY = 50 + 30 * Math.sin(angle);
                 }
-
-                renderer.render(scene, camera);
             }
-            animate();
 
-            // Handle Resize
-            window.addEventListener('resize', () => {
-                const w = container.clientWidth;
-                const h = container.clientHeight;
-                renderer.setSize(w, h);
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-            });
+            if (success) {
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", snapX); dot.setAttribute("cy", snapY); dot.setAttribute("r", "3.5"); dot.setAttribute("fill", "black");
+                svg.appendChild(dot);
+                if (type === 'trident') { if (state.trident.found1 && state.trident.found2) container.classList.add('solved'); }
+                else { container.classList.add('solved'); }
+            } else {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-popup'; errorDiv.textContent = 'X Try again';
+                errorDiv.style.left = event.clientX + 'px'; errorDiv.style.top = (event.clientY - 20) + 'px';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => { errorDiv.remove(); }, 1000);
+            }
         }
 
-        function toggleLight(type) {
-            const container = document.getElementById(type === 'cube' ? 'box-cube' : 'box-octa');
-            container.classList.toggle('lit');
+        // --- TABLE / MODAL LOGIC ---
+        const modal = document.getElementById('modal-overlay');
+        const modalError = document.getElementById('modal-error');
+        const inPosts = document.getElementById('in-posts');
+        const inSegments = document.getElementById('in-segments');
+        const inFields = document.getElementById('in-fields');
+        const tableBody = document.querySelector('#stats-table tbody');
 
-            const isLit = container.classList.contains('lit');
-            scenes[type].isActive = isLit;
+        function openModal() {
+            modal.classList.remove('hidden');
+            inPosts.value = ''; inSegments.value = ''; inFields.value = '';
+            modalError.classList.add('hidden');
+        }
+        function closeModal() { modal.classList.add('hidden'); }
 
-            // Animate light intensity
-            const target = isLit ? 1.5 : 0;
-            const light = scenes[type].light;
+        function addEntry() {
+            const v = parseInt(inPosts.value) || 0;
+            const e = parseInt(inSegments.value) || 0;
+            const f = parseInt(inFields.value) || 0;
 
-            // Simple GSAP-like tween
-            let start = light.intensity;
-            let startTime = null;
-            function fade(time) {
-                if (!startTime) startTime = time;
-                let progress = (time - startTime) / 500; // 500ms duration
-                if (progress > 1) progress = 1;
-
-                light.intensity = start + (target - start) * progress;
-
-                if (progress < 1) requestAnimationFrame(fade);
+            if (v - e + f === 1) {
+                const row = document.createElement('tr');
+                row.className = 'border-b last:border-0 border-slate-200';
+                row.innerHTML = `
+                    <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">${v}</td>
+                    <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">${e}</td>
+                    <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">${f}</td>
+                `;
+                tableBody.appendChild(row);
+                closeModal();
+            } else {
+                modalError.classList.remove('hidden');
             }
-            requestAnimationFrame(fade);
+        }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        // --- SKETCHING TOOL LOGIC ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        // Resize logic specific to tool canvas
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const { width, height } = entry.contentRect;
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width; canvas.height = height;
+                    if (strokes.length > 0) redrawRawStrokes();
+                }
+            }
+        });
+        resizeObserver.observe(canvas.parentElement);
+
+        const EPSILON = 1e-9;
+        function dist(p1, p2) { return Math.hypot(p1[0] - p2[0], p1[1] - p2[1]); }
+        function getIntersection(p0, p1, p2, p3) {
+            const s1_x = p1[0] - p0[0], s1_y = p1[1] - p0[1];
+            const s2_x = p3[0] - p2[0], s2_y = p3[1] - p2[1];
+            const denom = -s2_x * s1_y + s1_x * s2_y;
+            if (Math.abs(denom) < EPSILON) return null;
+            const s = (-s1_y * (p0[0] - p2[0]) + s1_x * (p0[1] - p2[1])) / denom;
+            const t = ( s2_x * (p0[1] - p2[1]) - s2_y * (p0[0] - p2[0])) / denom;
+            if (s >= 0 && s <= 1 && t >= 0 && t <= 1) return { point: [p0[0] + (t * s1_x), p0[1] + (t * s1_y)], tA: t, tB: s };
+            return null;
         }
 
-        // Initialize on Load
-        window.addEventListener('DOMContentLoaded', () => {
-            initScene('canvas-cube', 'cube');
-            initScene('canvas-octa', 'octa');
+        class IntersectionGraphBuilder {
+            constructor() { this.intersectionsMap = new Map(); }
+            getSegKey(sIdx, pIdx) { return `${sIdx}:${pIdx}`; }
+            addIntersection(sIdx, pIdx, point, t) {
+                const key = this.getSegKey(sIdx, pIdx);
+                if (!this.intersectionsMap.has(key)) this.intersectionsMap.set(key, []);
+                const list = this.intersectionsMap.get(key);
+                if (!list.some(i => Math.abs(i.t - t) < 1e-7)) list.push({ point, t });
+            }
+            build(strokes) {
+                this.intersectionsMap.clear();
+                strokes.forEach(stroke => {
+                    const d = dist(stroke.points[0], stroke.points[stroke.points.length - 1]);
+                    stroke.isLoop = d < 10.0;
+                    if (stroke.isLoop && d > EPSILON) stroke.points.push([...stroke.points[0]]);
+                });
+                for (let i = 0; i < strokes.length; i++) {
+                    for (let j = i; j < strokes.length; j++) {
+                        const sA = strokes[i], sB = strokes[j];
+                        for (let idxA = 0; idxA < sA.points.length - 1; idxA++) {
+                            const startB = (i === j) ? idxA + 1 : 0;
+                            for (let idxB = startB; idxB < sB.points.length - 1; idxB++) {
+                                if (i === j && Math.abs(idxA - idxB) < 2) continue;
+                                const res = getIntersection(sA.points[idxA], sA.points[idxA+1], sB.points[idxB], sB.points[idxB+1]);
+                                if (res) {
+                                    this.addIntersection(i, idxA, res.point, res.tA);
+                                    this.addIntersection(j, idxB, res.point, res.tB);
+                                }
+                            }
+                        }
+                    }
+                }
+                const fenceSegments = [];
+                strokes.forEach((stroke, sIdx) => {
+                    let q = [];
+                    if (stroke.isLoop) {
+                        let cutInfo = null;
+                        for (let i = 0; i < stroke.points.length - 1; i++) {
+                            const key = this.getSegKey(sIdx, i);
+                            if (this.intersectionsMap.has(key)) {
+                                const inters = this.intersectionsMap.get(key).sort((a,b) => a.t - b.t);
+                                cutInfo = { segIdx: i, t: inters[0].t, pt: inters[0].point }; break;
+                            }
+                        }
+                        if (cutInfo) {
+                            const k = cutInfo.segIdx, tCut = cutInfo.t;
+                            q.push({ segIdx: k, pStart: cutInfo.pt, pEnd: stroke.points[k+1], minT: tCut, maxT: 1.0 });
+                            for (let i = k + 1; i < stroke.points.length - 1; i++) q.push({ segIdx: i, pStart: stroke.points[i], pEnd: stroke.points[i+1], minT: 0, maxT: 1 });
+                            for (let i = 0; i < k; i++) q.push({ segIdx: i, pStart: stroke.points[i], pEnd: stroke.points[i+1], minT: 0, maxT: 1 });
+                            q.push({ segIdx: k, pStart: stroke.points[k], pEnd: cutInfo.pt, minT: 0.0, maxT: tCut });
+                        } else { q = this.getStandardQueue(stroke); }
+                    } else { q = this.getStandardQueue(stroke); }
+                    let currSeg = [q[0].pStart];
+                    q.forEach((task, taskIdx) => {
+                        const key = this.getSegKey(sIdx, task.segIdx);
+                        let cuts = [];
+                        if (this.intersectionsMap.has(key)) {
+                            cuts = this.intersectionsMap.get(key).filter(c => c.t > task.minT + EPSILON && c.t < task.maxT - EPSILON).sort((a, b) => a.t - b.t);
+                        }
+                        cuts.forEach(cut => { currSeg.push(cut.point); fenceSegments.push(currSeg); currSeg = [cut.point]; });
+                        const isPureLoop = stroke.isLoop && taskIdx === q.length -1;
+                        if (!isPureLoop) currSeg.push(task.pEnd);
+                    });
+                    if (currSeg.length > 1) fenceSegments.push(currSeg);
+                });
+                const posts = new Set(); const postArr = [];
+                fenceSegments.forEach(seg => {
+                    [seg[0], seg[seg.length-1]].forEach(p => {
+                        const k = `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+                        if(!posts.has(k)) { posts.add(k); postArr.push({id: k, pt: p}); }
+                    });
+                });
+                return { segments: fenceSegments, posts: postArr };
+            }
+            getStandardQueue(stroke) {
+                const q = [];
+                for (let i = 0; i < stroke.points.length - 1; i++) q.push({ segIdx: i, pStart: stroke.points[i], pEnd: stroke.points[i+1], minT: 0, maxT: 1 });
+                return q;
+            }
+        }
+
+        let strokes = []; let isDrawing = false; let currentPoints = [];
+        const tallyPosts = document.getElementById('tally-posts');
+        const tallySegs = document.getElementById('tally-segs');
+        const tallyFields = document.getElementById('tally-fields');
+        const tallyContainer = document.getElementById('tally-container');
+        const statusDiv = document.getElementById('status');
+        const PALETTE = [[255, 179, 186], [255, 223, 186], [255, 255, 186], [186, 255, 201], [186, 225, 255], [209, 186, 255], [255, 192, 203], [176, 224, 230], [240, 230, 140], [221, 160, 221]];
+
+        function getCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            return [
+                (e.clientX - rect.left) * (canvas.width / rect.width),
+                (e.clientY - rect.top) * (canvas.height / rect.height)
+            ];
+        }
+
+        canvas.addEventListener('pointerdown', e => { 
+            if (e.pointerType === 'touch') e.preventDefault();
+            isDrawing = true; 
+            canvas.setPointerCapture(e.pointerId);
+            currentPoints = [getCoords(e)]; 
         });
 
+        canvas.addEventListener('pointermove', e => {
+            if (isDrawing) {
+                if (e.pointerType === 'touch') e.preventDefault();
+                currentPoints.push(getCoords(e));
+                redrawRawStrokes();
+                ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#333';
+                ctx.beginPath();
+                ctx.moveTo(currentPoints[0][0], currentPoints[0][1]);
+                for(let i=1; i<currentPoints.length; i++) ctx.lineTo(currentPoints[i][0], currentPoints[i][1]);
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('pointerup', e => {
+            isDrawing = false;
+            canvas.releasePointerCapture(e.pointerId);
+            if(currentPoints.length > 2) {
+                const sim = currentPoints.filter((_, i) => i % 2 === 0);
+                strokes.push({ points: sim, isLoop: false });
+            }
+            currentPoints = []; resetTally(); redrawRawStrokes();
+        });
+
+        function resetTally() { tallyContainer.classList.remove('opacity-100'); tallyContainer.classList.add('opacity-0'); statusDiv.textContent = ""; }
+        function clearCanvas() { strokes = []; resetTally(); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function redrawRawStrokes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2; ctx.strokeStyle = '#333';
+            strokes.forEach(s => {
+                ctx.beginPath();
+                if(s.points.length) ctx.moveTo(s.points[0][0], s.points[0][1]);
+                s.points.forEach(p => ctx.lineTo(p[0], p[1]));
+                ctx.stroke();
+            });
+        }
+
+        function processStrokes() {
+            if (strokes.length === 0) return;
+            try {
+                const builder = new IntersectionGraphBuilder();
+                const strokeCopy = JSON.parse(JSON.stringify(strokes));
+                const topo = builder.build(strokeCopy);
+                tallyPosts.textContent = topo.posts.length;
+                tallySegs.textContent = topo.segments.length;
+                drawSegmentsForRaster(topo.segments);
+                const fieldCount = performFloodFill();
+                tallyFields.textContent = fieldCount;
+                drawPosts(topo.posts);
+                statusDiv.textContent = "";
+                tallyContainer.classList.remove('opacity-0');
+                tallyContainer.classList.add('opacity-100');
+            } catch (e) { console.error(e); statusDiv.textContent = e.message; }
+        }
+
+        function drawSegmentsForRaster(segments) {
+            ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#000000';
+            segments.forEach(seg => {
+                ctx.beginPath();
+                ctx.moveTo(seg[0][0], seg[0][1]);
+                for(let j=1; j<seg.length; j++) ctx.lineTo(seg[j][0], seg[j][1]);
+                ctx.stroke();
+            });
+        }
+        function drawPosts(posts) {
+            ctx.fillStyle = 'black';
+            posts.forEach(p => { ctx.beginPath(); ctx.arc(p.pt[0], p.pt[1], 4, 0, Math.PI*2); ctx.fill(); });
+        }
+        function performFloodFill() {
+            const width = canvas.width; const height = canvas.height;
+            const imgData = ctx.getImageData(0, 0, width, height); const data = imgData.data;
+            const visited = new Int32Array(width * height).fill(0);
+            for (let i = 0; i < width * height; i++) { const r = data[i*4]; if (r < 128) visited[i] = -1; }
+            const queue = new Int32Array(width * height);
+            function flood(sx, sy, id) {
+                let head = 0, tail = 0; const startIdx = sy * width + sx;
+                if (visited[startIdx] !== 0) return false;
+                queue[tail++] = startIdx; visited[startIdx] = id; let count = 0;
+                while (head < tail) {
+                    const idx = queue[head++]; count++;
+                    const cx = idx % width; const cy = (idx / width) | 0;
+                    const nUp = idx - width, nDown = idx + width, nLeft = idx - 1, nRight = idx + 1;
+                    if (cy > 0 && visited[nUp] === 0) { visited[nUp] = id; queue[tail++] = nUp; }
+                    if (cy < height-1 && visited[nDown] === 0) { visited[nDown] = id; queue[tail++] = nDown; }
+                    if (cx > 0 && visited[nLeft] === 0) { visited[nLeft] = id; queue[tail++] = nLeft; }
+                    if (cx < width-1 && visited[nRight] === 0) { visited[nRight] = id; queue[tail++] = nRight; }
+                }
+                return count > 20;
+            }
+            flood(0, 0, 1);
+            let fieldsFound = 0;
+            for (let y = 0; y < height; y+=2) {
+                for (let x = 0; x < width; x+=2) {
+                    const idx = y * width + x;
+                    if (visited[idx] === 0) {
+                        const regionId = fieldsFound + 2;
+                        if (flood(x, y, regionId)) { fieldsFound++; }
+                    }
+                }
+            }
+            for (let i = 0; i < width * height; i++) {
+                const id = visited[i];
+                if (id > 1) {
+                    const col = PALETTE[(id - 2) % PALETTE.length];
+                    data[i*4] = col[0]; data[i*4+1] = col[1]; data[i*4+2] = col[2];
+                } else if (id === 1) { data[i*4] = 255; data[i*4+1] = 255; data[i*4+2] = 255; }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            return fieldsFound;
+        }
     </script>
 </body>
 </html>
