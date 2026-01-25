@@ -5,6 +5,7 @@ They're designed for kids in their early teens. Some of them are part
 of an escape-room-like game, but they can each be done independently.
 
 ## TOC
+- [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
 - [Discover Euler's Beautiful Formula](euler.html)
 - [Prove There Are Only Five Regular Solids](only_five.html) - continues where the previous formula left off.
 - [Locate Your Stranded Boat](tutorial.html)
