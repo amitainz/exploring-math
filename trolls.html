@@ -324,6 +324,8 @@
         // State variables
         let activeTroll = null;
         let currentInput = "";
+        let hasPlayedLeft = false;
+        let hasPlayedRight = false;
 
         document.addEventListener("DOMContentLoaded", function() {
             generateTimeline();
@@ -421,6 +423,10 @@
 
             btnLeft.addEventListener('click', () => {
                 clearSelection();
+                if (!hasPlayedLeft) {
+                    new Audio('troll_1_every_4.mp3').play();
+                    hasPlayedLeft = true;
+                }
                 activeTroll = 'purple';
                 btnLeft.classList.add('selected');
                 txtLeft.classList.add('alive');
@@ -428,6 +434,10 @@
 
             btnRight.addEventListener('click', () => {
                 clearSelection();
+                if (!hasPlayedRight) {
+                    new Audio('troll_2_every_3.mp3').play();
+                    hasPlayedRight = true;
+                }
                 activeTroll = 'green';
                 btnRight.classList.add('selected');
                 txtRight.classList.add('alive');
