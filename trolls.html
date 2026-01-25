@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Troll Time(s) Table</title>
+    <title>Troll Time(s) Table & Gates</title>
     <style>
         body {
             font-family: monospace;
@@ -19,7 +19,7 @@
             color: #333;
         }
 
-        /* The main scrollable container */
+        /* --- TIMELINE STYLES --- */
         .container {
             display: flex;
             flex-direction: row;
@@ -29,20 +29,19 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             width: fit-content;
-            min-height: 120px; /* Ensure box has height even if empty */
+            min-height: 120px;
+            margin-bottom: 40px; /* Space between timeline and panels */
         }
 
-        /* Each vertical minute column */
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-right: 3px;
             width: 25px;
-            flex-shrink: 0; /* Prevent squishing */
+            flex-shrink: 0;
         }
 
-        /* The Rotated Time Label */
         .label {
             height: 50px;
             width: 25px;
@@ -61,7 +60,6 @@
             color: #555;
         }
 
-        /* The Squares */
         .square {
             width: 20px;
             height: 20px;
@@ -71,32 +69,79 @@
             transition: all 0.2s;
         }
 
-        /* Active Colors */
         .purple-active {
-            background-color: #9b59b6 !important; /* Purple */
+            background-color: #9b59b6 !important;
             border-color: #8e44ad;
         }
 
         .green-active {
-            background-color: #2ecc71 !important; /* Bright Green */
+            background-color: #2ecc71 !important;
             border-color: #27ae60;
         }
 
-        /* Hover Effect for clarity */
-        .column:hover .square {
-            border-color: #333;
+        .column:hover .square { border-color: #333; }
+        .column:hover .label span { color: #000; font-weight: bold; }
+
+        #loading-msg { padding: 20px; color: #777; font-style: italic; }
+
+        /* --- NEW PANEL STYLES --- */
+        .panels-wrapper {
+            display: flex;
+            gap: 20px; /* Space between the two panels */
+            max-width: 800px;
         }
-        .column:hover .label span {
-            color: #000;
+
+        .troll-panel {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .troll-btn {
+            padding: 10px 20px;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #333;
+            background: #fff;
+            margin-bottom: 15px;
+            transition: background 0.2s;
             font-weight: bold;
         }
 
-        /* Helper for if JS is disabled */
-        #loading-msg {
-            padding: 20px;
-            color: #777;
-            font-style: italic;
+        .troll-btn:hover {
+            background: #eee;
         }
+
+        /* Specific colors for the buttons to match the timeline */
+        #btn-left { border-color: #9b59b6; color: #9b59b6; }
+        #btn-left:hover { background-color: #f5eef7; }
+
+        #btn-right { border-color: #2ecc71; color: #27ae60; }
+        #btn-right:hover { background-color: #eafaf1; }
+
+        .troll-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+
+            /* The Fade Logic */
+            opacity: 0.2; /* Initially faded */
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none; /* Prevents selecting text when faded */
+        }
+
+        .troll-text.alive {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
     </style>
 </head>
 <body>
@@ -109,65 +154,87 @@
 
     <div class="container" id="timeline">
         <div id="loading-msg">
-            Loading timeline... <br>
-            (If this text remains, JavaScript is disabled in your viewer. Please open this file in a web browser.)
+            Loading timeline...
+        </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #ccc; margin: 30px 0;">
+
+    <div class="panels-wrapper">
+        <div class="troll-panel">
+            <button id="btn-left" class="troll-btn">Left Troll (Purple)</button>
+            <div id="text-left" class="troll-text">
+                <strong>The Purple Gate Keeper:</strong><br><br>
+                "I open my gate every 3 minutes. I am mischievous and impatient. If you miss my window, I might lock it for an hour!"
+            </div>
+        </div>
+
+        <div class="troll-panel">
+            <button id="btn-right" class="troll-btn">Right Troll (Green)</button>
+            <div id="text-right" class="troll-text">
+                <strong>The Green Gate Keeper:</strong><br><br>
+                "I open my gate every 4 minutes. I am slow and steady. I prefer apples to gold, and I smell like moss."
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // --- 1. GENERATE TIMELINE (Your original code) ---
             const container = document.getElementById('timeline');
-
-            // Clear the loading message
             container.innerHTML = '';
 
-            // Loop from minute 0 (4:00) to minute 60 (5:00)
             for (let i = 0; i <= 60; i++) {
-
-                // 1. Create Column
                 const col = document.createElement('div');
                 col.className = 'column';
 
-                // 2. Create Time Label
                 const labelDiv = document.createElement('div');
                 labelDiv.className = 'label';
                 const labelSpan = document.createElement('span');
 
-                // Calculate time
                 let hour = 4;
                 let minute = i;
-                if (i === 60) {
-                    hour = 5;
-                    minute = 0;
-                }
-                // Pad minute with leading zero (e.g., 4:05)
+                if (i === 60) { hour = 5; minute = 0; }
                 const timeStr = `${hour}:${minute.toString().padStart(2, '0')}`;
 
                 labelSpan.innerText = timeStr;
                 labelDiv.appendChild(labelSpan);
                 col.appendChild(labelDiv);
 
-                // 3. Top Row Square (Every 3 minutes -> Purple)
                 const square1 = document.createElement('div');
                 square1.className = 'square';
-                // Starts at 4:00 (i=0), then 4:03 (i=3), etc.
-                if (i % 3 === 0) {
-                    square1.classList.add('purple-active');
-                }
+                if (i % 3 === 0) square1.classList.add('purple-active');
                 col.appendChild(square1);
 
-                // 4. Bottom Row Square (Every 4 minutes -> Green)
                 const square2 = document.createElement('div');
                 square2.className = 'square';
-                // Starts at 4:00 (i=0), then 4:04 (i=4), etc.
-                if (i % 4 === 0) {
-                    square2.classList.add('green-active');
-                }
+                if (i % 4 === 0) square2.classList.add('green-active');
                 col.appendChild(square2);
 
-                // Add column to timeline
                 container.appendChild(col);
             }
+
+            // --- 2. HANDLE TROLL INTERACTION (New code) ---
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const txtLeft = document.getElementById('text-left');
+            const txtRight = document.getElementById('text-right');
+
+            // Function to activate Left
+            btnLeft.addEventListener('click', function() {
+                // Make Left Alive
+                txtLeft.classList.add('alive');
+                // Make Right Faded
+                txtRight.classList.remove('alive');
+            });
+
+            // Function to activate Right
+            btnRight.addEventListener('click', function() {
+                // Make Right Alive
+                txtRight.classList.add('alive');
+                // Make Left Faded
+                txtLeft.classList.remove('alive');
+            });
         });
     </script>
 </body>
