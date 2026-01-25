@@ -289,6 +289,7 @@
                 At what times can I make a run for it?
             </div>
             <button id="btn-done" class="troll-btn" style="margin-top: 15px; border-color: #333; color: #333;">All done</button>
+            <div id="done-error" style="color: red; font-size: 11px; margin-top: 5px; min-height: 15px; text-align: center;"></div>
         </div>
 
     </div>
@@ -414,6 +415,7 @@
                 txtRight.classList.remove('alive');
                 txtCenter.classList.remove('alive');
 
+                document.getElementById('done-error').innerText = "";
                 resetDisplay();
             }
 
@@ -471,6 +473,8 @@
         // --- VICTORY LOGIC ---
         function setupVictory() {
             const overlay = document.getElementById('victory-overlay');
+            const errDiv = document.getElementById('done-error');
+
             document.getElementById('btn-done').addEventListener('click', () => {
                 const targets = [0, 12, 24, 36, 48];
                 const allFound = targets.every(t => {
@@ -480,6 +484,12 @@
 
                 if (allFound) {
                     overlay.style.display = 'flex';
+                    errDiv.innerText = "";
+                } else {
+                    errDiv.innerText = "there's at least one opportunity to make a run for it which you've missed";
+                    errDiv.classList.remove('shuddering');
+                    void errDiv.offsetWidth;
+                    errDiv.classList.add('shuddering');
                 }
             });
             overlay.addEventListener('click', () => { overlay.style.display = 'none'; });
@@ -534,6 +544,7 @@
                             highlight.className = 'column-highlight';
                             col.appendChild(highlight);
                         }
+                        document.getElementById('done-error').innerText = "";
 
                         col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         isCorrect = true;
