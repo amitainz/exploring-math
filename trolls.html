@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Troll Time(s) Table - Interactive</title>
+    <title>Troll Time(s) Table - Keyboard Support</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
     <style>
@@ -69,7 +69,6 @@
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        /* Logic: These classes are added via JS now */
         .purple-active {
             background-color: #9b59b6 !important;
             border-color: #8e44ad;
@@ -143,7 +142,7 @@
 
         .digital-display {
             background-color: #000;
-            color: #0f0; /* Retro Green */
+            color: #0f0;
             font-family: 'Orbitron', sans-serif;
             font-size: 32px;
             padding: 10px 20px;
@@ -153,9 +152,9 @@
             text-align: center;
             letter-spacing: 2px;
             box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);
+            transition: all 0.2s;
         }
 
-        /* The Shudder Animation */
         @keyframes shudder {
             0% { transform: translateX(0); border-color: #f00; color: #f00; }
             25% { transform: translateX(-5px); }
@@ -185,15 +184,21 @@
             font-size: 18px;
             cursor: pointer;
             box-shadow: 0 4px 0 #222;
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s;
         }
 
-        .key:active {
+        /* Active state for mouse clicks AND keyboard presses */
+        .key:active, .key.active-press {
             transform: translateY(4px);
             box-shadow: 0 0 0 #222;
+            background-color: #666; /* Light up slightly */
         }
 
         .key-enter { background-color: #2ecc71; color: #000; }
+        .key-enter:active, .key-enter.active-press { background-color: #27ae60; }
+
         .key-clear { background-color: #e74c3c; color: white; }
+        .key-clear:active, .key-clear.active-press { background-color: #c0392b; }
 
     </style>
 </head>
@@ -223,32 +228,74 @@
         <div class="digital-display" id="display">4:--</div>
 
         <div class="keypad">
-            <button class="key" onclick="pressKey(1)">1</button>
-            <button class="key" onclick="pressKey(2)">2</button>
-            <button class="key" onclick="pressKey(3)">3</button>
-            <button class="key" onclick="pressKey(4)">4</button>
-            <button class="key" onclick="pressKey(5)">5</button>
-            <button class="key" onclick="pressKey(6)">6</button>
-            <button class="key" onclick="pressKey(7)">7</button>
-            <button class="key" onclick="pressKey(8)">8</button>
-            <button class="key" onclick="pressKey(9)">9</button>
-            <button class="key key-clear" onclick="pressKey('C')">C</button>
-            <button class="key" onclick="pressKey(0)">0</button>
-            <button class="key key-enter" onclick="pressKey('E')">GO</button>
+            <button class="key" data-val="1" onclick="pressKey(1)">1</button>
+            <button class="key" data-val="2" onclick="pressKey(2)">2</button>
+            <button class="key" data-val="3" onclick="pressKey(3)">3</button>
+            <button class="key" data-val="4" onclick="pressKey(4)">4</button>
+            <button class="key" data-val="5" onclick="pressKey(5)">5</button>
+            <button class="key" data-val="6" onclick="pressKey(6)">6</button>
+            <button class="key" data-val="7" onclick="pressKey(7)">7</button>
+            <button class="key" data-val="8" onclick="pressKey(8)">8</button>
+            <button class="key" data-val="9" onclick="pressKey(9)">9</button>
+            <button class="key key-clear" data-val="C" onclick="pressKey('C')">C</button>
+            <button class="key" data-val="0" onclick="pressKey(0)">0</button>
+            <button class="key key-enter" data-val="E" onclick="pressKey('E')">GO</button>
         </div>
     </div>
 
     <script>
         // State variables
-        let activeTroll = null; // 'purple' or 'green'
-        let currentInput = "";  // Stores the two digits
+        let activeTroll = null;
+        let currentInput = "";
 
         document.addEventListener("DOMContentLoaded", function() {
             generateTimeline();
             setupTrollButtons();
+            setupKeyboardSupport();
         });
 
-        // 1. Generate the empty timeline
+        // --- 1. KEYBOARD SUPPORT LOGIC ---
+        function setupKeyboardSupport() {
+            document.addEventListener('keydown', function(event) {
+                let keyVal = null;
+
+                // Check numbers
+                if (event.key >= '0' && event.key <= '9') {
+                    keyVal = parseInt(event.key);
+                }
+                // Check Enter
+                else if (event.key === 'Enter') {
+                    keyVal = 'E';
+                    event.preventDefault(); // Good practice
+                }
+                // Check Escape
+                else if (event.key === 'Escape') {
+                    keyVal = 'C';
+                    event.preventDefault();
+                }
+
+                // If valid key found, trigger press and visual
+                if (keyVal !== null) {
+                    pressKey(keyVal);
+                    animateButton(keyVal);
+                }
+            });
+        }
+
+        // Helper to visually animate the button when typing
+        function animateButton(val) {
+            // Find button with matching data-val
+            const btn = document.querySelector(`.key[data-val="${val}"]`);
+            if (btn) {
+                btn.classList.add('active-press');
+                // Remove class after 100ms
+                setTimeout(() => {
+                    btn.classList.remove('active-press');
+                }, 100);
+            }
+        }
+
+        // --- 2. TIMELINE GENERATION ---
         function generateTimeline() {
             const container = document.getElementById('timeline');
             container.innerHTML = '';
@@ -257,7 +304,6 @@
                 const col = document.createElement('div');
                 col.className = 'column';
 
-                // Label
                 const labelDiv = document.createElement('div');
                 labelDiv.className = 'label';
                 const labelSpan = document.createElement('span');
@@ -268,13 +314,11 @@
                 labelDiv.appendChild(labelSpan);
                 col.appendChild(labelDiv);
 
-                // Purple Square (Top) - Note unique ID
                 const sqPurple = document.createElement('div');
                 sqPurple.className = 'square';
                 sqPurple.id = `purple-sq-${i}`;
                 col.appendChild(sqPurple);
 
-                // Green Square (Bottom) - Note unique ID
                 const sqGreen = document.createElement('div');
                 sqGreen.className = 'square';
                 sqGreen.id = `green-sq-${i}`;
@@ -284,7 +328,7 @@
             }
         }
 
-        // 2. Troll Selection Logic
+        // --- 3. TROLL SELECTION ---
         function setupTrollButtons() {
             const btnLeft = document.getElementById('btn-left');
             const btnRight = document.getElementById('btn-right');
@@ -293,7 +337,6 @@
 
             btnLeft.addEventListener('click', () => {
                 activeTroll = 'purple';
-                // Visual updates
                 btnLeft.classList.add('selected');
                 btnRight.classList.remove('selected');
                 txtLeft.classList.add('alive');
@@ -303,7 +346,6 @@
 
             btnRight.addEventListener('click', () => {
                 activeTroll = 'green';
-                // Visual updates
                 btnRight.classList.add('selected');
                 btnLeft.classList.remove('selected');
                 txtRight.classList.add('alive');
@@ -312,10 +354,8 @@
             });
         }
 
-        // 3. Keypad Logic
+        // --- 4. KEYPAD LOGIC ---
         function pressKey(key) {
-            const display = document.getElementById('display');
-
             // Handle Clear
             if (key === 'C') {
                 resetDisplay();
@@ -337,70 +377,65 @@
 
         function updateDisplay() {
             const display = document.getElementById('display');
-            // Pad with placeholder underscores if needed for visual flair
             display.innerText = `4:${currentInput}`;
         }
 
         function resetDisplay() {
             currentInput = "";
-            document.getElementById('display').innerText = "4:--";
-            document.getElementById('display').classList.remove('shuddering');
+            const display = document.getElementById('display');
+            display.innerText = "4:--";
+            display.classList.remove('shuddering');
         }
 
         function triggerShudder() {
             const display = document.getElementById('display');
-            // Remove class and add it back to restart animation
             display.classList.remove('shuddering');
             void display.offsetWidth; // Trigger reflow
             display.classList.add('shuddering');
             setTimeout(resetDisplay, 500);
         }
 
-        // 4. The Core Logic Check
+        // --- 5. GAME LOGIC ---
         function submitTime() {
-            // Check if a troll is selected
             if (!activeTroll) {
                 alert("Please select a Troll first!");
                 return;
             }
 
-            // Parse input
             const minute = parseInt(currentInput);
 
-            // Validate valid minute range (0-60)
             if (isNaN(minute) || minute < 0 || minute > 60) {
                 triggerShudder();
                 return;
             }
 
-            // Check Logic based on Troll
             let isCorrect = false;
 
             if (activeTroll === 'purple') {
-                // Purple wants multiples of 3
                 if (minute % 3 === 0) {
                     const sq = document.getElementById(`purple-sq-${minute}`);
+                    // Only fill if not already filled (optional polish, keeps user from spamming same number)
                     if(sq) {
                         sq.classList.add('purple-active');
+                        // Scroll to the element so user can see it
+                        sq.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                         isCorrect = true;
                     }
                 }
             } else if (activeTroll === 'green') {
-                // Green wants multiples of 4
                 if (minute % 4 === 0) {
                     const sq = document.getElementById(`green-sq-${minute}`);
                     if(sq) {
                         sq.classList.add('green-active');
+                        sq.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                         isCorrect = true;
                     }
                 }
             }
 
             if (isCorrect) {
-                // Success: clear input instantly so they can type the next one
                 resetDisplay();
             } else {
-                // Failure: Shudder animation
                 triggerShudder();
             }
         }
