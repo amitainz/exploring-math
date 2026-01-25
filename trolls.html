@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline 4:00 - 5:00</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 40px;
+            background-color: #f4f4f4;
+        }
+
+        h3 { margin-top: 0; }
+
+        .legend {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* The main scrollable container */
+        .container {
+            display: flex;
+            flex-direction: row;
+            overflow-x: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: fit-content;
+            min-height: 120px; /* Ensure box has height even if empty */
+        }
+
+        /* Each vertical minute column */
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 3px;
+            width: 25px;
+            flex-shrink: 0; /* Prevent squishing */
+        }
+
+        /* The Rotated Time Label */
+        .label {
+            height: 50px;
+            width: 25px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .label span {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-90deg);
+            white-space: nowrap;
+            font-size: 11px;
+            color: #555;
+        }
+
+        /* The Squares */
+        .square {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ddd;
+            margin-bottom: 4px;
+            background-color: #f0f0f0;
+            transition: all 0.2s;
+        }
+
+        /* Active Colors */
+        .purple-active {
+            background-color: #9b59b6 !important; /* Purple */
+            border-color: #8e44ad;
+        }
+
+        .green-active {
+            background-color: #2ecc71 !important; /* Bright Green */
+            border-color: #27ae60;
+        }
+
+        /* Hover Effect for clarity */
+        .column:hover .square {
+            border-color: #333;
+        }
+        .column:hover .label span {
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Helper for if JS is disabled */
+        #loading-msg {
+            padding: 20px;
+            color: #777;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <h3>Timeline: 4:00 to 5:00</h3>
+    <div class="legend">
+        Top Row: Every 3 min (<span style="color:#9b59b6; font-weight:bold">Purple</span>) |
+        Bottom Row: Every 4 min (<span style="color:#2ecc71; font-weight:bold">Bright Green</span>)
+    </div>
+
+    <div class="container" id="timeline">
+        <div id="loading-msg">
+            Loading timeline... <br>
+            (If this text remains, JavaScript is disabled in your viewer. Please open this file in a web browser.)
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const container = document.getElementById('timeline');
+
+            // Clear the loading message
+            container.innerHTML = '';
+
+            // Loop from minute 0 (4:00) to minute 60 (5:00)
+            for (let i = 0; i <= 60; i++) {
+
+                // 1. Create Column
+                const col = document.createElement('div');
+                col.className = 'column';
+
+                // 2. Create Time Label
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'label';
+                const labelSpan = document.createElement('span');
+
+                // Calculate time
+                let hour = 4;
+                let minute = i;
+                if (i === 60) {
+                    hour = 5;
+                    minute = 0;
+                }
+                // Pad minute with leading zero (e.g., 4:05)
+                const timeStr = `${hour}:${minute.toString().padStart(2, '0')}`;
+
+                labelSpan.innerText = timeStr;
+                labelDiv.appendChild(labelSpan);
+                col.appendChild(labelDiv);
+
+                // 3. Top Row Square (Every 3 minutes -> Purple)
+                const square1 = document.createElement('div');
+                square1.className = 'square';
+                // Starts at 4:00 (i=0), then 4:03 (i=3), etc.
+                if (i % 3 === 0) {
+                    square1.classList.add('purple-active');
+                }
+                col.appendChild(square1);
+
+                // 4. Bottom Row Square (Every 4 minutes -> Green)
+                const square2 = document.createElement('div');
+                square2.className = 'square';
+                // Starts at 4:00 (i=0), then 4:04 (i=4), etc.
+                if (i % 4 === 0) {
+                    square2.classList.add('green-active');
+                }
+                col.appendChild(square2);
+
+                // Add column to timeline
+                container.appendChild(col);
+            }
+        });
+    </script>
+</body>
+</html>
