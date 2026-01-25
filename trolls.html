@@ -310,7 +310,7 @@
         <div class="troll-panel panel-yellow">
             <button id="btn-center" class="troll-btn">Plan the run to the palace</button>
             <div id="text-center" class="troll-text">
-                What are <em>all</em> the times we can make a run for it?
+                What are <em>all</em> the times both gates are open?
             </div>
 
             <button id="btn-done" class="troll-btn" style="margin-top: 15px; border-color: #333; color: #333;">All done</button>
@@ -326,7 +326,7 @@
         <div class="control-center">
             <div class="control-top-row">
                 <div class="control-question" id="active-question-display">
-                    Select a plan above to begin...
+                    Select a question above...
                 </div>
 
                 <div class="keypad-stack">
@@ -445,8 +445,8 @@
             const txtCenter = document.getElementById('text-center');
             const questionDisplay = document.getElementById('active-question-display');
 
-            function updateQuestion(text) {
-                questionDisplay.innerText = text.trim();
+            function updateQuestion(title, text, color) {
+                questionDisplay.innerHTML = `<strong style="color: ${color}; font-size: 24px; display: block; margin-bottom: 8px;">${title}</strong>${text}`;
             }
 
             function clearSelection() {
@@ -472,7 +472,7 @@
                 activeTroll = 'purple';
                 btnLeft.classList.add('selected');
                 txtLeft.classList.add('alive');
-                updateQuestion(txtLeft.innerText);
+                updateQuestion(btnLeft.innerText, txtLeft.innerText, '#9b59b6');
             });
 
             btnRight.addEventListener('click', () => {
@@ -484,7 +484,7 @@
                 activeTroll = 'green';
                 btnRight.classList.add('selected');
                 txtRight.classList.add('alive');
-                updateQuestion(txtRight.innerText);
+                updateQuestion(btnRight.innerText, txtRight.innerText, '#2ecc71');
             });
 
             btnCenter.addEventListener('click', () => {
@@ -496,7 +496,7 @@
                 activeTroll = 'yellow';
                 btnCenter.classList.add('selected');
                 txtCenter.classList.add('alive');
-                updateQuestion(txtCenter.innerText);
+                updateQuestion(btnCenter.innerText, txtCenter.innerText, '#f1c40f');
             });
         }
 
