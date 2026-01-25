@@ -326,6 +326,7 @@
         let currentInput = "";
         let hasPlayedLeft = false;
         let hasPlayedRight = false;
+        let hasPlayedCenter = false;
 
         document.addEventListener("DOMContentLoaded", function() {
             generateTimeline();
@@ -445,6 +446,10 @@
 
             btnCenter.addEventListener('click', () => {
                 clearSelection();
+                if (!hasPlayedCenter) {
+                    new Audio('girl_getting_home.mp3').play();
+                    hasPlayedCenter = true;
+                }
                 activeTroll = 'yellow';
                 btnCenter.classList.add('selected');
                 txtCenter.classList.add('alive');
