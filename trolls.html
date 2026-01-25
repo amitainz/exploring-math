@@ -43,6 +43,7 @@
             width: 25px;
             flex-shrink: 0;
             position: relative; /* Essential for the overlay to position correctly */
+            border-radius: 4px;
         }
 
         .label {
@@ -50,7 +51,7 @@
             width: 25px;
             position: relative;
             margin-bottom: 10px;
-            z-index: 2; /* Keep text above highlight if desired, or below if you want tint */
+            z-index: 1;
         }
 
         .label span {
@@ -72,7 +73,7 @@
             background-color: #f0f0f0;
             transition: background-color 0.3s;
             position: relative;
-            z-index: 2;
+            z-index: 1;
         }
 
         .purple-active {
@@ -90,16 +91,18 @@
         /* The Yellow Highlight Overlay */
         .column-highlight {
             position: absolute;
-            top: -5px;
-            left: -2px;
-            width: 100%;
-            height: 105%; /* Cover labels and squares */
-            background-color: rgba(255, 215, 0, 0.4); /* Yellow with alpha */
-            border-radius: 10px;
-            z-index: 1; /* Sits behind the text/squares logic if z-index is managed, or on top if 1 is high enough */
-            pointer-events: none; /* Let clicks pass through */
-            border: 2px solid rgba(218, 165, 32, 0.5);
-            padding: 0 2px;
+            /* Center marker over the column */
+            top: -2px; bottom: -2px; left: -2px; right: -2px;
+            width: auto; height: auto;
+
+            background-color: rgba(255, 240, 0, 1);
+            mix-blend-mode: multiply; /* The "Marker" effect */
+            z-index: 10; /* Ensures it sits on top */
+
+            border-radius: 6px;
+            pointer-events: none;
+            border: 2px solid rgba(220, 200, 0, 0.5);
+            padding: 0;
         }
 
         /* --- SELECTION PANELS (SCROLLABLE AREA) --- */
@@ -500,6 +503,7 @@
                             highlight.className = 'column-highlight';
                             col.appendChild(highlight);
                         }
+
                         col.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         isCorrect = true;
                     }
