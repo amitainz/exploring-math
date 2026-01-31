@@ -118,7 +118,7 @@
 
                 <circle id="base-handle" r="10" fill="#4a90e2" stroke="white" stroke-width="2" class="grab-handle" />
                 <g id="tip-group" class="grab-handle">
-                    <polygon id="tip-arrow" points="-10,-10 15,0 -10,10" fill="#4a90e2" stroke="white" stroke-width="2" />
+                    <polygon id="tip-arrow" points="-25,-10 0,0 -25,10" fill="#4a90e2" stroke="white" stroke-width="2" />
                 </g>
             </g>
 
@@ -130,11 +130,11 @@
                 <circle id="slider-zero-dot" cx="200" cy="0" r="5" fill="#4a90e2" />
 
                 <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
-                    <polygon id="slider-arrowhead" points="-2,-6 12,0 -2,6" fill="#4a90e2" />
+                    <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
 
-                    <polygon id="slider-caret" points="-8,22 8,22 0,8" fill="#222" />
+                    <polygon id="slider-caret" points="-8,-22 8,-22 0,-8" fill="#222" />
 
-                    <text id="slider-value-text" x="0" y="38" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
+                    <text id="slider-value-text" x="0" y="45" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
                 </g>
             </g>
         </svg>
@@ -153,6 +153,7 @@
     const sliderCenter = 200;
     const sliderRange = 10;
     const sliderStepPx = sliderWidth / (sliderRange * 2);
+    const arrowHeadLength = 14; // Length of the slider arrow for trimming
 
     // --- DOM Elements ---
     const inputEl = document.getElementById('labels-input');
@@ -216,7 +217,7 @@
             circle.setAttribute("class", "point-marker");
             pointsGroup.appendChild(circle);
 
-            // Inner Label (Index 0..n-1)
+            // Inner Label (Index)
             const innerCoords = getCoords(i, circleRadius - 25);
             const innerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
             innerText.setAttribute("x", innerCoords.x);
@@ -225,7 +226,7 @@
             innerText.textContent = i;
             pointsGroup.appendChild(innerText);
 
-            // Outer Label (User Input)
+            // Outer Label (Custom)
             const outerCoords = getCoords(i, circleRadius + 25);
             const outerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
             outerText.setAttribute("x", outerCoords.x);
@@ -273,21 +274,30 @@
         // Move Group
         sliderHandleGroup.setAttribute("transform", `translate(${sliderX}, 0)`);
 
-        // Update Line
-        sliderVectorLine.setAttribute("x2", sliderX);
+        // Update Line Length (Stop short of the tip so arrowhead fits)
+        const currentLen = Math.abs(sliderX - sliderCenter);
+        if (currentLen < arrowHeadLength) {
+             // If too short, just hide line to avoid mess
+             sliderVectorLine.setAttribute("visibility", "hidden");
+        } else {
+             sliderVectorLine.setAttribute("visibility", "visible");
+             // Trim the line length by the arrow head length
+             const trimX = sliderX - (isNeg ? -arrowHeadLength : arrowHeadLength);
+             sliderVectorLine.setAttribute("x2", trimX);
+        }
+
         sliderVectorLine.setAttribute("stroke", color);
 
         // Update Dot & Arrowhead Color
         sliderZeroDot.setAttribute("fill", color);
         sliderArrowhead.setAttribute("fill", color);
 
-        // Flip Arrowhead if negative
-        // Note: The polygon points Right. If negative, we want it pointing Left.
+        // Flip Arrowhead if negative (Scale -1 to point left)
         sliderArrowhead.setAttribute("transform", isNeg ? "scale(-1, 1)" : "");
 
         // Update Text
         const dispVal = Math.round(vectorValue);
-        const sign = dispVal > 0 ? "+" : ""; // Show + for positive, minus comes automatically
+        const sign = dispVal > 0 ? "+" : "";
         sliderValueText.textContent = sign + dispVal;
 
         // Circle Colors
@@ -306,6 +316,8 @@
         const tipCoords = getCoords(tipVal, circleRadius);
         tipGroup.setAttribute("transform", `translate(${tipCoords.x}, ${tipCoords.y})`);
 
+        // Rotate tip arrow to point along the tangent
+        // Since tip arrow polygon now has tip at (0,0), rotation is strictly tangent
         const tangentAngle = (tipCoords.angle * 180 / Math.PI) + 90 + (isNeg ? 180 : 0);
         tipArrow.setAttribute("transform", `rotate(${tangentAngle})`);
 
