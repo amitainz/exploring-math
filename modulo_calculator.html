@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modulo Calculator Factory</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #input-container {
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            width: 300px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4a90e2;
+        }
+
+        #canvas-container {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        svg {
+            display: block;
+            overflow: visible;
+        }
+
+        .label-text {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #555;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .tick-line { stroke: #ddd; stroke-width: 2; }
+        .tick-text { font-size: 12px; fill: #999; text-anchor: middle; }
+
+        /* Interactive Elements */
+        .grab-handle { cursor: grab; transition: r 0.2s; }
+        .grab-handle:active { cursor: grabbing; r: 12; }
+
+        #vector-path {
+            fill: none;
+            stroke: rgba(74, 144, 226, 0.6);
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none; /* Let clicks pass through to drag areas */
+        }
+
+        #vector-path.negative {
+            stroke: rgba(226, 74, 74, 0.6);
+        }
+
+        .point-marker {
+            fill: #eee;
+            stroke: none;
+        }
+
+        .point-marker.active {
+            fill: #333;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Modulo Factory</h1>
+
+    <div id="input-container">
+        <input type="text" id="labels-input" value="0, 1, 2, 3, 4, 5, 6, 7" placeholder="Type labels (e.g. A, B, C)">
+    </div>
+
+    <div id="canvas-container">
+        <svg id="main-svg" width="500" height="600">
+            <defs>
+                <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#4a90e2" />
+                </marker>
+                 <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#e24a4a" />
+                </marker>
+            </defs>
+
+            <g id="circle-group" transform="translate(250, 220)">
+                <circle cx="0" cy="0" r="160" fill="none" stroke="#eee" stroke-width="2" />
+                <g id="points-group"></g>
+
+                <path id="vector-path" d="" />
+
+                <circle id="base-handle" r="10" fill="#4a90e2" stroke="white" stroke-width="2" class="grab-handle" />
+                <g id="tip-group" class="grab-handle">
+                    <polygon id="tip-arrow" points="-10,-10 15,0 -10,10" fill="#4a90e2" stroke="white" stroke-width="2" />
+                </g>
+            </g>
+
+            <g id="slider-group" transform="translate(50, 520)">
+                <line x1="0" y1="0" x2="400" y2="0" stroke="#ccc" stroke-width="4" stroke-linecap="round" />
+                <circle cx="200" cy="0" r="4" fill="#999" /> <g id="slider-ticks"></g>
+
+                <line id="slider-vector-line" x1="200" y1="0" x2="200" y2="0" stroke="#4a90e2" stroke-width="6" />
+
+                <circle id="slider-handle" cx="200" cy="0" r="12" fill="#4a90e2" stroke="white" stroke-width="3" class="grab-handle" />
+            </g>
+        </svg>
+    </div>
+
+<script>
+    // --- State ---
+    let labels = [];
+    let n = 0; // Modulo
+    let vectorValue = 2; // The increment value
+    let baseIndex = 0; // Where the arrow starts
+
+    // --- Configuration ---
+    const circleRadius = 140;
+    const sliderWidth = 400;
+    const sliderCenter = 200;
+    const sliderRange = 10; // +/- 10 integers displayed
+    const sliderStepPx = sliderWidth / (sliderRange * 2);
+
+    // --- DOM Elements ---
+    const inputEl = document.getElementById('labels-input');
+    const pointsGroup = document.getElementById('points-group');
+    const vectorPath = document.getElementById('vector-path');
+    const baseHandle = document.getElementById('base-handle');
+    const tipGroup = document.getElementById('tip-group');
+    const tipArrow = document.getElementById('tip-arrow');
+    const sliderTicksGroup = document.getElementById('slider-ticks');
+    const sliderHandle = document.getElementById('slider-handle');
+    const sliderVectorLine = document.getElementById('slider-vector-line');
+    const svgEl = document.getElementById('main-svg');
+
+    // --- Helpers ---
+    // Proper modulo that handles negative numbers
+    function mod(a, n) {
+        return ((a % n) + n) % n;
+    }
+
+    // Convert polar to cartesian
+    function getCoords(index, radius) {
+        // -90 degrees is top. Clockwise.
+        const angle = -Math.PI / 2 + (index * (2 * Math.PI) / n);
+        return {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+            angle: angle
+        };
+    }
+
+    // --- Initialization ---
+    function parseInput() {
+        const raw = inputEl.value;
+        if (!raw.trim()) {
+            labels = ['0', '1', '2', '3', '4'];
+        } else {
+            labels = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        }
+        n = labels.length;
+        if (n === 0) {
+            labels = ['0'];
+            n = 1;
+        }
+        renderPoints();
+        updateVisuals();
+    }
+
+    function renderPoints() {
+        pointsGroup.innerHTML = '';
+        labels.forEach((label, i) => {
+            const coords = getCoords(i, circleRadius);
+
+            // Draw Point
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", coords.x);
+            circle.setAttribute("cy", coords.y);
+            circle.setAttribute("r", 4);
+            circle.setAttribute("class", "point-marker");
+            pointsGroup.appendChild(circle);
+
+            // Draw Label
+            const textCoords = getCoords(i, circleRadius + 25);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", textCoords.x);
+            text.setAttribute("y", textCoords.y);
+            text.setAttribute("class", "label-text");
+            text.textContent = label;
+            pointsGroup.appendChild(text);
+        });
+    }
+
+    function renderSliderTicks() {
+        sliderTicksGroup.innerHTML = '';
+        for(let i = -sliderRange; i <= sliderRange; i++) {
+            if(i === 0) continue; // Skip center (already drawn)
+            const x = sliderCenter + (i * sliderStepPx);
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x);
+            line.setAttribute("y1", -5);
+            line.setAttribute("x2", x);
+            line.setAttribute("y2", 5);
+            line.setAttribute("class", "tick-line");
+
+            // Only show numbers for steps of 5 or ends
+            if (Math.abs(i) % 5 === 0 || Math.abs(i) === sliderRange) {
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", 20);
+                text.setAttribute("class", "tick-text");
+                text.textContent = i;
+                sliderTicksGroup.appendChild(text);
+            }
+
+            sliderTicksGroup.appendChild(line);
+        }
+    }
+
+    // --- Rendering Logic ---
+
+    function updateVisuals() {
+        // 1. Update Slider UI
+        const sliderX = sliderCenter + (vectorValue * sliderStepPx);
+        sliderHandle.setAttribute("cx", sliderX);
+        sliderVectorLine.setAttribute("x2", sliderX);
+
+        const color = vectorValue < 0 ? "#e24a4a" : "#4a90e2";
+        sliderHandle.setAttribute("fill", color);
+        sliderVectorLine.setAttribute("stroke", color);
+        baseHandle.setAttribute("fill", color);
+        tipArrow.setAttribute("fill", color);
+
+        if(vectorValue < 0) {
+            vectorPath.classList.add('negative');
+        } else {
+            vectorPath.classList.remove('negative');
+        }
+
+        // 2. Update Circular Base Position
+        const baseCoords = getCoords(baseIndex, circleRadius);
+        baseHandle.setAttribute("cx", baseCoords.x);
+        baseHandle.setAttribute("cy", baseCoords.y);
+
+        // 3. Update Circular Tip Position
+        // The tip is mathematically at (base + vector) % n
+        const tipVal = mod(baseIndex + vectorValue, n);
+        const tipCoords = getCoords(tipVal, circleRadius);
+
+        tipGroup.setAttribute("transform", `translate(${tipCoords.x}, ${tipCoords.y})`);
+        // Rotate tip arrow to point along the tangent
+        const tangentAngle = (tipCoords.angle * 180 / Math.PI) + 90 + (vectorValue < 0 ? 180 : 0);
+        tipArrow.setAttribute("transform", `rotate(${tangentAngle})`);
+
+        // 4. Draw the Winding Arrow (Spiral)
+        // We construct a path that spirals out/in slightly or just winds around
+        drawWindingPath();
+    }
+
+    function drawWindingPath() {
+        // We will draw a path composed of many small line segments to simulate a curve
+        // that can wrap around multiple times.
+
+        const steps = 100; // Resolution of curve
+        const pathData = [];
+
+        // Start angle in radians
+        const startTheta = -Math.PI / 2 + (baseIndex * (2 * Math.PI) / n);
+
+        // Total angle span to cover
+        // vectorValue corresponds to vectorValue * (2PI / n) radians
+        const totalAngleSpan = vectorValue * (2 * Math.PI / n);
+
+        // We create a slight spiral effect visually if it wraps,
+        // but for a pure modulo calc, a constant radius is often cleaner.
+        // Let's stick to constant radius but ensure the direction is correct.
+
+        for(let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const currentTheta = startTheta + (t * totalAngleSpan);
+
+            // Radius: we can oscillate slightly or spiral out to show overlapping laps
+            // Let's do a subtle spiral out then snap back, or just constant.
+            // Constant is less confusing for reading the result.
+            const r = circleRadius;
+
+            const x = r * Math.cos(currentTheta);
+            const y = r * Math.sin(currentTheta);
+
+            if (i === 0) pathData.push(`M ${x} ${y}`);
+            else pathData.push(`L ${x} ${y}`);
+        }
+
+        vectorPath.setAttribute("d", pathData.join(" "));
+    }
+
+
+    // --- Interaction Logic ---
+
+    // Generic Drag Handler
+    function setupDrag(element, onDrag, onEnd) {
+        let isDragging = false;
+
+        element.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+
+        // Touch support
+        element.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        }, {passive: false});
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            onDrag(getMousePos(e));
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            onDrag(getTouchPos(e));
+        }, {passive: false});
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging && onEnd) onEnd();
+            isDragging = false;
+        });
+
+        window.addEventListener('touchend', () => {
+            if (isDragging && onEnd) onEnd();
+            isDragging = false;
+        });
+    }
+
+    function getMousePos(evt) {
+        const CTM = svgEl.getScreenCTM();
+        return {
+            x: (evt.clientX - CTM.e) / CTM.a,
+            y: (evt.clientY - CTM.f) / CTM.d
+        };
+    }
+
+    function getTouchPos(evt) {
+        const CTM = svgEl.getScreenCTM();
+        const touch = evt.touches[0];
+        return {
+            x: (touch.clientX - CTM.e) / CTM.a,
+            y: (touch.clientY - CTM.f) / CTM.d
+        };
+    }
+
+    // 1. Slider Logic
+    setupDrag(sliderHandle, (pos) => {
+        // Map local coordinates relative to slider group transform (50, 520)
+        const localX = pos.x - 50;
+
+        let val = Math.round((localX - sliderCenter) / sliderStepPx);
+        // Clamp to range? Let's allow slightly outside but snap visuals
+        // Or strictly clamp:
+        // val = Math.max(-sliderRange, Math.min(sliderRange, val));
+
+        if (val !== vectorValue) {
+            vectorValue = val;
+            updateVisuals();
+        }
+    });
+
+    // 2. Base Drag Logic
+    setupDrag(baseHandle, (pos) => {
+        // Coordinates relative to circle center (250, 220)
+        const localX = pos.x - 250;
+        const localY = pos.y - 220;
+
+        // Calculate Angle
+        let angle = Math.atan2(localY, localX); // -PI to PI
+
+        // Convert to 0 to 2PI starting from top (-PI/2) clockwise
+        // Standard atan2: 0 is Right.
+        // We want 0 at Top.
+        // Screen coords: Right=0, Down=PI/2, Left=PI, Up=-PI/2
+
+        // Adjust so Top is 0, clockwise is positive
+        let adjustedAngle = angle + (Math.PI / 2);
+        if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
+
+        // Map to index
+        const sectorSize = (2 * Math.PI) / n;
+        let index = Math.round(adjustedAngle / sectorSize);
+        index = index % n;
+
+        if (index !== baseIndex) {
+            baseIndex = index;
+            updateVisuals();
+        }
+    });
+
+    // 3. Tip Drag Logic
+    setupDrag(tipGroup, (pos) => {
+        const localX = pos.x - 250;
+        const localY = pos.y - 220;
+
+        let angle = Math.atan2(localY, localX);
+        let adjustedAngle = angle + (Math.PI / 2);
+        if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
+
+        const sectorSize = (2 * Math.PI) / n;
+        let targetIndex = Math.round(adjustedAngle / sectorSize);
+        targetIndex = targetIndex % n;
+
+        // We want to find the new Base, such that:
+        // (Base + Vector) % n = Target
+        // So Base = (Target - Vector) % n
+
+        let newBase = mod(targetIndex - vectorValue, n);
+
+        if (newBase !== baseIndex) {
+            baseIndex = newBase;
+            updateVisuals();
+        }
+    });
+
+
+    // --- Run ---
+    inputEl.addEventListener('input', parseInput);
+    renderSliderTicks();
+    parseInput(); // Init
+
+</script>
+</body>
+</html>
