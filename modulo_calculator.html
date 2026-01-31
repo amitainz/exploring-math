@@ -356,13 +356,17 @@
         }, {passive: false});
 
         window.addEventListener('mouseup', () => {
-            if (isDragging && onEnd) onEnd();
-            isDragging = false;
+            if (isDragging) {
+                if (onEnd) onEnd();
+                isDragging = false;
+            }
         });
 
         window.addEventListener('touchend', () => {
-            if (isDragging && onEnd) onEnd();
-            isDragging = false;
+            if (isDragging) {
+                if (onEnd) onEnd();
+                isDragging = false;
+            }
         });
     }
 
@@ -384,74 +388,67 @@
     }
 
     // 1. Slider Logic
-    setupDrag(sliderHandle, (pos) => {
-        // Map local coordinates relative to slider group transform (50, 520)
-        const localX = pos.x - 50;
-
-        let val = Math.round((localX - sliderCenter) / sliderStepPx);
-        // Clamp to range? Let's allow slightly outside but snap visuals
-        // Or strictly clamp:
-        // val = Math.max(-sliderRange, Math.min(sliderRange, val));
-
-        if (val !== vectorValue) {
+    setupDrag(sliderHandle,
+        (pos) => { // onDrag
+            const localX = pos.x - 50;
+            // Use fractional value for smooth movement
+            let val = (localX - sliderCenter) / sliderStepPx;
             vectorValue = val;
             updateVisuals();
+        },
+        () => { // onEnd
+            // Snap to integer
+            vectorValue = Math.round(vectorValue);
+            updateVisuals();
         }
-    });
+    );
 
     // 2. Base Drag Logic
-    setupDrag(baseHandle, (pos) => {
-        // Coordinates relative to circle center (250, 220)
-        const localX = pos.x - 250;
-        const localY = pos.y - 220;
+    setupDrag(baseHandle,
+        (pos) => { // onDrag
+            const localX = pos.x - 250;
+            const localY = pos.y - 220;
 
-        // Calculate Angle
-        let angle = Math.atan2(localY, localX); // -PI to PI
+            let angle = Math.atan2(localY, localX);
+            let adjustedAngle = angle + (Math.PI / 2);
+            if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
 
-        // Convert to 0 to 2PI starting from top (-PI/2) clockwise
-        // Standard atan2: 0 is Right.
-        // We want 0 at Top.
-        // Screen coords: Right=0, Down=PI/2, Left=PI, Up=-PI/2
+            const sectorSize = (2 * Math.PI) / n;
+            // Use fractional index
+            let index = adjustedAngle / sectorSize;
 
-        // Adjust so Top is 0, clockwise is positive
-        let adjustedAngle = angle + (Math.PI / 2);
-        if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
-
-        // Map to index
-        const sectorSize = (2 * Math.PI) / n;
-        let index = Math.round(adjustedAngle / sectorSize);
-        index = index % n;
-
-        if (index !== baseIndex) {
-            baseIndex = index;
+            baseIndex = mod(index, n);
+            updateVisuals();
+        },
+        () => { // onEnd
+            baseIndex = mod(Math.round(baseIndex), n);
             updateVisuals();
         }
-    });
+    );
 
     // 3. Tip Drag Logic
-    setupDrag(tipGroup, (pos) => {
-        const localX = pos.x - 250;
-        const localY = pos.y - 220;
+    setupDrag(tipGroup,
+        (pos) => { // onDrag
+            const localX = pos.x - 250;
+            const localY = pos.y - 220;
 
-        let angle = Math.atan2(localY, localX);
-        let adjustedAngle = angle + (Math.PI / 2);
-        if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
+            let angle = Math.atan2(localY, localX);
+            let adjustedAngle = angle + (Math.PI / 2);
+            if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
 
-        const sectorSize = (2 * Math.PI) / n;
-        let targetIndex = Math.round(adjustedAngle / sectorSize);
-        targetIndex = targetIndex % n;
+            const sectorSize = (2 * Math.PI) / n;
+            // Use fractional index
+            let targetIndex = adjustedAngle / sectorSize;
 
-        // We want to find the new Base, such that:
-        // (Base + Vector) % n = Target
-        // So Base = (Target - Vector) % n
-
-        let newBase = mod(targetIndex - vectorValue, n);
-
-        if (newBase !== baseIndex) {
-            baseIndex = newBase;
+            // Base = Target - Vector
+            baseIndex = mod(targetIndex - vectorValue, n);
+            updateVisuals();
+        },
+        () => { // onEnd
+            baseIndex = mod(Math.round(baseIndex), n);
             updateVisuals();
         }
-    });
+    );
 
 
     // --- Run ---
