@@ -81,18 +81,18 @@
         .grab-handle { cursor: grab; }
         .grab-handle:active { cursor: grabbing; }
 
-        #vector-path {
+        /* Spiral Path Styles */
+        .spiral-segment {
             fill: none;
-            stroke: rgba(74, 144, 226, 0.6);
             stroke-width: 6;
             stroke-linecap: round;
             stroke-linejoin: round;
             pointer-events: none;
+            opacity: 0.3; /* Base opacity for layering */
         }
 
-        #vector-path.negative {
-            stroke: rgba(226, 74, 74, 0.6);
-        }
+        .spiral-segment.positive { stroke: #4a90e2; }
+        .spiral-segment.negative { stroke: #e24a4a; }
 
         .point-marker {
             fill: #eee;
@@ -114,7 +114,7 @@
                 <circle cx="0" cy="0" r="160" fill="none" stroke="#eee" stroke-width="2" />
                 <g id="points-group"></g>
 
-                <path id="vector-path" d="" />
+                <g id="spiral-paths-container"></g>
 
                 <circle id="base-handle" r="10" fill="#4a90e2" stroke="white" stroke-width="2" class="grab-handle" />
                 <g id="tip-group" class="grab-handle">
@@ -126,15 +126,17 @@
                 <line x1="0" y1="0" x2="400" y2="0" stroke="#ccc" stroke-width="4" stroke-linecap="round" />
                 <g id="slider-ticks"></g>
 
-                <line id="slider-vector-line" x1="200" y1="0" x2="200" y2="0" stroke="#4a90e2" stroke-width="6" />
-                <circle id="slider-zero-dot" cx="200" cy="0" r="5" fill="#4a90e2" />
+                <g id="slider-vector-group" transform="translate(0, -25)">
+                    <line id="slider-vector-line" x1="200" y1="0" x2="200" y2="0" stroke="#4a90e2" stroke-width="6" stroke-linecap="butt" />
+                    <circle id="slider-zero-dot" cx="200" cy="0" r="5" fill="#4a90e2" />
 
-                <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
-                    <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
+                    <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
+                        <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
 
-                    <polygon id="slider-caret" points="-8,-22 8,-22 0,-8" fill="#222" />
+                        <polygon id="slider-caret" points="-8,-20 8,-20 0,-6" fill="#222" />
 
-                    <text id="slider-value-text" x="0" y="45" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
+                        <text id="slider-value-text" x="0" y="60" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
+                    </g>
                 </g>
             </g>
         </svg>
@@ -153,18 +155,18 @@
     const sliderCenter = 200;
     const sliderRange = 10;
     const sliderStepPx = sliderWidth / (sliderRange * 2);
-    const arrowHeadLength = 14; // Length of the slider arrow for trimming
+    const arrowHeadLength = 14;
 
     // --- DOM Elements ---
     const inputEl = document.getElementById('labels-input');
     const pointsGroup = document.getElementById('points-group');
-    const vectorPath = document.getElementById('vector-path');
+    const spiralContainer = document.getElementById('spiral-paths-container');
     const baseHandle = document.getElementById('base-handle');
     const tipGroup = document.getElementById('tip-group');
     const tipArrow = document.getElementById('tip-arrow');
     const sliderTicksGroup = document.getElementById('slider-ticks');
 
-    // New Slider Elements
+    // Slider Elements
     const sliderHandleGroup = document.getElementById('slider-handle-group');
     const sliderVectorLine = document.getElementById('slider-vector-line');
     const sliderZeroDot = document.getElementById('slider-zero-dot');
@@ -250,7 +252,6 @@
             line.setAttribute("y2", 5);
             line.setAttribute("class", "tick-line");
 
-            // Tick Numbers
             if (Math.abs(i) % 5 === 0 || Math.abs(i) === sliderRange) {
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 text.setAttribute("x", x);
@@ -271,31 +272,31 @@
         // 1. Slider UI
         const sliderX = sliderCenter + (vectorValue * sliderStepPx);
 
-        // Move Group
+        // Move Handle Group
         sliderHandleGroup.setAttribute("transform", `translate(${sliderX}, 0)`);
 
-        // Update Line Length (Stop short of the tip so arrowhead fits)
-        const currentLen = Math.abs(sliderX - sliderCenter);
-        if (currentLen < arrowHeadLength) {
-             // If too short, just hide line to avoid mess
+        // Update Line Length
+        // Calculate absolute length from center
+        const absLen = Math.abs(sliderX - sliderCenter);
+        // We want the line to stop at the base of the arrowhead.
+        // The arrowhead length is 14px.
+        const lineLen = Math.max(0, absLen - arrowHeadLength);
+
+        // Determine x2 based on direction
+        const trimX = isNeg ? (sliderCenter - lineLen) : (sliderCenter + lineLen);
+
+        if (lineLen <= 0) {
              sliderVectorLine.setAttribute("visibility", "hidden");
         } else {
              sliderVectorLine.setAttribute("visibility", "visible");
-             // Trim the line length by the arrow head length
-             const trimX = sliderX - (isNeg ? -arrowHeadLength : arrowHeadLength);
              sliderVectorLine.setAttribute("x2", trimX);
         }
 
         sliderVectorLine.setAttribute("stroke", color);
-
-        // Update Dot & Arrowhead Color
         sliderZeroDot.setAttribute("fill", color);
         sliderArrowhead.setAttribute("fill", color);
-
-        // Flip Arrowhead if negative (Scale -1 to point left)
         sliderArrowhead.setAttribute("transform", isNeg ? "scale(-1, 1)" : "");
 
-        // Update Text
         const dispVal = Math.round(vectorValue);
         const sign = dispVal > 0 ? "+" : "";
         sliderValueText.textContent = sign + dispVal;
@@ -303,8 +304,6 @@
         // Circle Colors
         baseHandle.setAttribute("fill", color);
         tipArrow.setAttribute("fill", color);
-        if(isNeg) vectorPath.classList.add('negative');
-        else vectorPath.classList.remove('negative');
 
         // 2. Circular Base
         const baseCoords = getCoords(baseIndex, circleRadius);
@@ -316,37 +315,69 @@
         const tipCoords = getCoords(tipVal, circleRadius);
         tipGroup.setAttribute("transform", `translate(${tipCoords.x}, ${tipCoords.y})`);
 
-        // Rotate tip arrow to point along the tangent
-        // Since tip arrow polygon now has tip at (0,0), rotation is strictly tangent
         const tangentAngle = (tipCoords.angle * 180 / Math.PI) + 90 + (isNeg ? 180 : 0);
         tipArrow.setAttribute("transform", `rotate(${tangentAngle})`);
 
-        // 4. Spiral Path
-        drawWindingPath();
+        // 4. Spiral Path (Transparency Layering)
+        drawWindingPath(isNeg);
     }
 
-    function drawWindingPath() {
-        const steps = 100;
-        const pathData = [];
+    function drawWindingPath(isNegative) {
+        spiralContainer.innerHTML = ''; // Clear previous
+
+        // 1 full lap = 2PI radians.
+        // Total radians = vectorValue * (2PI / n)
+        const totalRads = Math.abs(vectorValue) * (2 * Math.PI / n);
         const startTheta = -Math.PI / 2 + (baseIndex * (2 * Math.PI) / n);
-        const totalAngleSpan = vectorValue * (2 * Math.PI / n);
+        const direction = isNegative ? -1 : 1;
 
-        for(let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const currentTheta = startTheta + (t * totalAngleSpan);
-            const r = circleRadius;
-            const x = r * Math.cos(currentTheta);
-            const y = r * Math.sin(currentTheta);
-            if (i === 0) pathData.push(`M ${x} ${y}`);
-            else pathData.push(`L ${x} ${y}`);
+        // Determine how many overlapping layers we need
+        // E.g., if totalRads = 3PI.
+        // Layer 1: 0 to 3PI.
+        // Layer 2: 2PI to 3PI.
+        const laps = Math.ceil(totalRads / (2 * Math.PI));
+
+        // Base steps for smoothness
+        const stepsPerRad = 20;
+
+        for (let lap = 0; lap < laps; lap++) {
+            // Start of this layer (0, 2PI, 4PI...)
+            const layerStartRad = lap * 2 * Math.PI;
+
+            // If the layer start is beyond our total length, stop (shouldn't happen with ceil loop)
+            if (layerStartRad >= totalRads) break;
+
+            const pathData = [];
+
+            // Calculate number of steps for this segment (from layerStartRad to totalRads)
+            const segmentLen = totalRads - layerStartRad;
+            const steps = Math.ceil(segmentLen * stepsPerRad) + 2;
+
+            for(let i = 0; i <= steps; i++) {
+                // t goes from 0 to 1 representing the segment from layerStart to Total
+                const t = i / steps;
+                const currentRelRad = layerStartRad + (t * segmentLen);
+
+                // Actual angle on circle
+                const currentTheta = startTheta + (direction * currentRelRad);
+
+                const x = circleRadius * Math.cos(currentTheta);
+                const y = circleRadius * Math.sin(currentTheta);
+
+                if (i === 0) pathData.push(`M ${x} ${y}`);
+                else pathData.push(`L ${x} ${y}`);
+            }
+
+            const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathEl.setAttribute("d", pathData.join(" "));
+            pathEl.setAttribute("class", isNegative ? "spiral-segment negative" : "spiral-segment positive");
+            spiralContainer.appendChild(pathEl);
         }
-        vectorPath.setAttribute("d", pathData.join(" "));
     }
 
-    // --- Interaction Logic (Smooth + Snap) ---
+    // --- Interaction Logic ---
     function setupDrag(element, onDrag, onEnd) {
         let isDragging = false;
-
         const start = (e) => { isDragging = true; e.preventDefault(); };
         const move = (e) => {
             if(!isDragging) return;
@@ -357,7 +388,6 @@
             if(isDragging && onEnd) onEnd();
             isDragging = false;
         };
-
         element.addEventListener('mousedown', start);
         element.addEventListener('touchstart', start, {passive: false});
         window.addEventListener('mousemove', move);
@@ -396,8 +426,6 @@
             const localY = pos.y - 220;
             let angle = Math.atan2(localY, localX) + (Math.PI / 2);
             if (angle < 0) angle += 2 * Math.PI;
-
-            // Fractional index
             const index = angle / ((2 * Math.PI) / n);
             baseIndex = mod(index, n);
             updateVisuals();
@@ -415,8 +443,6 @@
             const localY = pos.y - 220;
             let angle = Math.atan2(localY, localX) + (Math.PI / 2);
             if (angle < 0) angle += 2 * Math.PI;
-
-            // Fractional target
             const targetIndex = angle / ((2 * Math.PI) / n);
             baseIndex = mod(targetIndex - vectorValue, n);
             updateVisuals();
