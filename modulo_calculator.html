@@ -88,7 +88,7 @@
             stroke-linecap: round;
             stroke-linejoin: round;
             pointer-events: none;
-            opacity: 0.3; /* Base opacity for layering */
+            opacity: 0.2; /* Updated Opacity */
         }
 
         .spiral-segment.positive { stroke: #4a90e2; }
@@ -126,16 +126,16 @@
                 <line x1="0" y1="0" x2="400" y2="0" stroke="#ccc" stroke-width="4" stroke-linecap="round" />
                 <g id="slider-ticks"></g>
 
-                <g id="slider-vector-group" transform="translate(0, -25)">
+                <g id="slider-vector-group">
                     <line id="slider-vector-line" x1="200" y1="0" x2="200" y2="0" stroke="#4a90e2" stroke-width="6" stroke-linecap="butt" />
                     <circle id="slider-zero-dot" cx="200" cy="0" r="5" fill="#4a90e2" />
 
                     <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
                         <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
 
-                        <polygon id="slider-caret" points="-8,-20 8,-20 0,-6" fill="#222" />
+                        <polygon id="slider-caret" points="-8,-22 8,-22 0,-8" fill="#222" />
 
-                        <text id="slider-value-text" x="0" y="60" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
+                        <text id="slider-value-text" x="0" y="45" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
                     </g>
                 </g>
             </g>
@@ -278,8 +278,7 @@
         // Update Line Length
         // Calculate absolute length from center
         const absLen = Math.abs(sliderX - sliderCenter);
-        // We want the line to stop at the base of the arrowhead.
-        // The arrowhead length is 14px.
+        // Trim length so it meets the base of the arrowhead without extending past it
         const lineLen = Math.max(0, absLen - arrowHeadLength);
 
         // Determine x2 based on direction
@@ -332,9 +331,6 @@
         const direction = isNegative ? -1 : 1;
 
         // Determine how many overlapping layers we need
-        // E.g., if totalRads = 3PI.
-        // Layer 1: 0 to 3PI.
-        // Layer 2: 2PI to 3PI.
         const laps = Math.ceil(totalRads / (2 * Math.PI));
 
         // Base steps for smoothness
@@ -344,7 +340,7 @@
             // Start of this layer (0, 2PI, 4PI...)
             const layerStartRad = lap * 2 * Math.PI;
 
-            // If the layer start is beyond our total length, stop (shouldn't happen with ceil loop)
+            // If the layer start is beyond our total length, stop
             if (layerStartRad >= totalRads) break;
 
             const pathData = [];
