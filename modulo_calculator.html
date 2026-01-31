@@ -25,24 +25,46 @@
             letter-spacing: 2px;
         }
 
-        #input-container {
+        /* Controls Container */
+        #controls-container {
+            display: flex;
+            gap: 10px;
             margin-bottom: 20px;
             z-index: 10;
+            align-items: center;
         }
 
-        input[type="text"] {
+        /* Common Input Styles */
+        .control-input {
             padding: 10px 15px;
             font-size: 16px;
             border: 2px solid #ddd;
             border-radius: 25px;
-            width: 300px;
-            text-align: center;
             outline: none;
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus {
+        .control-input:focus {
             border-color: #4a90e2;
+        }
+
+        select.control-input {
+            cursor: pointer;
+            background-color: white;
+        }
+
+        input[type="text"].control-input {
+            width: 300px;
+            text-align: center;
+        }
+
+        input[type="number"].control-input {
+            width: 100px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
         }
 
         #canvas-container {
@@ -88,7 +110,7 @@
             stroke-linecap: round;
             stroke-linejoin: round;
             pointer-events: none;
-            opacity: 0.2; /* Updated Opacity */
+            opacity: 0.2; /* Layering Opacity */
         }
 
         .spiral-segment.positive { stroke: #4a90e2; }
@@ -104,8 +126,18 @@
 
     <h1>Modulo Factory</h1>
 
-    <div id="input-container">
-        <input type="text" id="labels-input" value="0, 1, 2, 3, 4, 5, 6, 7" placeholder="Type labels (e.g. A, B, C)">
+    <div id="controls-container">
+        <select id="preset-select" class="control-input">
+            <option value="custom">Custom Labels</option>
+            <option value="number">Number Count</option>
+            <option value="days">Days of Week</option>
+            <option value="months">Months of Year</option>
+            <option value="alphabet">Alphabet</option>
+        </select>
+
+        <input type="text" id="labels-input" class="control-input" value="0, 1, 2, 3, 4, 5, 6, 7" placeholder="Type labels (e.g. A, B, C)">
+
+        <input type="number" id="number-input" class="control-input hidden" value="12" min="1" max="50">
     </div>
 
     <div id="canvas-container">
@@ -132,9 +164,7 @@
 
                     <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
                         <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
-
                         <polygon id="slider-caret" points="-8,-22 8,-22 0,-8" fill="#222" />
-
                         <text id="slider-value-text" x="0" y="45" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
                     </g>
                 </g>
@@ -157,8 +187,18 @@
     const sliderStepPx = sliderWidth / (sliderRange * 2);
     const arrowHeadLength = 14;
 
+    // --- Data Presets ---
+    const PRESETS = {
+        days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
+    };
+
     // --- DOM Elements ---
-    const inputEl = document.getElementById('labels-input');
+    const presetSelect = document.getElementById('preset-select');
+    const labelsInput = document.getElementById('labels-input');
+    const numberInput = document.getElementById('number-input');
+
     const pointsGroup = document.getElementById('points-group');
     const spiralContainer = document.getElementById('spiral-paths-container');
     const baseHandle = document.getElementById('base-handle');
@@ -189,29 +229,67 @@
         };
     }
 
-    // --- Initialization ---
-    function parseInput() {
-        const raw = inputEl.value;
+    // --- State Management ---
+    function updateConfiguration() {
+        const mode = presetSelect.value;
+
+        // Toggle Visibility
+        if (mode === 'custom') {
+            labelsInput.classList.remove('hidden');
+            numberInput.classList.add('hidden');
+            parseCustomInput();
+        } else if (mode === 'number') {
+            labelsInput.classList.add('hidden');
+            numberInput.classList.remove('hidden');
+            parseNumberInput();
+        } else {
+            // Presets
+            labelsInput.classList.add('hidden');
+            numberInput.classList.add('hidden');
+            applyPreset(mode);
+        }
+
+        // Clamp baseIndex if n changed drastically
+        if (baseIndex >= n) baseIndex = 0;
+
+        renderPoints();
+        updateVisuals();
+    }
+
+    function parseCustomInput() {
+        const raw = labelsInput.value;
         if (!raw.trim()) {
             labels = ['0', '1', '2', '3', '4'];
         } else {
             labels = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
         }
         n = labels.length;
-        if (n === 0) {
-            labels = ['0'];
-            n = 1;
-        }
-        renderPoints();
-        updateVisuals();
+        if (n === 0) { labels = ['0']; n = 1; }
     }
 
+    function parseNumberInput() {
+        let val = parseInt(numberInput.value);
+        if (isNaN(val) || val < 1) val = 1;
+        n = val;
+        labels = []; // No outer labels
+    }
+
+    function applyPreset(mode) {
+        if (PRESETS[mode]) {
+            labels = [...PRESETS[mode]];
+            n = labels.length;
+        }
+    }
+
+    // --- Rendering ---
     function renderPoints() {
         pointsGroup.innerHTML = '';
-        labels.forEach((label, i) => {
+
+        // Loop purely based on n, regardless of label source
+        for(let i = 0; i < n; i++) {
             const coords = getCoords(i, circleRadius);
 
-            // Point
+            // Point Marker
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("cx", coords.x);
             circle.setAttribute("cy", coords.y);
@@ -219,7 +297,7 @@
             circle.setAttribute("class", "point-marker");
             pointsGroup.appendChild(circle);
 
-            // Inner Label (Index)
+            // Inner Label (Index 0..n-1) - Always Shown
             const innerCoords = getCoords(i, circleRadius - 25);
             const innerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
             innerText.setAttribute("x", innerCoords.x);
@@ -228,15 +306,17 @@
             innerText.textContent = i;
             pointsGroup.appendChild(innerText);
 
-            // Outer Label (Custom)
-            const outerCoords = getCoords(i, circleRadius + 25);
-            const outerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            outerText.setAttribute("x", outerCoords.x);
-            outerText.setAttribute("y", outerCoords.y);
-            outerText.setAttribute("class", "label-text");
-            outerText.textContent = label;
-            pointsGroup.appendChild(outerText);
-        });
+            // Outer Label (Custom/Preset) - Only if labels exist for this index
+            if (labels.length > i) {
+                const outerCoords = getCoords(i, circleRadius + 25);
+                const outerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                outerText.setAttribute("x", outerCoords.x);
+                outerText.setAttribute("y", outerCoords.y);
+                outerText.setAttribute("class", "label-text");
+                outerText.textContent = labels[i];
+                pointsGroup.appendChild(outerText);
+            }
+        }
     }
 
     function renderSliderTicks() {
@@ -264,24 +344,17 @@
         }
     }
 
-    // --- Rendering Logic ---
     function updateVisuals() {
         const color = vectorValue < 0 ? "#e24a4a" : "#4a90e2";
         const isNeg = vectorValue < 0;
 
         // 1. Slider UI
         const sliderX = sliderCenter + (vectorValue * sliderStepPx);
-
-        // Move Handle Group
         sliderHandleGroup.setAttribute("transform", `translate(${sliderX}, 0)`);
 
-        // Update Line Length
-        // Calculate absolute length from center
+        // Trim vector line to stop at arrowhead base
         const absLen = Math.abs(sliderX - sliderCenter);
-        // Trim length so it meets the base of the arrowhead without extending past it
         const lineLen = Math.max(0, absLen - arrowHeadLength);
-
-        // Determine x2 based on direction
         const trimX = isNeg ? (sliderCenter - lineLen) : (sliderCenter + lineLen);
 
         if (lineLen <= 0) {
@@ -317,44 +390,32 @@
         const tangentAngle = (tipCoords.angle * 180 / Math.PI) + 90 + (isNeg ? 180 : 0);
         tipArrow.setAttribute("transform", `rotate(${tangentAngle})`);
 
-        // 4. Spiral Path (Transparency Layering)
+        // 4. Spiral Path
         drawWindingPath(isNeg);
     }
 
     function drawWindingPath(isNegative) {
-        spiralContainer.innerHTML = ''; // Clear previous
+        spiralContainer.innerHTML = '';
 
-        // 1 full lap = 2PI radians.
-        // Total radians = vectorValue * (2PI / n)
         const totalRads = Math.abs(vectorValue) * (2 * Math.PI / n);
         const startTheta = -Math.PI / 2 + (baseIndex * (2 * Math.PI) / n);
         const direction = isNegative ? -1 : 1;
 
-        // Determine how many overlapping layers we need
+        // Multi-layer loop for transparency accumulation
         const laps = Math.ceil(totalRads / (2 * Math.PI));
-
-        // Base steps for smoothness
         const stepsPerRad = 20;
 
         for (let lap = 0; lap < laps; lap++) {
-            // Start of this layer (0, 2PI, 4PI...)
             const layerStartRad = lap * 2 * Math.PI;
-
-            // If the layer start is beyond our total length, stop
             if (layerStartRad >= totalRads) break;
 
             const pathData = [];
-
-            // Calculate number of steps for this segment (from layerStartRad to totalRads)
             const segmentLen = totalRads - layerStartRad;
             const steps = Math.ceil(segmentLen * stepsPerRad) + 2;
 
             for(let i = 0; i <= steps; i++) {
-                // t goes from 0 to 1 representing the segment from layerStart to Total
                 const t = i / steps;
                 const currentRelRad = layerStartRad + (t * segmentLen);
-
-                // Actual angle on circle
                 const currentTheta = startTheta + (direction * currentRelRad);
 
                 const x = circleRadius * Math.cos(currentTheta);
@@ -449,10 +510,14 @@
         }
     );
 
+    // --- Event Listeners ---
+    presetSelect.addEventListener('change', updateConfiguration);
+    labelsInput.addEventListener('input', updateConfiguration);
+    numberInput.addEventListener('input', updateConfiguration);
+
     // --- Init ---
-    inputEl.addEventListener('input', parseInput);
     renderSliderTicks();
-    parseInput();
+    updateConfiguration();
 
 </script>
 </body>
