@@ -1,8 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Corrected Decimal Clock</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Fidelity Decimal Clock</title>
     <style>
+        :root {
+            --bg-color: #1a1b1e;
+            --clock-bg: #25262b;
+            --accent-u: #40c057; /* Green */
+            --accent-t: #4dabf7; /* Blue */
+            --accent-h: #fa5252; /* Red */
+            --text-color: #c1c2c5;
+        }
+
         body {
             display: flex;
             flex-direction: column;
@@ -10,323 +21,388 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background: #2c3e50;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-            user-select: none; /* Prevent text selection while dragging */
+            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-color);
+            overflow: hidden; /* Prevent scroll on drag */
         }
 
-        #clock-face {
+        /* --- THE CLOCK --- */
+        .clock-wrapper {
             position: relative;
-            width: 400px;
-            height: 400px;
-            background: #ecf0f1;
-            border-radius: 50%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 15px solid #34495e;
+            width: 360px;
+            height: 360px;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
         }
 
-        /* Dial Markings */
-        .tick {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 50%; /* Only draw in top half, rotate container */
-            width: 2px;
-            transform-origin: 50% 100%;
-            pointer-events: none;
+        .clock-face {
+            width: 100%;
+            height: 100%;
+            background: var(--clock-bg);
+            border-radius: 50%;
+            border: 8px solid #2c2e33;
+            position: relative;
         }
-        .tick::after {
-            content: '';
+
+        /* SVG Overlay for ticks/numbers */
+        svg.dial {
             position: absolute;
-            top: 10px;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 10px;
-            background: #bdc3c7;
-        }
-        .tick.major::after {
-            height: 25px;
-            background: #2c3e50;
-            width: 4px;
-            left: -1px;
-        }
-        .label {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            left: 50%;
-            top: 40px;
-            transform-origin: 50% 160px; /* Offset to rotate around center */
-            text-align: center;
-            color: #2c3e50;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-left: -15px; /* Center text */
+            height: 100%;
             pointer-events: none;
         }
 
-        /* Hands */
+        text {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            fill: #5c5f66;
+            font-size: 24px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        /* HANDS */
+        .hand-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through container */
+        }
+
         .hand {
             position: absolute;
             bottom: 50%;
             left: 50%;
             transform-origin: 50% 100%;
-            cursor: pointer;
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transition: transform 0.05s linear; /* Smooth visual update */
+            border-radius: 100px;
+            cursor: grab;
+            pointer-events: auto; /* Re-enable clicks on hands */
+            transition: filter 0.2s, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: transform;
+            z-index: 10;
         }
 
-        /* Specific Hand Styles */
-        #hand-hundreds {
-            width: 10px;
-            height: 110px; /* Shortest */
-            background: #e74c3c; /* Red */
-            z-index: 2;
-            margin-left: -5px;
-        }
-        #hand-tens {
-            width: 6px;
-            height: 150px;
-            background: #3498db; /* Blue */
-            z-index: 3;
-            margin-left: -3px;
-        }
-        #hand-units {
-            width: 4px;
-            height: 180px; /* Longest */
-            background: #2ecc71; /* Green */
-            z-index: 4;
-            margin-left: -2px;
-        }
-
-        .center-nut {
+        .hand::before {
+            /* Invisible hit area to make grabbing easier */
+            content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #2c3e50;
-            border-radius: 50%;
+            left: -15px;
+            right: -15px;
+            top: -15px;
+            bottom: -15px;
+        }
+
+        .hand:active, .hand.dragging {
+            cursor: grabbing;
+            filter: brightness(1.3);
+            transition: none; /* Instant movement while dragging */
+        }
+
+        /* Hundreds (Red) - Short & Thick */
+        #hand-h {
+            width: 12px;
+            height: 90px;
+            background: var(--accent-h);
+            margin-left: -6px;
+            z-index: 2;
+        }
+
+        /* Tens (Blue) - Medium */
+        #hand-t {
+            width: 8px;
+            height: 130px;
+            background: var(--accent-t);
+            margin-left: -4px;
+            z-index: 3;
+        }
+
+        /* Units (Green) - Long & Thin */
+        #hand-u {
+            width: 4px;
+            height: 160px;
+            background: var(--accent-u);
+            margin-left: -2px;
+            z-index: 4;
+        }
+
+        .center-cap {
+            position: absolute;
             top: 50%;
             left: 50%;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 10;
+            z-index: 20;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             pointer-events: none;
         }
 
-        /* Controls */
-        #controls {
-            margin-top: 50px;
+        /* --- CONTROLS --- */
+        .controls {
+            margin-top: 40px;
             text-align: center;
-            background: rgba(0,0,0,0.2);
-            padding: 20px;
-            border-radius: 15px;
         }
 
-        input[type="number"] {
-            font-size: 2.5rem;
-            width: 140px;
+        .readout-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        input#digital-readout {
+            background: #141517;
+            border: 2px solid #2c2e33;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 3rem;
+            width: 200px;
+            padding: 10px 20px;
+            border-radius: 12px;
             text-align: center;
-            background: #34495e;
-            color: #2ecc71;
-            border: 2px solid #2ecc71;
-            border-radius: 8px;
-            font-family: 'Courier New', Courier, monospace;
             outline: none;
+            transition: border-color 0.2s;
         }
 
-        .instructions {
-            font-size: 0.9rem;
-            color: #bdc3c7;
-            margin-top: 10px;
+        input#digital-readout:focus {
+            border-color: var(--accent-t);
         }
 
-        .legend span { margin: 0 10px; font-weight: bold; }
+        .legend {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+
     </style>
 </head>
 <body>
 
-    <div id="clock-face">
-        <div class="center-nut"></div>
-        <div id="hand-hundreds" class="hand" title="Hundreds"></div>
-        <div id="hand-tens" class="hand" title="Tens"></div>
-        <div id="hand-units" class="hand" title="Units"></div>
+    <div class="clock-wrapper" id="clock-area">
+        <div class="clock-face">
+            <svg class="dial" viewBox="0 0 360 360">
+                </svg>
+
+            <div class="hand-container">
+                <div id="hand-h" class="hand" data-role="hundreds"></div>
+                <div id="hand-t" class="hand" data-role="tens"></div>
+                <div id="hand-u" class="hand" data-role="units"></div>
+            </div>
+
+            <div class="center-cap"></div>
+        </div>
     </div>
 
-    <div id="controls">
-        <div style="margin-bottom: 10px;" class="legend">
-            <span style="color: #e74c3c">Hundreds</span>
-            <span style="color: #3498db">Tens</span>
-            <span style="color: #2ecc71">Units</span>
+    <div class="controls">
+        <div class="readout-wrapper">
+            <input type="number" id="digital-readout" value="0" min="0" max="999">
         </div>
-        <input type="number" id="digital-input" value="0" min="0" max="999">
-        <div class="instructions">Drag hands to wind • Type & Enter to jump</div>
+
+        <div class="legend">
+            <div class="legend-item" style="color: var(--accent-h)"><div class="dot" style="background:var(--accent-h)"></div>100s</div>
+            <div class="legend-item" style="color: var(--accent-t)"><div class="dot" style="background:var(--accent-t)"></div>10s</div>
+            <div class="legend-item" style="color: var(--accent-u)"><div class="dot" style="background:var(--accent-u)"></div>1s</div>
+        </div>
+        <p style="margin-top: 20px; color: #5c5f66; font-size: 0.8rem;">Drag hands to wind • Tap number to edit</p>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const MAX_VAL = 1000;
-        let globalValue = 0; // The master source of truth (0 to 1000)
+        // --- DRAWING THE DIAL (SVG) ---
+        const svg = document.querySelector('.dial');
+        const cx = 180, cy = 180, r = 160;
 
-        const clockFace = document.getElementById('clock-face');
-        const input = document.getElementById('digital-input');
-        const hands = {
-            hundreds: document.getElementById('hand-hundreds'),
-            tens: document.getElementById('hand-tens'),
-            units: document.getElementById('hand-units')
-        };
+        function createTick(angle, isMajor, num) {
+            const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const length = isMajor ? 20 : 10;
+            const width = isMajor ? 4 : 2;
+            const color = isMajor ? "#5c5f66" : "#2c2e33";
 
-        // --- SETUP DIAL MARKS ---
-        for(let i=0; i<10; i++) {
-            // Major ticks (The numbers 0-9)
-            const tick = document.createElement('div');
-            tick.className = 'tick major';
-            tick.style.transform = `translateX(-50%) rotate(${i * 36}deg)`; // 360 / 10 = 36 deg
-            clockFace.appendChild(tick);
+            const rad = (angle - 90) * Math.PI / 180;
+            const x1 = cx + (r - length) * Math.cos(rad);
+            const y1 = cy + (r - length) * Math.sin(rad);
+            const x2 = cx + r * Math.cos(rad);
+            const y2 = cy + r * Math.sin(rad);
 
-            // Labels
-            const label = document.createElement('div');
-            label.className = 'label';
-            label.innerText = i;
-            label.style.transform = `translateX(-50%) rotate(${i * 36}deg)`;
-            // Counter-rotate text so numbers stand upright
-            const innerSpan = document.createElement('span');
-            innerSpan.style.display = 'block';
-            innerSpan.style.transform = `rotate(-${i * 36}deg)`;
-            innerSpan.innerText = i;
-            label.innerHTML = '';
-            label.appendChild(innerSpan);
-            clockFace.appendChild(label);
+            tick.setAttribute("x1", x1);
+            tick.setAttribute("y1", y1);
+            tick.setAttribute("x2", x2);
+            tick.setAttribute("y2", y2);
+            tick.setAttribute("stroke", color);
+            tick.setAttribute("stroke-width", width);
+            tick.setAttribute("stroke-linecap", "round");
+            svg.appendChild(tick);
 
-            // Minor ticks (subdivisions)
-            for(let j=1; j<10; j++) {
-                const minor = document.createElement('div');
-                minor.className = 'tick';
-                minor.style.transform = `translateX(-50%) rotate(${(i*36) + (j*3.6)}deg)`;
-                clockFace.appendChild(minor);
+            if (isMajor) {
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                // Position numbers slightly inward
+                const tx = cx + (r - 40) * Math.cos(rad);
+                const ty = cy + (r - 40) * Math.sin(rad);
+                text.setAttribute("x", tx);
+                text.setAttribute("y", ty + 2); // Visual tweak for vertical centering
+                text.textContent = num;
+                svg.appendChild(text);
             }
         }
 
-        // --- CORE LOGIC ---
-
-        function updateDisplay(value) {
-            // Clamp value
-            if (value < 0) value = 0;
-            if (value >= MAX_VAL) value = MAX_VAL - 0.01; // Keep it just under 1000 to prevent overflow
-            globalValue = value;
-
-            // 1. Digital Readout (Integer)
-            input.value = Math.floor(globalValue);
-
-            // 2. Hand Rotation
-            // Units Hand: 0-10 loops. Full circle = 10 units.
-            // Angle = (Value % 10) / 10 * 360
-            const uAngle = (globalValue % 10) / 10 * 360;
-
-            // Tens Hand: 0-100 loops. Full circle = 100 units.
-            // Angle = (Value % 100) / 100 * 360
-            const tAngle = (globalValue % 100) / 100 * 360;
-
-            // Hundreds Hand: 0-1000. Full circle = 1000 units.
-            // Angle = Value / 1000 * 360
-            const hAngle = (globalValue / 1000) * 360;
-
-            hands.units.style.transform = `rotate(${uAngle}deg)`;
-            hands.tens.style.transform = `rotate(${tAngle}deg)`;
-            hands.hundreds.style.transform = `rotate(${hAngle}deg)`;
+        for (let i = 0; i < 100; i++) {
+            const angle = i * 3.6;
+            const isMajor = (i % 10 === 0);
+            const num = i / 10;
+            createTick(angle, isMajor, isMajor ? num : null);
         }
 
-        // --- DRAG INTERACTION ---
+        // --- CLOCK LOGIC ---
+        const state = {
+            value: 0, // Float 0-1000
+            max: 1000
+        };
 
-        let isDragging = false;
-        let activeHand = null;
-        let lastAngle = 0;
+        const els = {
+            h: document.getElementById('hand-h'),
+            t: document.getElementById('hand-t'),
+            u: document.getElementById('hand-u'),
+            input: document.getElementById('digital-readout'),
+            clockArea: document.getElementById('clock-area')
+        };
 
-        function getAngle(x, y) {
-            const rect = clockFace.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            // atan2 returns radians from -PI to PI. Convert to degrees 0-360
-            // -90 offsets it so 0 degrees is at 12 o'clock
-            let angle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
-            angle += 90;
-            if (angle < 0) angle += 360;
-            return angle;
+        function updateView(animate = false) {
+            // Clamp
+            if (state.value < 0) state.value = 0;
+            if (state.value >= state.max) state.value = state.max - 0.01;
+
+            els.input.value = Math.round(state.value);
+
+            // Calculate Angles
+            // Units: 10 per 360deg
+            const degU = (state.value % 10) / 10 * 360;
+            // Tens: 100 per 360deg
+            const degT = (state.value % 100) / 100 * 360;
+            // Hundreds: 1000 per 360deg
+            const degH = (state.value / 1000) * 360;
+
+            const transformStyle = animate ? 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none';
+
+            if(animate) {
+                [els.h, els.t, els.u].forEach(el => el.style.transition = transformStyle);
+            }
+
+            els.u.style.transform = `rotate(${degU}deg)`;
+            els.t.style.transform = `rotate(${degT}deg)`;
+            els.h.style.transform = `rotate(${degH}deg)`;
         }
 
-        // Mouse Down
-        Object.keys(hands).forEach(key => {
-            hands[key].addEventListener('mousedown', (e) => {
-                isDragging = true;
-                activeHand = key;
-                lastAngle = getAngle(e.clientX, e.clientY);
-                hands[key].style.transition = 'none'; // Disable transition for instant drag response
-                e.preventDefault();
-            });
-        });
+        // --- INTERACTION ENGINE ---
+        let drag = {
+            active: false,
+            hand: null,
+            lastAngle: 0,
+            startVal: 0
+        };
 
-        // Mouse Move
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+        function getAngle(clientX, clientY) {
+            const rect = els.clockArea.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = clientX - centerX;
+            const dy = clientY - centerY;
+            let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+            deg += 90; // normalize 0 to top
+            return deg < 0 ? deg + 360 : deg;
+        }
 
-            const currentAngle = getAngle(e.clientX, e.clientY);
-            let delta = currentAngle - lastAngle;
+        function handleStart(e) {
+            // Detect if clicking a hand
+            const target = e.target.closest('.hand');
+            if (!target) return;
 
-            // Handle the "Wrap Around" (12 o'clock boundary)
-            // If delta is huge (e.g. 350 to 10 is -340), we crossed 12 clockwise
+            e.preventDefault(); // Stop scrolling on mobile
+
+            drag.active = true;
+            drag.hand = target.dataset.role;
+            target.classList.add('dragging');
+
+            // Disable transition for instant drag
+            [els.h, els.t, els.u].forEach(el => el.style.transition = 'none');
+
+            const point = e.touches ? e.touches[0] : e;
+            drag.lastAngle = getAngle(point.clientX, point.clientY);
+        }
+
+        function handleMove(e) {
+            if (!drag.active) return;
+            e.preventDefault();
+
+            const point = e.touches ? e.touches[0] : e;
+            const currentAngle = getAngle(point.clientX, point.clientY);
+
+            let delta = currentAngle - drag.lastAngle;
+            // Normalize wrapping (crossing 12 o'clock)
             if (delta < -180) delta += 360;
             if (delta > 180) delta -= 360;
 
-            // Determine how much value changes per degree
-            // Units Hand: 360 deg = 10 units -> 1 deg = 10/360 units
-            // Tens Hand: 360 deg = 100 units -> 1 deg = 100/360 units
-            // Hundreds Hand: 360 deg = 1000 units -> 1 deg = 1000/360 units
+            // Sensitivity based on hand
+            let multiplier = 0;
+            if (drag.hand === 'units') multiplier = 10 / 360;     // 10 units per circle
+            if (drag.hand === 'tens') multiplier = 100 / 360;     // 100 units per circle
+            if (drag.hand === 'hundreds') multiplier = 1000 / 360; // 1000 units per circle
 
-            let valChange = 0;
-            if (activeHand === 'units') valChange = delta * (10 / 360);
-            if (activeHand === 'tens') valChange = delta * (100 / 360);
-            if (activeHand === 'hundreds') valChange = delta * (1000 / 360);
+            state.value += delta * multiplier;
+            drag.lastAngle = currentAngle;
 
-            let newValue = globalValue + valChange;
+            updateView(false); // No animation during drag
+        }
 
-            // Soft boundaries (can't drag past 0 or 999)
-            if (newValue < 0) newValue = 0;
-            if (newValue >= MAX_VAL) newValue = MAX_VAL - 0.01;
+        function handleEnd() {
+            if (!drag.active) return;
 
-            updateDisplay(newValue);
-            lastAngle = currentAngle;
+            // Clean up
+            document.querySelectorAll('.hand').forEach(h => h.classList.remove('dragging'));
+            drag.active = false;
+            drag.hand = null;
+
+            // SNAP LOGIC: Round to nearest integer
+            state.value = Math.round(state.value);
+            updateView(true); // Animate the snap
+        }
+
+        // --- EVENT LISTENERS ---
+        // Mouse
+        document.addEventListener('mousedown', handleStart);
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+
+        // Touch (Mobile)
+        document.addEventListener('touchstart', handleStart, {passive: false});
+        document.addEventListener('touchmove', handleMove, {passive: false});
+        document.addEventListener('touchend', handleEnd);
+
+        // Input
+        els.input.addEventListener('change', (e) => {
+            let val = parseInt(e.target.value);
+            if(isNaN(val)) val = 0;
+            state.value = val;
+            updateView(true);
         });
 
-        // Mouse Up
-        window.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                // Re-enable smooth transitions for clicks/inputs
-                Object.values(hands).forEach(h => h.style.transition = 'transform 0.1s cubic-bezier(0.4, 2.08, 0.55, 0.44)');
-                // Snap to integer logic if desired? Let's leave it float for smoothness, but input cleans it up.
-            }
+        // Allow Enter key
+        els.input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') els.input.blur();
         });
 
-        // --- INPUT INTERACTION ---
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                let val = parseFloat(input.value);
-                if (isNaN(val)) val = 0;
-                updateDisplay(val);
-                input.blur(); // Remove focus
-            }
-        });
-
-        // Also update on manual change (arrows or loss of focus)
-        input.addEventListener('change', (e) => {
-            let val = parseFloat(input.value);
-             if (isNaN(val)) val = 0;
-            updateDisplay(val);
-        });
-
-        // Initialize
-        updateDisplay(0);
+        // Init
+        updateView(true);
 
     </script>
 </body>
