@@ -289,6 +289,9 @@
 <body>
 
     <div id="quiz-panel">
+        <div class="question-card" id="q0-card">
+            <div class="question-text">Play with the calculator on the left - drag the arrow around the circle, and use the black caret below to change the length. Note how you can use negative numbers to move in the opposite direction. Then, when you're ready, try to use the Calculator to answer the riddles below.</div>
+        </div>
 
         <div class="question-card" id="q1-card">
             <div class="question-text">It's Monday. What day will it be 6 days from now?</div>
@@ -330,11 +333,11 @@
 
         <div id="controls-container">
             <select id="preset-select" class="control-input">
-                <option value="custom">Custom Labels</option>
-                <option value="number">Number Count</option>
                 <option value="days">Days of Week</option>
                 <option value="months">Months of Year</option>
                 <option value="alphabet">Alphabet</option>
+                <option value="custom">Custom Labels</option>
+                <option value="number">Number Count</option>
             </select>
             <input type="text" id="labels-input" class="control-input" value="0, 1, 2, 3, 4, 5, 6, 7" placeholder="Type labels (e.g. A, B, C)">
             <input type="number" id="number-input" class="control-input hidden" value="12" min="1" max="50">
