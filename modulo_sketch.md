@@ -1,6 +1,10 @@
 # Brainstorming Content for Tutorial on Periods and Modulo Arithmetic
 
 
+```
+python -c 'import sys;print("".join(chr((ord(c)-72)%26+65)for c in sys.argv[1].strip() if c.isalpha()))' "IPZTH YJROL HKLKA VIYLZ AMVYY LWHPY ZZAVW LZJVY AYLXB PYLKZ AVWEE"
+```
+
 ## Astronomical Periods Govern our Time Perception
 - earth revolves around the sun
 - moon revolves around the earth

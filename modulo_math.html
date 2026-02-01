@@ -48,7 +48,75 @@
             font-weight: 500;
         }
 
-        /* Scrollable Drum Picker */
+        /* --- INTERCEPT CARD STYLES (NEW) --- */
+        .intercept-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px 10px; /* Row gap, Col gap */
+            justify-content: center;
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .cipher-group {
+            display: flex;
+            gap: 3px;
+        }
+
+        .cipher-char {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 24px;
+        }
+
+        .decode-input {
+            width: 20px;
+            height: 24px;
+            text-align: center;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            background: #fafafa;
+        }
+
+        .decode-input:focus {
+            border-color: #4a90e2;
+            outline: none;
+            background: #fff;
+        }
+
+        /* The green locked-in letter */
+        .decoded-letter {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            height: 30px; /* Match input height + margin area */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .encoded-letter {
+            font-size: 16px;
+            color: #555;
+            border-top: 2px solid #ddd;
+            width: 100%;
+            text-align: center;
+            padding-top: 2px;
+            font-weight: bold;
+        }
+
+        .padding-char {
+            color: #bbb;
+            border-color: #eee;
+        }
+
+        /* --- DRUM PICKER STYLES --- */
         .picker-container {
             width: 200px;
             height: 120px; /* Shows 3 items (40px each) */
@@ -85,10 +153,9 @@
             box-sizing: border-box;
         }
 
-        /* Selection Highlight Bar (The "Caret" equivalent) */
         .picker-highlight {
             position: absolute;
-            top: 40px; /* Middle of 120px */
+            top: 40px;
             left: 0;
             width: 100%;
             height: 40px;
@@ -99,7 +166,6 @@
             z-index: 2;
         }
 
-        /* Gradient Overlays for 3D effect */
         .picker-overlay-top, .picker-overlay-bottom {
             position: absolute;
             left: 0;
@@ -151,7 +217,7 @@
         .shaking { animation: shake 0.3s ease-in-out; }
 
 
-        /* --- CALCULATOR PANEL (Original Styles) --- */
+        /* --- CALCULATOR PANEL --- */
         #calculator-panel {
             display: flex;
             flex-direction: column;
@@ -238,6 +304,13 @@
             <div class="feedback-msg" id="q2-feedback">Result</div>
         </div>
 
+        <div class="question-card" id="intercept-card">
+            <div class="question-text" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">"We intercepted this message..."</div>
+            <div class="intercept-container" id="message-grid">
+                </div>
+            <div class="feedback-msg" id="intercept-feedback">Hint: Shift +7</div>
+        </div>
+
     </div>
 
     <hr style="width: 80%; border: 0; border-top: 1px solid #ddd; margin-bottom: 30px;">
@@ -312,20 +385,9 @@
         }
         scroller.innerHTML = content;
 
-        // Start in the middle
         const totalItems = items.length * 50;
         const middleSet = Math.floor(25 * items.length);
         currentIndex = middleSet;
-
-        // Initial Offset:
-        // We want the currentIndex item to be in the "middle" slot.
-        // In a container of height 120 (3 items), slot 0 is top, slot 1 is middle.
-        // So we want the element at currentIndex to be at y = 40.
-        // Transform moves the whole list.
-        // If transform is -1000, top of list is at -1000.
-        // We want item[currentIndex] (which is at currentIndex * 40) to be at screen pos 40.
-        // So: (currentIndex * 40) + offset = 40
-        // offset = 40 - (currentIndex * 40)
 
         offset = 40 - (currentIndex * itemHeight);
         scroller.style.transform = `translateY(${offset}px)`;
@@ -358,15 +420,8 @@
         function onEnd() {
             if(!isDragging) return;
             isDragging = false;
-
-            // Snap logic
-            // We want item N to land at position 40.
-            // pos = 40 - (N * 40)
-            // N = (40 - pos) / 40
-
             let index = Math.round((40 - offset) / itemHeight);
             currentIndex = index;
-
             offset = 40 - (index * itemHeight);
             scroller.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
             updatePos();
@@ -405,7 +460,6 @@
         }
     }
 
-    // Mon(1) + 6 = Sun(0)
     function checkQ1() {
         const ans = picker1.getValue();
         if (ans === "Sunday") {
@@ -415,9 +469,6 @@
         }
     }
 
-    // Mar(2) - 25 = Feb(1)
-    // 25 mod 12 = 1.
-    // 2 - 1 = 1 (Feb).
     function checkQ2() {
         const ans = picker2.getValue();
         if (ans === "February") {
@@ -427,18 +478,101 @@
         }
     }
 
+    // ==========================================
+    // INTERCEPT MESSAGE LOGIC
+    // ==========================================
+    function setupInterceptQuiz() {
+        const grid = document.getElementById('message-grid');
+
+        // Encrypted with Shift +7.
+        // Original: BISMARCK HEADED TO BREST FOR REPAIRS STOP ESCORT REQUIRED STOP
+        // Length 53 chars. Added 2 'X' to make 55 (divisible by 5).
+        const plainText = "BISMARCKHEADEDTOBRESTFORREPAIRSSTOPESCORTREQUIREDSTOPXX";
+        const encryptedText = "IPZTHYROLHKLKAVIYLZAMVYYLWHPYZZAVWLZJVYAYLXBPYLKZAVWXX";
+
+        let html = "";
+
+        // Loop 1: Quintets
+        for (let i = 0; i < encryptedText.length; i += 5) {
+            html += `<div class="cipher-group">`;
+
+            // Loop 2: Chars inside quintet
+            for (let j = 0; j < 5; j++) {
+                const idx = i + j;
+                if (idx >= encryptedText.length) break;
+
+                const eChar = encryptedText[idx]; // Encrypted char
+                const dChar = plainText[idx];     // Decrypted (Target) char
+
+                // Identify padding (Last 2 characters are XX)
+                // idx 53, 54
+                const isPadding = (idx >= 53);
+
+                html += `
+                    <div class="cipher-char">
+                        ${isPadding ?
+                            // Padding: Just show the X, no input
+                            `<div class="decoded-letter padding-char">X</div>` :
+                            // Input: User must solve
+                            `<input type="text" maxlength="1" class="decode-input"
+                                data-index="${idx}"
+                                data-correct="${dChar}">`
+                        }
+                        <div class="encoded-letter ${isPadding ? 'padding-char' : ''}">${eChar}</div>
+                    </div>`;
+            }
+            html += `</div>`;
+        }
+        grid.innerHTML = html;
+
+        // Event Delegation for inputs
+        grid.addEventListener('input', (e) => {
+            if (e.target.classList.contains('decode-input')) {
+                const input = e.target;
+                const val = input.value.toUpperCase();
+                const correct = input.dataset.correct;
+                const card = document.getElementById('intercept-card');
+
+                if (val === correct) {
+                    // 1. Correct: Lock it in
+                    const parent = input.parentElement;
+                    const letterDiv = document.createElement('div');
+                    letterDiv.className = 'decoded-letter';
+                    letterDiv.textContent = correct;
+                    parent.replaceChild(letterDiv, input);
+
+                    // 2. Check if all done
+                    const remaining = document.querySelectorAll('.decode-input');
+                    if(remaining.length === 0) {
+                        const fb = document.getElementById('intercept-feedback');
+                        fb.textContent = "MESSAGE DECODED: Bismarck Headed to Brest";
+                        fb.className = "feedback-msg success";
+                        fb.style.opacity = 1;
+                    } else {
+                        // 3. Auto-focus next input
+                        if(remaining[0]) remaining[0].focus();
+                    }
+
+                } else if (val !== "") {
+                    // 4. Incorrect: Shudder
+                    input.value = "";
+                    card.classList.remove('shaking');
+                    void card.offsetWidth; // force reflow
+                    card.classList.add('shaking');
+                }
+            }
+        });
+    }
+
 
     // ==========================================
     // CALCULATOR LOGIC
     // ==========================================
-
-    // --- State ---
     let labels = [];
     let n = 0;
     let vectorValue = 2;
     let baseIndex = 0;
 
-    // --- Configuration ---
     const circleRadius = 140;
     const sliderWidth = 400;
     const sliderCenter = 200;
@@ -446,14 +580,12 @@
     const sliderStepPx = sliderWidth / (sliderRange * 2);
     const arrowHeadLength = 14;
 
-    // --- Data Presets ---
     const PRESETS = {
         days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
     };
 
-    // --- DOM Elements ---
     const presetSelect = document.getElementById('preset-select');
     const labelsInput = document.getElementById('labels-input');
     const numberInput = document.getElementById('number-input');
@@ -464,31 +596,20 @@
     const tipGroup = document.getElementById('tip-group');
     const tipArrow = document.getElementById('tip-arrow');
     const sliderTicksGroup = document.getElementById('slider-ticks');
-
-    // Slider Elements
     const sliderHandleGroup = document.getElementById('slider-handle-group');
     const sliderVectorLine = document.getElementById('slider-vector-line');
     const sliderZeroDot = document.getElementById('slider-zero-dot');
     const sliderArrowhead = document.getElementById('slider-arrowhead');
     const sliderValueText = document.getElementById('slider-value-text');
-
     const svgEl = document.getElementById('main-svg');
 
-    // --- Helpers ---
-    function mod(a, n) {
-        return ((a % n) + n) % n;
-    }
+    function mod(a, n) { return ((a % n) + n) % n; }
 
     function getCoords(index, radius) {
         const angle = -Math.PI / 2 + (index * (2 * Math.PI) / n);
-        return {
-            x: radius * Math.cos(angle),
-            y: radius * Math.sin(angle),
-            angle: angle
-        };
+        return { x: radius * Math.cos(angle), y: radius * Math.sin(angle), angle: angle };
     }
 
-    // --- State Management ---
     function updateConfiguration() {
         const mode = presetSelect.value;
         if (mode === 'custom') {
@@ -511,11 +632,8 @@
 
     function parseCustomInput() {
         const raw = labelsInput.value;
-        if (!raw.trim()) {
-            labels = ['0', '1', '2', '3', '4'];
-        } else {
-            labels = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        }
+        if (!raw.trim()) { labels = ['0', '1', '2', '3', '4']; }
+        else { labels = raw.split(',').map(s => s.trim()).filter(s => s.length > 0); }
         n = labels.length;
         if (n === 0) { labels = ['0']; n = 1; }
     }
@@ -528,13 +646,9 @@
     }
 
     function applyPreset(mode) {
-        if (PRESETS[mode]) {
-            labels = [...PRESETS[mode]];
-            n = labels.length;
-        }
+        if (PRESETS[mode]) { labels = [...PRESETS[mode]]; n = labels.length; }
     }
 
-    // --- Rendering ---
     function renderPoints() {
         pointsGroup.innerHTML = '';
         for(let i = 0; i < n; i++) {
@@ -600,9 +714,8 @@
         const lineLen = Math.max(0, absLen - arrowHeadLength);
         const trimX = isNeg ? (sliderCenter - lineLen) : (sliderCenter + lineLen);
 
-        if (lineLen <= 0) {
-             sliderVectorLine.setAttribute("visibility", "hidden");
-        } else {
+        if (lineLen <= 0) sliderVectorLine.setAttribute("visibility", "hidden");
+        else {
              sliderVectorLine.setAttribute("visibility", "visible");
              sliderVectorLine.setAttribute("x2", trimX);
         }
@@ -658,7 +771,6 @@
                 if (i === 0) pathData.push(`M ${x} ${y}`);
                 else pathData.push(`L ${x} ${y}`);
             }
-
             const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
             pathEl.setAttribute("d", pathData.join(" "));
             pathEl.setAttribute("class", isNegative ? "spiral-segment negative" : "spiral-segment positive");
@@ -666,7 +778,6 @@
         }
     }
 
-    // --- Interaction Logic ---
     function setupDrag(element, onDrag, onEnd) {
         let isDragging = false;
         const start = (e) => { isDragging = true; e.preventDefault(); };
@@ -675,10 +786,7 @@
             const point = e.touches ? getTouchPos(e) : getMousePos(e);
             onDrag(point);
         };
-        const end = () => {
-            if(isDragging && onEnd) onEnd();
-            isDragging = false;
-        };
+        const end = () => { if(isDragging && onEnd) onEnd(); isDragging = false; };
         element.addEventListener('mousedown', start);
         element.addEventListener('touchstart', start, {passive: false});
         window.addEventListener('mousemove', move);
@@ -697,57 +805,40 @@
         return { x: (t.clientX - CTM.e) / CTM.a, y: (t.clientY - CTM.f) / CTM.d };
     }
 
-    setupDrag(sliderHandleGroup,
-        (pos) => {
-            const localX = pos.x - 50;
-            vectorValue = (localX - sliderCenter) / sliderStepPx;
-            updateVisuals();
-        },
-        () => {
-            vectorValue = Math.round(vectorValue);
-            updateVisuals();
-        }
-    );
+    setupDrag(sliderHandleGroup, (pos) => {
+        const localX = pos.x - 50;
+        vectorValue = (localX - sliderCenter) / sliderStepPx;
+        updateVisuals();
+    }, () => { vectorValue = Math.round(vectorValue); updateVisuals(); });
 
-    setupDrag(baseHandle,
-        (pos) => {
-            const localX = pos.x - 250;
-            const localY = pos.y - 220;
-            let angle = Math.atan2(localY, localX) + (Math.PI / 2);
-            if (angle < 0) angle += 2 * Math.PI;
-            const index = angle / ((2 * Math.PI) / n);
-            baseIndex = mod(index, n);
-            updateVisuals();
-        },
-        () => {
-            baseIndex = mod(Math.round(baseIndex), n);
-            updateVisuals();
-        }
-    );
+    setupDrag(baseHandle, (pos) => {
+        const localX = pos.x - 250;
+        const localY = pos.y - 220;
+        let angle = Math.atan2(localY, localX) + (Math.PI / 2);
+        if (angle < 0) angle += 2 * Math.PI;
+        baseIndex = mod(angle / ((2 * Math.PI) / n), n);
+        updateVisuals();
+    }, () => { baseIndex = mod(Math.round(baseIndex), n); updateVisuals(); });
 
-    setupDrag(tipGroup,
-        (pos) => {
-            const localX = pos.x - 250;
-            const localY = pos.y - 220;
-            let angle = Math.atan2(localY, localX) + (Math.PI / 2);
-            if (angle < 0) angle += 2 * Math.PI;
-            const targetIndex = angle / ((2 * Math.PI) / n);
-            baseIndex = mod(targetIndex - vectorValue, n);
-            updateVisuals();
-        },
-        () => {
-            baseIndex = mod(Math.round(baseIndex), n);
-            updateVisuals();
-        }
-    );
+    setupDrag(tipGroup, (pos) => {
+        const localX = pos.x - 250;
+        const localY = pos.y - 220;
+        let angle = Math.atan2(localY, localX) + (Math.PI / 2);
+        if (angle < 0) angle += 2 * Math.PI;
+        const targetIndex = angle / ((2 * Math.PI) / n);
+        baseIndex = mod(targetIndex - vectorValue, n);
+        updateVisuals();
+    }, () => { baseIndex = mod(Math.round(baseIndex), n); updateVisuals(); });
 
-    // --- Init ---
     presetSelect.addEventListener('change', updateConfiguration);
     labelsInput.addEventListener('input', updateConfiguration);
     numberInput.addEventListener('input', updateConfiguration);
 
     renderSliderTicks();
     updateConfiguration();
+
+    // --- Initialize new feature ---
+    setupInterceptQuiz();
 
 </script>
 </body>
