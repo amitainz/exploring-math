@@ -288,6 +288,10 @@
 </head>
 <body>
 
+    <div id="success-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; justify-content:center; align-items:center;">
+        <img src="decryption_success.png" style="max-width:90%; max-height:90%; box-shadow: 0 0 20px black;">
+    </div>
+
     <div id="quiz-panel">
         <div class="question-card" id="q0-card">
             <div class="question-text">Play with the calculator on the left - drag the arrow around the circle, and use the black caret below to change the length. Note how you can use negative numbers to move in the opposite direction. Then, when you're ready, try to use the Calculator to answer the riddles below.</div>
@@ -550,6 +554,12 @@
                         fb.textContent = "MESSAGE DECODED!";
                         fb.className = "feedback-msg success";
                         fb.style.opacity = 1;
+
+                        const overlay = document.getElementById('success-overlay');
+                        overlay.style.display = 'flex';
+                        window.addEventListener('keydown', function() {
+                            overlay.style.display = 'none';
+                        }, {once:true});
                     } else {
                         // 3. Auto-focus next input
                         if(remaining[0]) remaining[0].focus();
