@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modulo Calculator Factory</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+            padding-bottom: 50px;
+        }
+
+        /* --- QUIZ PANEL STYLES --- */
+        #quiz-panel {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .question-text {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        /* Scrollable Drum Picker */
+        .picker-container {
+            width: 200px;
+            height: 60px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            touch-action: none;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .picker-container:active { cursor: grabbing; border-color: #4a90e2; }
+
+        .picker-scroller {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            will-change: transform;
+        }
+
+        .picker-item {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .check-btn {
+            padding: 8px 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .check-btn:hover { background: #357abd; }
+
+        .feedback-msg {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .feedback-msg.success { color: #28a745; opacity: 1; }
+        .feedback-msg.error { color: #dc3545; opacity: 1; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shaking { animation: shake 0.3s ease-in-out; }
+
+
+        /* --- CALCULATOR PANEL (Original Styles) --- */
+        #calculator-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #controls-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            z-index: 10;
+            align-items: center;
+        }
+
+        .control-input {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .control-input:focus { border-color: #4a90e2; }
+        select.control-input { cursor: pointer; background-color: white; }
+        input[type="text"].control-input { width: 300px; text-align: center; }
+        input[type="number"].control-input { width: 100px; text-align: center; }
+        .hidden { display: none; }
+
+        #canvas-container {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        svg { display: block; overflow: visible; }
+        .label-text { font-size: 14px; font-weight: bold; fill: #555; text-anchor: middle; dominant-baseline: middle; }
+        .index-text { font-size: 12px; font-weight: bold; fill: #999; text-anchor: middle; dominant-baseline: middle; }
+        .tick-line { stroke: #ddd; stroke-width: 2; }
+        .tick-text { font-size: 12px; fill: #ccc; text-anchor: middle; }
+        .grab-handle { cursor: grab; }
+        .grab-handle:active { cursor: grabbing; }
+        .spiral-segment { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: 0.2; }
+        .spiral-segment.positive { stroke: #4a90e2; }
+        .spiral-segment.negative { stroke: #e24a4a; }
+        .point-marker { fill: #eee; stroke: none; }
+
+    </style>
+</head>
+<body>
+
+    <div id="quiz-panel">
+
+        <div class="question-card" id="q1-card">
+            <div class="question-text">It's Monday. What day will it be 6 days from now?</div>
+            <div class="picker-container" id="q1-picker">
+                <div class="picker-scroller" id="q1-scroller"></div>
+            </div>
+            <button class="check-btn" onclick="checkQ1()">Check Answer</button>
+            <div class="feedback-msg" id="q1-feedback">Result</div>
+        </div>
+
+        <div class="question-card" id="q2-card">
+            <div class="question-text">It's February. What month was it 25 months ago?</div>
+            <div class="picker-container" id="q2-picker">
+                <div class="picker-scroller" id="q2-scroller"></div>
+            </div>
+            <button class="check-btn" onclick="checkQ2()">Check Answer</button>
+            <div class="feedback-msg" id="q2-feedback">Result</div>
+        </div>
+
+    </div>
+
+    <hr style="width: 80%; border: 0; border-top: 1px solid #ddd; margin-bottom: 30px;">
+
+    <div id="calculator-panel">
+        <h1>Modulo Factory</h1>
+
+        <div id="controls-container">
+            <select id="preset-select" class="control-input">
+                <option value="custom">Custom Labels</option>
+                <option value="number">Number Count</option>
+                <option value="days">Days of Week</option>
+                <option value="months">Months of Year</option>
+                <option value="alphabet">Alphabet</option>
+            </select>
+            <input type="text" id="labels-input" class="control-input" value="0, 1, 2, 3, 4, 5, 6, 7" placeholder="Type labels (e.g. A, B, C)">
+            <input type="number" id="number-input" class="control-input hidden" value="12" min="1" max="50">
+        </div>
+
+        <div id="canvas-container">
+            <svg id="main-svg" width="500" height="600">
+                <g id="circle-group" transform="translate(250, 220)">
+                    <circle cx="0" cy="0" r="160" fill="none" stroke="#eee" stroke-width="2" />
+                    <g id="points-group"></g>
+                    <g id="spiral-paths-container"></g>
+                    <circle id="base-handle" r="10" fill="#4a90e2" stroke="white" stroke-width="2" class="grab-handle" />
+                    <g id="tip-group" class="grab-handle">
+                        <polygon id="tip-arrow" points="-25,-10 0,0 -25,10" fill="#4a90e2" stroke="white" stroke-width="2" />
+                    </g>
+                </g>
+
+                <g id="slider-group" transform="translate(50, 520)">
+                    <line x1="0" y1="0" x2="400" y2="0" stroke="#ccc" stroke-width="4" stroke-linecap="round" />
+                    <g id="slider-ticks"></g>
+                    <g id="slider-vector-group">
+                        <line id="slider-vector-line" x1="200" y1="0" x2="200" y2="0" stroke="#4a90e2" stroke-width="6" stroke-linecap="butt" />
+                        <circle id="slider-zero-dot" cx="200" cy="0" r="5" fill="#4a90e2" />
+                        <g id="slider-handle-group" class="grab-handle" transform="translate(200, 0)">
+                            <polygon id="slider-arrowhead" points="-14,-6 0,0 -14,6" fill="#4a90e2" />
+                            <polygon id="slider-caret" points="-8,-22 8,-22 0,-8" fill="#222" />
+                            <text id="slider-value-text" x="0" y="45" font-size="14" font-weight="bold" fill="black" text-anchor="middle">+0</text>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+<script>
+    // ==========================================
+    // QUIZ LOGIC
+    // ==========================================
+    const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // Generic Picker Controller
+    function setupPicker(containerId, scrollerId, items) {
+        const container = document.getElementById(containerId);
+        const scroller = document.getElementById(scrollerId);
+        const itemHeight = 60;
+        let currentIndex = 0;
+        let offset = 0;
+
+        // Render Items (Render 3 sets for infinite scroll illusion logic, but simplified here to just long list wrapped)
+        // For simplicity in a single file, we will just render the list once and clamp, or render a looped list.
+        // Let's do a simple looped list: Prev(-1), Current(0), Next(1) logic is complex for DOM.
+        // EASIER APPROACH: Just render the list 100 times so it feels infinite.
+
+        let content = "";
+        for(let i=0; i<50; i++) { // Repeat 50 times
+            items.forEach((item, idx) => {
+                content += `<div class="picker-item" data-val="${item}">${item}</div>`;
+            });
+        }
+        scroller.innerHTML = content;
+
+        // Start in the middle
+        const totalItems = items.length * 50;
+        const middleSet = Math.floor(25 * items.length);
+        currentIndex = middleSet;
+        offset = -currentIndex * itemHeight;
+        scroller.style.transform = `translateY(${offset}px)`;
+
+        // Drag Logic
+        let startY = 0;
+        let startOffset = 0;
+        let isDragging = false;
+
+        function updatePos() {
+            scroller.style.transform = `translateY(${offset}px)`;
+        }
+
+        function onStart(e) {
+            isDragging = true;
+            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            startOffset = offset;
+            scroller.style.transition = 'none';
+            e.preventDefault();
+        }
+
+        function onMove(e) {
+            if(!isDragging) return;
+            const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            const delta = y - startY;
+            offset = startOffset + delta;
+            updatePos();
+        }
+
+        function onEnd() {
+            if(!isDragging) return;
+            isDragging = false;
+
+            // Snap logic
+            const index = Math.round(-offset / itemHeight);
+            currentIndex = index;
+            offset = -index * itemHeight;
+            scroller.style.transition = 'transform 0.3s ease-out';
+            updatePos();
+        }
+
+        container.addEventListener('mousedown', onStart);
+        container.addEventListener('touchstart', onStart, {passive:false});
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, {passive:false});
+        window.addEventListener('mouseup', onEnd);
+        window.addEventListener('touchend', onEnd);
+
+        return {
+            getValue: () => {
+                // Determine which item is selected based on index
+                // Since we repeated the list, we mod by list length
+                let realIndex = currentIndex % items.length;
+                if(realIndex < 0) realIndex += items.length;
+                return items[realIndex];
+            }
+        };
+    }
+
+    const picker1 = setupPicker('q1-picker', 'q1-scroller', DAYS);
+    const picker2 = setupPicker('q2-picker', 'q2-scroller', MONTHS);
+
+    function showFeedback(cardId, feedbackId, isCorrect, msg) {
+        const fb = document.getElementById(feedbackId);
+        const card = document.getElementById(cardId);
+
+        fb.textContent = msg;
+        fb.className = isCorrect ? 'feedback-msg success' : 'feedback-msg error';
+
+        if(!isCorrect) {
+            card.classList.remove('shaking');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('shaking');
+        }
+    }
+
+    // Mon(1) + 6 = Sun(0)
+    function checkQ1() {
+        const ans = picker1.getValue();
+        if (ans === "Sunday") {
+            showFeedback('q1-card', 'q1-feedback', true, "Well done!");
+        } else {
+            showFeedback('q1-card', 'q1-feedback', false, "Try again!");
+        }
+    }
+
+    // Feb(1) - 25 = Jan(0)  [25 mod 12 = 1. 1-1 = 0]
+    function checkQ2() {
+        const ans = picker2.getValue();
+        if (ans === "January") {
+            showFeedback('q2-card', 'q2-feedback', true, "Good job!");
+        } else {
+            showFeedback('q2-card', 'q2-feedback', false, "Try again!");
+        }
+    }
+
+
+    // ==========================================
+    // CALCULATOR LOGIC (Original Code Below)
+    // ==========================================
+
+    // --- State ---
+    let labels = [];
+    let n = 0;
+    let vectorValue = 2;
+    let baseIndex = 0;
+
+    // --- Configuration ---
+    const circleRadius = 140;
+    const sliderWidth = 400;
+    const sliderCenter = 200;
+    const sliderRange = 10;
+    const sliderStepPx = sliderWidth / (sliderRange * 2);
+    const arrowHeadLength = 14;
+
+    // --- Data Presets ---
+    const PRESETS = {
+        days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('')
+    };
+
+    // --- DOM Elements ---
+    const presetSelect = document.getElementById('preset-select');
+    const labelsInput = document.getElementById('labels-input');
+    const numberInput = document.getElementById('number-input');
+
+    const pointsGroup = document.getElementById('points-group');
+    const spiralContainer = document.getElementById('spiral-paths-container');
+    const baseHandle = document.getElementById('base-handle');
+    const tipGroup = document.getElementById('tip-group');
+    const tipArrow = document.getElementById('tip-arrow');
+    const sliderTicksGroup = document.getElementById('slider-ticks');
+
+    // Slider Elements
+    const sliderHandleGroup = document.getElementById('slider-handle-group');
+    const sliderVectorLine = document.getElementById('slider-vector-line');
+    const sliderZeroDot = document.getElementById('slider-zero-dot');
+    const sliderArrowhead = document.getElementById('slider-arrowhead');
+    const sliderValueText = document.getElementById('slider-value-text');
+
+    const svgEl = document.getElementById('main-svg');
+
+    // --- Helpers ---
+    function mod(a, n) {
+        return ((a % n) + n) % n;
+    }
+
+    function getCoords(index, radius) {
+        const angle = -Math.PI / 2 + (index * (2 * Math.PI) / n);
+        return {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+            angle: angle
+        };
+    }
+
+    // --- State Management ---
+    function updateConfiguration() {
+        const mode = presetSelect.value;
+        if (mode === 'custom') {
+            labelsInput.classList.remove('hidden');
+            numberInput.classList.add('hidden');
+            parseCustomInput();
+        } else if (mode === 'number') {
+            labelsInput.classList.add('hidden');
+            numberInput.classList.remove('hidden');
+            parseNumberInput();
+        } else {
+            labelsInput.classList.add('hidden');
+            numberInput.classList.add('hidden');
+            applyPreset(mode);
+        }
+        if (baseIndex >= n) baseIndex = 0;
+        renderPoints();
+        updateVisuals();
+    }
+
+    function parseCustomInput() {
+        const raw = labelsInput.value;
+        if (!raw.trim()) {
+            labels = ['0', '1', '2', '3', '4'];
+        } else {
+            labels = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        }
+        n = labels.length;
+        if (n === 0) { labels = ['0']; n = 1; }
+    }
+
+    function parseNumberInput() {
+        let val = parseInt(numberInput.value);
+        if (isNaN(val) || val < 1) val = 1;
+        n = val;
+        labels = [];
+    }
+
+    function applyPreset(mode) {
+        if (PRESETS[mode]) {
+            labels = [...PRESETS[mode]];
+            n = labels.length;
+        }
+    }
+
+    // --- Rendering ---
+    function renderPoints() {
+        pointsGroup.innerHTML = '';
+        for(let i = 0; i < n; i++) {
+            const coords = getCoords(i, circleRadius);
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", coords.x);
+            circle.setAttribute("cy", coords.y);
+            circle.setAttribute("r", 4);
+            circle.setAttribute("class", "point-marker");
+            pointsGroup.appendChild(circle);
+
+            const innerCoords = getCoords(i, circleRadius - 25);
+            const innerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            innerText.setAttribute("x", innerCoords.x);
+            innerText.setAttribute("y", innerCoords.y);
+            innerText.setAttribute("class", "index-text");
+            innerText.textContent = i;
+            pointsGroup.appendChild(innerText);
+
+            if (labels.length > i) {
+                const outerCoords = getCoords(i, circleRadius + 25);
+                const outerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                outerText.setAttribute("x", outerCoords.x);
+                outerText.setAttribute("y", outerCoords.y);
+                outerText.setAttribute("class", "label-text");
+                outerText.textContent = labels[i];
+                pointsGroup.appendChild(outerText);
+            }
+        }
+    }
+
+    function renderSliderTicks() {
+        sliderTicksGroup.innerHTML = '';
+        for(let i = -sliderRange; i <= sliderRange; i++) {
+            if(i === 0) continue;
+            const x = sliderCenter + (i * sliderStepPx);
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x);
+            line.setAttribute("y1", -5);
+            line.setAttribute("x2", x);
+            line.setAttribute("y2", 5);
+            line.setAttribute("class", "tick-line");
+            if (Math.abs(i) % 5 === 0 || Math.abs(i) === sliderRange) {
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", 20);
+                text.setAttribute("class", "tick-text");
+                text.textContent = i;
+                sliderTicksGroup.appendChild(text);
+            }
+            sliderTicksGroup.appendChild(line);
+        }
+    }
+
+    function updateVisuals() {
+        const color = vectorValue < 0 ? "#e24a4a" : "#4a90e2";
+        const isNeg = vectorValue < 0;
+
+        const sliderX = sliderCenter + (vectorValue * sliderStepPx);
+        sliderHandleGroup.setAttribute("transform", `translate(${sliderX}, 0)`);
+
+        const absLen = Math.abs(sliderX - sliderCenter);
+        const lineLen = Math.max(0, absLen - arrowHeadLength);
+        const trimX = isNeg ? (sliderCenter - lineLen) : (sliderCenter + lineLen);
+
+        if (lineLen <= 0) {
+             sliderVectorLine.setAttribute("visibility", "hidden");
+        } else {
+             sliderVectorLine.setAttribute("visibility", "visible");
+             sliderVectorLine.setAttribute("x2", trimX);
+        }
+
+        sliderVectorLine.setAttribute("stroke", color);
+        sliderZeroDot.setAttribute("fill", color);
+        sliderArrowhead.setAttribute("fill", color);
+        sliderArrowhead.setAttribute("transform", isNeg ? "scale(-1, 1)" : "");
+
+        const dispVal = Math.round(vectorValue);
+        const sign = dispVal > 0 ? "+" : "";
+        sliderValueText.textContent = sign + dispVal;
+
+        baseHandle.setAttribute("fill", color);
+        tipArrow.setAttribute("fill", color);
+
+        const baseCoords = getCoords(baseIndex, circleRadius);
+        baseHandle.setAttribute("cx", baseCoords.x);
+        baseHandle.setAttribute("cy", baseCoords.y);
+
+        const tipVal = mod(baseIndex + vectorValue, n);
+        const tipCoords = getCoords(tipVal, circleRadius);
+        tipGroup.setAttribute("transform", `translate(${tipCoords.x}, ${tipCoords.y})`);
+
+        const tangentAngle = (tipCoords.angle * 180 / Math.PI) + 90 + (isNeg ? 180 : 0);
+        tipArrow.setAttribute("transform", `rotate(${tangentAngle})`);
+
+        drawWindingPath(isNeg);
+    }
+
+    function drawWindingPath(isNegative) {
+        spiralContainer.innerHTML = '';
+        const totalRads = Math.abs(vectorValue) * (2 * Math.PI / n);
+        const startTheta = -Math.PI / 2 + (baseIndex * (2 * Math.PI) / n);
+        const direction = isNegative ? -1 : 1;
+        const laps = Math.ceil(totalRads / (2 * Math.PI));
+        const stepsPerRad = 20;
+
+        for (let lap = 0; lap < laps; lap++) {
+            const layerStartRad = lap * 2 * Math.PI;
+            if (layerStartRad >= totalRads) break;
+
+            const pathData = [];
+            const segmentLen = totalRads - layerStartRad;
+            const steps = Math.ceil(segmentLen * stepsPerRad) + 2;
+
+            for(let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const currentRelRad = layerStartRad + (t * segmentLen);
+                const currentTheta = startTheta + (direction * currentRelRad);
+                const x = circleRadius * Math.cos(currentTheta);
+                const y = circleRadius * Math.sin(currentTheta);
+                if (i === 0) pathData.push(`M ${x} ${y}`);
+                else pathData.push(`L ${x} ${y}`);
+            }
+
+            const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathEl.setAttribute("d", pathData.join(" "));
+            pathEl.setAttribute("class", isNegative ? "spiral-segment negative" : "spiral-segment positive");
+            spiralContainer.appendChild(pathEl);
+        }
+    }
+
+    // --- Interaction Logic ---
+    function setupDrag(element, onDrag, onEnd) {
+        let isDragging = false;
+        const start = (e) => { isDragging = true; e.preventDefault(); };
+        const move = (e) => {
+            if(!isDragging) return;
+            const point = e.touches ? getTouchPos(e) : getMousePos(e);
+            onDrag(point);
+        };
+        const end = () => {
+            if(isDragging && onEnd) onEnd();
+            isDragging = false;
+        };
+        element.addEventListener('mousedown', start);
+        element.addEventListener('touchstart', start, {passive: false});
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move, {passive: false});
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchend', end);
+    }
+
+    function getMousePos(evt) {
+        const CTM = svgEl.getScreenCTM();
+        return { x: (evt.clientX - CTM.e) / CTM.a, y: (evt.clientY - CTM.f) / CTM.d };
+    }
+    function getTouchPos(evt) {
+        const CTM = svgEl.getScreenCTM();
+        const t = evt.touches[0];
+        return { x: (t.clientX - CTM.e) / CTM.a, y: (t.clientY - CTM.f) / CTM.d };
+    }
+
+    setupDrag(sliderHandleGroup,
+        (pos) => {
+            const localX = pos.x - 50;
+            vectorValue = (localX - sliderCenter) / sliderStepPx;
+            updateVisuals();
+        },
+        () => {
+            vectorValue = Math.round(vectorValue);
+            updateVisuals();
+        }
+    );
+
+    setupDrag(baseHandle,
+        (pos) => {
+            const localX = pos.x - 250;
+            const localY = pos.y - 220;
+            let angle = Math.atan2(localY, localX) + (Math.PI / 2);
+            if (angle < 0) angle += 2 * Math.PI;
+            const index = angle / ((2 * Math.PI) / n);
+            baseIndex = mod(index, n);
+            updateVisuals();
+        },
+        () => {
+            baseIndex = mod(Math.round(baseIndex), n);
+            updateVisuals();
+        }
+    );
+
+    setupDrag(tipGroup,
+        (pos) => {
+            const localX = pos.x - 250;
+            const localY = pos.y - 220;
+            let angle = Math.atan2(localY, localX) + (Math.PI / 2);
+            if (angle < 0) angle += 2 * Math.PI;
+            const targetIndex = angle / ((2 * Math.PI) / n);
+            baseIndex = mod(targetIndex - vectorValue, n);
+            updateVisuals();
+        },
+        () => {
+            baseIndex = mod(Math.round(baseIndex), n);
+            updateVisuals();
+        }
+    );
+
+    // --- Init ---
+    presetSelect.addEventListener('change', updateConfiguration);
+    labelsInput.addEventListener('input', updateConfiguration);
+    numberInput.addEventListener('input', updateConfiguration);
+
+    renderSliderTicks();
+    updateConfiguration();
+
+</script>
+</body>
+</html>
