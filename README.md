@@ -1,7 +1,7 @@
 # Exploring Math
 
 This repo contains tutorials for guided exploration of some cool things in math and its applications.
-Many of them will not show properly on your phone - I strongly recommend you use a desktop to view them.
+Many of them will not show properly on your phone - I strongly recommend you use a wide screen to view them.
 
 The tutorials are designed for kids of different ages (well, my daughters' ages really,
 but they seem determined to keep growing up).
