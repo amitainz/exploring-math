@@ -484,41 +484,26 @@
     function setupInterceptQuiz() {
         const grid = document.getElementById('message-grid');
 
-        // Encrypted with Shift +7.
-        // Original: BISMARCK HEADED TO BREST FOR REPAIRS STOP ESCORT REQUIRED STOP
-        // Length 53 chars. Added 2 'X' to make 55 (divisible by 5).
-        const plainText = "BISMARCKHEADEDTOBRESTFORREPAIRSSTOPESCORTREQUIREDSTOPXX";
-        const encryptedText = "IPZTHYJROLHKLKAVIYLZAMVYYLWHPYZZAVWLZJVYAYLXBPYLKZAVWXX";
+        // Encrypted with Shift +7, preserving spaces.
+        const plainText = "BISMARCK HEADED TO BREST FOR REPAIRS STOP ESCORT REQUIRED STOP";
+        const encryptedText = "IPZTHYJR OLHKLK AV IYLZA MVY YLWHPYZ ZAVW LZJVYA YLXBPYLK ZAVW";
 
         let html = "";
 
-        // Loop 1: Quintets
-        for (let i = 0; i < encryptedText.length; i += 5) {
-            html += `<div class="cipher-group">`;
+        for (let i = 0; i < plainText.length; i++) {
+            const dChar = plainText[i];
+            const eChar = encryptedText[i];
 
-            // Loop 2: Chars inside quintet
-            for (let j = 0; j < 5; j++) {
-                const idx = i + j;
-                if (idx >= encryptedText.length) break;
-
-                const eChar = encryptedText[idx]; // Encrypted char
-                const dChar = plainText[idx];     // Decrypted (Target) char
-
-                // Identify padding (Last 2 characters are XX)
-                // idx 53, 54
-                const isPadding = (idx >= 53);
-
+            if (dChar === " ") {
+                // Pass through space (spacer visual)
+                html += `<div class="cipher-char" style="width: 20px;"></div>`;
+            } else {
                 html += `
                     <div class="cipher-char">
-                        ${isPadding ?
-                            // Padding: Just show the X, no input
-                            `<div class="decoded-letter padding-char">X</div>` :
-                            // Input: User must solve
-                            `<input type="text" maxlength="1" class="decode-input"
-                                data-index="${idx}"
-                                data-correct="${dChar}">`
-                        }
-                        <div class="encoded-letter ${isPadding ? 'padding-char' : ''}">${eChar}</div>
+                        <input type="text" maxlength="1" class="decode-input"
+                            data-index="${i}"
+                            data-correct="${dChar}">
+                        <div class="encoded-letter">${eChar}</div>
                     </div>`;
             }
             html += `</div>`;
@@ -545,7 +530,7 @@
                     const remaining = document.querySelectorAll('.decode-input');
                     if(remaining.length === 0) {
                         const fb = document.getElementById('intercept-feedback');
-                        fb.textContent = "MESSAGE DECODED: Bismarck Headed to Brest";
+                        fb.textContent = "MESSAGE DECODED: Bismarck Headed to Brest for Repairs...";
                         fb.className = "feedback-msg success";
                         fb.style.opacity = 1;
                     } else {
