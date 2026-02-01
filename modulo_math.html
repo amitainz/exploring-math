@@ -318,10 +318,14 @@
         </div>
 
         <div class="question-card" id="intercept-card">
-            <div class="question-text" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">"We intercepted this message..."</div>
+            <div class="question-text" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">We have intercepted the following message in a channel the German High Command uses for its most important messages. Can you help us decrypt it?</div>
+
             <div class="intercept-container" id="message-grid">
                 </div>
             <div class="feedback-msg" id="intercept-feedback">Hint: Shift +7</div>
+            <div class="question-text" style="font-family: 'Courier New', Courier, monospace; font-weight: bold;">Our officers were able to listen in and record the following conversation, we think it might be related.</div>
+            <audio id="decryption-audio" src="decryption.mp3"></audio>
+            <button class="check-btn" onclick="document.getElementById('decryption-audio').play()">Play Call</button>
         </div>
 
     </div>
@@ -543,7 +547,7 @@
                     const remaining = document.querySelectorAll('.decode-input');
                     if(remaining.length === 0) {
                         const fb = document.getElementById('intercept-feedback');
-                        fb.textContent = "MESSAGE DECODED: Bismarck Headed to Brest for Repairs...";
+                        fb.textContent = "MESSAGE DECODED!";
                         fb.className = "feedback-msg success";
                         fb.style.opacity = 1;
                     } else {
