@@ -51,7 +51,7 @@
         /* Scrollable Drum Picker */
         .picker-container {
             width: 200px;
-            height: 60px;
+            height: 120px; /* Shows 3 items (40px each) */
             background: #f8f9fa;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -59,8 +59,6 @@
             position: relative;
             cursor: grab;
             touch-action: none;
-            display: flex;
-            justify-content: center;
             margin-bottom: 15px;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
         }
@@ -73,17 +71,52 @@
             left: 0;
             width: 100%;
             will-change: transform;
+            z-index: 1;
         }
 
         .picker-item {
-            height: 60px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            color: #333;
+            color: #555;
+            box-sizing: border-box;
         }
+
+        /* Selection Highlight Bar (The "Caret" equivalent) */
+        .picker-highlight {
+            position: absolute;
+            top: 40px; /* Middle of 120px */
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: rgba(74, 144, 226, 0.1);
+            border-top: 1px solid rgba(74, 144, 226, 0.3);
+            border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Gradient Overlays for 3D effect */
+        .picker-overlay-top, .picker-overlay-bottom {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .picker-overlay-top {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(248,249,250,1), rgba(248,249,250,0));
+        }
+        .picker-overlay-bottom {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(248,249,250,1), rgba(248,249,250,0));
+        }
+
 
         .check-btn {
             padding: 8px 20px;
@@ -94,6 +127,7 @@
             font-size: 14px;
             cursor: pointer;
             transition: background 0.2s;
+            z-index: 5;
         }
 
         .check-btn:hover { background: #357abd; }
@@ -183,16 +217,22 @@
         <div class="question-card" id="q1-card">
             <div class="question-text">It's Monday. What day will it be 6 days from now?</div>
             <div class="picker-container" id="q1-picker">
+                <div class="picker-overlay-top"></div>
+                <div class="picker-highlight"></div>
                 <div class="picker-scroller" id="q1-scroller"></div>
+                <div class="picker-overlay-bottom"></div>
             </div>
             <button class="check-btn" onclick="checkQ1()">Check Answer</button>
             <div class="feedback-msg" id="q1-feedback">Result</div>
         </div>
 
         <div class="question-card" id="q2-card">
-            <div class="question-text">It's February. What month was it 25 months ago?</div>
+            <div class="question-text">It's March. What month was it 25 months ago?</div>
             <div class="picker-container" id="q2-picker">
+                <div class="picker-overlay-top"></div>
+                <div class="picker-highlight"></div>
                 <div class="picker-scroller" id="q2-scroller"></div>
+                <div class="picker-overlay-bottom"></div>
             </div>
             <button class="check-btn" onclick="checkQ2()">Check Answer</button>
             <div class="feedback-msg" id="q2-feedback">Result</div>
@@ -257,19 +297,17 @@
     function setupPicker(containerId, scrollerId, items) {
         const container = document.getElementById(containerId);
         const scroller = document.getElementById(scrollerId);
-        const itemHeight = 60;
+        const itemHeight = 40; // MATCH CSS
+        const visibleItems = 3;
+
         let currentIndex = 0;
         let offset = 0;
 
-        // Render Items (Render 3 sets for infinite scroll illusion logic, but simplified here to just long list wrapped)
-        // For simplicity in a single file, we will just render the list once and clamp, or render a looped list.
-        // Let's do a simple looped list: Prev(-1), Current(0), Next(1) logic is complex for DOM.
-        // EASIER APPROACH: Just render the list 100 times so it feels infinite.
-
+        // Render Infinite List
         let content = "";
-        for(let i=0; i<50; i++) { // Repeat 50 times
-            items.forEach((item, idx) => {
-                content += `<div class="picker-item" data-val="${item}">${item}</div>`;
+        for(let i=0; i<50; i++) {
+            items.forEach((item) => {
+                content += `<div class="picker-item">${item}</div>`;
             });
         }
         scroller.innerHTML = content;
@@ -278,7 +316,18 @@
         const totalItems = items.length * 50;
         const middleSet = Math.floor(25 * items.length);
         currentIndex = middleSet;
-        offset = -currentIndex * itemHeight;
+
+        // Initial Offset:
+        // We want the currentIndex item to be in the "middle" slot.
+        // In a container of height 120 (3 items), slot 0 is top, slot 1 is middle.
+        // So we want the element at currentIndex to be at y = 40.
+        // Transform moves the whole list.
+        // If transform is -1000, top of list is at -1000.
+        // We want item[currentIndex] (which is at currentIndex * 40) to be at screen pos 40.
+        // So: (currentIndex * 40) + offset = 40
+        // offset = 40 - (currentIndex * 40)
+
+        offset = 40 - (currentIndex * itemHeight);
         scroller.style.transform = `translateY(${offset}px)`;
 
         // Drag Logic
@@ -311,10 +360,15 @@
             isDragging = false;
 
             // Snap logic
-            const index = Math.round(-offset / itemHeight);
+            // We want item N to land at position 40.
+            // pos = 40 - (N * 40)
+            // N = (40 - pos) / 40
+
+            let index = Math.round((40 - offset) / itemHeight);
             currentIndex = index;
-            offset = -index * itemHeight;
-            scroller.style.transition = 'transform 0.3s ease-out';
+
+            offset = 40 - (index * itemHeight);
+            scroller.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
             updatePos();
         }
 
@@ -327,8 +381,6 @@
 
         return {
             getValue: () => {
-                // Determine which item is selected based on index
-                // Since we repeated the list, we mod by list length
                 let realIndex = currentIndex % items.length;
                 if(realIndex < 0) realIndex += items.length;
                 return items[realIndex];
@@ -363,10 +415,12 @@
         }
     }
 
-    // Feb(1) - 25 = Jan(0)  [25 mod 12 = 1. 1-1 = 0]
+    // Mar(2) - 25 = Feb(1)
+    // 25 mod 12 = 1.
+    // 2 - 1 = 1 (Feb).
     function checkQ2() {
         const ans = picker2.getValue();
-        if (ans === "January") {
+        if (ans === "February") {
             showFeedback('q2-card', 'q2-feedback', true, "Good job!");
         } else {
             showFeedback('q2-card', 'q2-feedback', false, "Try again!");
@@ -375,7 +429,7 @@
 
 
     // ==========================================
-    // CALCULATOR LOGIC (Original Code Below)
+    // CALCULATOR LOGIC
     // ==========================================
 
     // --- State ---
