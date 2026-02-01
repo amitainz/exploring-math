@@ -17,7 +17,7 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 - [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
 
 ## WIP
-- [modulo math](modulo_math.html)
+- [modulo math quiz](modulo_math.html), or just the [modulo calculator](modulo_calculator.html)
 ### Stubs
 - [Fourier Analysis WIP](fourier.html)
 
