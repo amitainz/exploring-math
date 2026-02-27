@@ -18,6 +18,8 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 
 - [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
 
+### Not Just Math
+- [Key Spelling Words](spelling.html)
 ## WIP
 - [modulo math quiz](modulo_math.html), or just the [modulo calculator](modulo_calculator.html)
 ### Stubs
