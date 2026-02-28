@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Universal Spelling Pad</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #fafafa; }
+        #canvas { border: 2px solid #333; background: white; border-radius: 10px; touch-action: none; }
+        #status { color: #007bff; font-weight: bold; margin: 10px; }
+        #output { font-size: 60px; margin-top: 20px; color: #222; }
+    </style>
+</head>
+<body>
+    <h1>SPELLING PAD</h1>
+    <div id="status">Ready</div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <br>
+    <button onclick="clearCanvas()" style="padding:15px;">CLEAR</button>
+    <button onclick="recognize()" style="padding:15px; background:#28a745; color:white;">CHECK</button>
+    <div id="output">_</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        let drawing = false;
+
+        // Standard Canvas Drawing
+        canvas.onpointerdown = () => drawing = true;
+        canvas.onpointerup = () => { drawing = false; ctx.beginPath(); };
+        canvas.onpointermove = (e) => {
+            if(!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        };
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('output').innerText = "_";
+        }
+
+        async function recognize() {
+            status.innerText = "Thinking...";
+
+            // Tesseract looks at the canvas as an image
+            const result = await Tesseract.recognize(canvas, 'eng', {
+                // FORCE CAPITAL LETTERS & NO AUTO-COMPLETE
+                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                tessedit_pageseg_mode: '10' // Treat as a single character
+            });
+
+            document.getElementById('output').innerText = result.data.text.trim().toUpperCase();
+            status.innerText = "Done!";
+        }
+    </script>
+</body>
+</html>
