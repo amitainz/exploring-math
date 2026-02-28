@@ -113,9 +113,65 @@
             "going", "this", "out", "there", "where", "saw", "very", "have"
         ];
 
-        // Trigger voices to load early
+        // Voice hints ordered by clarity preference (British first).
+        const preferredVoicePatterns = [
+            /google uk english female/i,
+            /google uk english male/i,
+            /libby.*english \(united kingdom\)/i,
+            /ryan.*english \(united kingdom\)/i,
+            /sonia.*english \(united kingdom\)/i,
+            /hazel/i,
+            /daniel/i,
+            /arthur/i
+        ];
+
+        let cachedVoices = [];
+        let preferredVoice = null;
+
+        function scoreVoice(voice) {
+            const lang = (voice.lang || '').toLowerCase();
+            const name = (voice.name || '').toLowerCase();
+            let score = 0;
+
+            if (lang === 'en-gb') score += 120;
+            else if (lang.startsWith('en-gb')) score += 110;
+            else if (lang === 'en-ie' || lang === 'en-au' || lang === 'en-nz') score += 80;
+            else if (lang.startsWith('en-')) score += 60;
+
+            preferredVoicePatterns.forEach((pattern, index) => {
+                if (pattern.test(name)) {
+                    score += 70 - index * 3;
+                }
+            });
+
+            if (/natural|neural|enhanced|premium|online/.test(name)) score += 20;
+            if (/compact|legacy/.test(name)) score -= 10;
+            if (!voice.localService) score += 5;
+
+            return score;
+        }
+
+        function choosePreferredVoice(voices) {
+            if (!voices.length) return null;
+
+            const englishVoices = voices.filter(voice => /^en(-|$)/i.test(voice.lang || ''));
+            const pool = englishVoices.length ? englishVoices : voices;
+
+            return pool
+                .map(voice => ({ voice, score: scoreVoice(voice) }))
+                .sort((a, b) => b.score - a.score)[0]?.voice || null;
+        }
+
+        function refreshVoices() {
+            if (!('speechSynthesis' in window)) return;
+            cachedVoices = window.speechSynthesis.getVoices();
+            preferredVoice = choosePreferredVoice(cachedVoices);
+        }
+
+        // Trigger voices to load early and also after async voice initialization.
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.getVoices();
+            refreshVoices();
+            window.speechSynthesis.onvoiceschanged = refreshVoices;
         }
 
         function speakWord(word) {
@@ -128,23 +184,21 @@
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(word);
-            const voices = window.speechSynthesis.getVoices();
-
-            // Look for a British English voice
-            const ukVoice = voices.find(voice =>
-                voice.lang === 'en-GB' ||
-                voice.name.includes('UK') ||
-                voice.name.includes('Great Britain')
-            );
-
-            if (ukVoice) {
-                utterance.voice = ukVoice;
-            } else {
-                utterance.lang = 'en-GB'; // Fallback
+            if (!cachedVoices.length) {
+                refreshVoices();
             }
 
-            // Speak slightly slower for learning clarity
-            utterance.rate = 0.85;
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+                utterance.lang = preferredVoice.lang || 'en-GB';
+            } else {
+                utterance.lang = 'en-GB'; // Fallback to British English when no voice metadata exists
+            }
+
+            // Keep speech clear without sounding slurred.
+            utterance.rate = 0.92;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
             window.speechSynthesis.speak(utterance);
         }
 
