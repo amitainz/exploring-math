@@ -318,8 +318,183 @@
         // ==========================================
         let currentTargetWord = "";
         const TOTAL_BOXES = 10;
+        const OCR_CONFIDENCE_THRESHOLD = 65;
+        const OCR_DARK_PIXEL_THRESHOLD = 210;
+        const OCR_OUTPUT_SIZE = 128;
+        const OCR_GLYPH_MARGIN = 16;
         let canvases = [];
         let contexts = [];
+        let ocrWorkerPromise = null;
+        const ocrCache = new Map();
+
+        function clearOcrCache() {
+            ocrCache.clear();
+        }
+
+        function fillWhite(ctx, width, height) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function getOcrWorker() {
+            if (!ocrWorkerPromise) {
+                ocrWorkerPromise = (async () => {
+                    const worker = await Tesseract.createWorker('eng');
+                    await worker.setParameters({
+                        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                        tessedit_pageseg_mode: '10'
+                    });
+                    return worker;
+                })().catch((err) => {
+                    ocrWorkerPromise = null;
+                    throw err;
+                });
+            }
+            return ocrWorkerPromise;
+        }
+
+        function computeCanvasHash(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let hash = 2166136261;
+
+            for (let i = 0; i < data.length; i += 4) {
+                hash ^= data[i];
+                hash = Math.imul(hash, 16777619);
+                hash ^= data[i + 1];
+                hash = Math.imul(hash, 16777619);
+                hash ^= data[i + 2];
+                hash = Math.imul(hash, 16777619);
+            }
+
+            return (hash >>> 0).toString(36);
+        }
+
+        function preprocessCanvasForOcr(canvas) {
+            const srcCtx = canvas.getContext('2d');
+            const srcImage = srcCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const srcData = srcImage.data;
+
+            let minX = canvas.width;
+            let minY = canvas.height;
+            let maxX = -1;
+            let maxY = -1;
+
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const idx = (y * canvas.width + x) * 4;
+                    const r = srcData[idx];
+                    const g = srcData[idx + 1];
+                    const b = srcData[idx + 2];
+                    const luminance = (r * 299 + g * 587 + b * 114) / 1000;
+
+                    if (luminance < OCR_DARK_PIXEL_THRESHOLD) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+
+            if (maxX === -1) {
+                return null;
+            }
+
+            const glyphWidth = maxX - minX + 1;
+            const glyphHeight = maxY - minY + 1;
+            const targetCanvas = document.createElement('canvas');
+            targetCanvas.width = OCR_OUTPUT_SIZE;
+            targetCanvas.height = OCR_OUTPUT_SIZE;
+
+            const targetCtx = targetCanvas.getContext('2d');
+            fillWhite(targetCtx, OCR_OUTPUT_SIZE, OCR_OUTPUT_SIZE);
+
+            const available = OCR_OUTPUT_SIZE - OCR_GLYPH_MARGIN * 2;
+            const scale = Math.min(available / glyphWidth, available / glyphHeight);
+            const drawWidth = Math.max(1, Math.round(glyphWidth * scale));
+            const drawHeight = Math.max(1, Math.round(glyphHeight * scale));
+            const offsetX = Math.floor((OCR_OUTPUT_SIZE - drawWidth) / 2);
+            const offsetY = Math.floor((OCR_OUTPUT_SIZE - drawHeight) / 2);
+
+            targetCtx.imageSmoothingEnabled = true;
+            targetCtx.drawImage(
+                canvas,
+                minX,
+                minY,
+                glyphWidth,
+                glyphHeight,
+                offsetX,
+                offsetY,
+                drawWidth,
+                drawHeight
+            );
+
+            const normalized = targetCtx.getImageData(0, 0, OCR_OUTPUT_SIZE, OCR_OUTPUT_SIZE);
+            const normalizedData = normalized.data;
+            for (let i = 0; i < normalizedData.length; i += 4) {
+                const r = normalizedData[i];
+                const g = normalizedData[i + 1];
+                const b = normalizedData[i + 2];
+                const luminance = (r * 299 + g * 587 + b * 114) / 1000;
+                const value = luminance < OCR_DARK_PIXEL_THRESHOLD ? 0 : 255;
+                normalizedData[i] = value;
+                normalizedData[i + 1] = value;
+                normalizedData[i + 2] = value;
+                normalizedData[i + 3] = 255;
+            }
+            targetCtx.putImageData(normalized, 0, 0);
+
+            return targetCanvas;
+        }
+
+        function pickLetter(data) {
+            const syms = (data.symbols || [])
+                .map((s) => ({
+                    text: (s.text || "").toUpperCase(),
+                    confidence: Number(s.confidence ?? 0)
+                }))
+                .filter((s) => /^[A-Z]$/.test(s.text));
+            const best = syms.sort((a, b) => b.confidence - a.confidence)[0];
+
+            if (best && best.confidence >= OCR_CONFIDENCE_THRESHOLD) {
+                return best.text;
+            }
+
+            const fallback = (data.text || "").replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase();
+            return Number(data.confidence ?? 0) >= OCR_CONFIDENCE_THRESHOLD ? fallback : "";
+        }
+
+        async function recognizeLetterFromCanvas(canvas) {
+            if (canvas.dataset.hasStrokes !== 'true') {
+                return '';
+            }
+
+            const cacheKey = computeCanvasHash(canvas);
+            if (ocrCache.has(cacheKey)) {
+                return ocrCache.get(cacheKey);
+            }
+
+            const task = (async () => {
+                const prepared = preprocessCanvasForOcr(canvas);
+                if (!prepared) {
+                    return '';
+                }
+
+                const worker = await getOcrWorker();
+                const result = await worker.recognize(prepared);
+                return pickLetter(result.data);
+            })();
+
+            ocrCache.set(cacheKey, task);
+
+            try {
+                return await task;
+            } catch (err) {
+                ocrCache.delete(cacheKey);
+                throw err;
+            }
+        }
 
         function initBoxes() {
             const container = document.getElementById('boxContainer');
@@ -337,14 +512,17 @@
 
                 const ctx = c.getContext('2d');
                 // Fill canvas with white so the AI can actually "see" the ink
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, c.width, c.height);
+                fillWhite(ctx, c.width, c.height);
 
                 ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e293b';
 
                 let isDrawing = false;
                 c.onpointerdown = (e) => {
-                    isDrawing = true; c.dataset.hasStrokes = 'true';
+                    isDrawing = true;
+                    c.dataset.hasStrokes = 'true';
+                    if (typeof c.setPointerCapture === 'function') {
+                        c.setPointerCapture(e.pointerId);
+                    }
                     const rect = c.getBoundingClientRect();
                     ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
                 };
@@ -353,8 +531,14 @@
                     const rect = c.getBoundingClientRect();
                     ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); ctx.stroke();
                 };
-                c.onpointerup = () => isDrawing = false;
-                c.onpointerleave = () => isDrawing = false;
+                c.onpointerup = (e) => {
+                    isDrawing = false;
+                    if (typeof c.hasPointerCapture === 'function' && c.hasPointerCapture(e.pointerId)) {
+                        c.releasePointerCapture(e.pointerId);
+                    }
+                };
+                c.onpointerleave = () => { isDrawing = false; };
+                c.onpointercancel = () => { isDrawing = false; };
 
                 wrap.appendChild(c); container.appendChild(wrap);
                 canvases.push(c); contexts.push(ctx);
@@ -365,6 +549,8 @@
             currentTargetWord = word;
             document.getElementById('spellingModal').classList.remove('hidden');
             document.getElementById('spellingResult').innerText = "";
+            clearOcrCache();
+            void getOcrWorker();
             initBoxes();
         }
 
@@ -373,10 +559,10 @@
         function clearAllBoxes() {
             canvases.forEach((c, i) => { 
                 contexts[i].clearRect(0, 0, c.width, c.height); 
-                contexts[i].fillStyle = '#ffffff';
-                contexts[i].fillRect(0, 0, c.width, c.height);
+                fillWhite(contexts[i], c.width, c.height);
                 c.dataset.hasStrokes = 'false'; 
             });
+            clearOcrCache();
             document.getElementById('spellingResult').innerText = "";
         }
 
@@ -386,15 +572,7 @@
             checkBtn.innerText = "Checking..."; checkBtn.disabled = true; resultDiv.innerText = "";
 
             try {
-                const promises = canvases.map(c => {
-                    if (c.dataset.hasStrokes === 'true') {
-                        return Tesseract.recognize(c, 'eng', {
-                            tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                            tessedit_pageseg_mode: '10' // 10 = Treat as single character
-                        }).then(res => res.data.text.trim().toUpperCase());
-                    }
-                    return Promise.resolve('');
-                });
+                const promises = canvases.map((c) => recognizeLetterFromCanvas(c));
 
                 const letters = await Promise.all(promises);
                 
@@ -404,7 +582,7 @@
 
                 // STRICT POSITIONAL CHECKING
                 for (let i = 0; i < TOTAL_BOXES; i++) {
-                    const char = letters[i].replace(/[^A-Z]/g, '').charAt(0) || "";
+                    const char = letters[i] || "";
                     const hasStrokes = canvases[i]?.dataset.hasStrokes === 'true';
                     displaySlots.push(char || (hasStrokes ? "?" : "_"));
                     
