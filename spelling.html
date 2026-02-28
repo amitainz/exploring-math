@@ -385,36 +385,36 @@
             const resultDiv = document.getElementById('spellingResult');
             checkBtn.innerText = "Checking..."; checkBtn.disabled = true; resultDiv.innerText = "";
 
-            const promises = canvases.map(c => {
-                if (c.dataset.hasStrokes === 'true') {
-                    return Tesseract.recognize(c, 'eng', {
-                        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                        tessedit_pageseg_mode: '10' // 10 = Treat as single character
-                    }).then(res => res.data.text.trim().toUpperCase());
-                }
-                return Promise.resolve('');
-            });
-
             try {
+                const promises = canvases.map(c => {
+                    if (c.dataset.hasStrokes === 'true') {
+                        return Tesseract.recognize(c, 'eng', {
+                            tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                            tessedit_pageseg_mode: '10' // 10 = Treat as single character
+                        }).then(res => res.data.text.trim().toUpperCase());
+                    }
+                    return Promise.resolve('');
+                });
+
                 const letters = await Promise.all(promises);
                 
                 let isCorrect = true;
-                let displaySpelled = "";
+                const displaySlots = [];
                 const targetUpper = currentTargetWord.toUpperCase();
 
                 // STRICT POSITIONAL CHECKING
                 for (let i = 0; i < TOTAL_BOXES; i++) {
                     const char = letters[i].replace(/[^A-Z]/g, '').charAt(0) || "";
+                    const hasStrokes = canvases[i]?.dataset.hasStrokes === 'true';
+                    displaySlots.push(char || (hasStrokes ? "?" : "_"));
                     
                     if (i < targetUpper.length) {
                         // Inside the word: Check if the letter matches the box position
                         if (char !== targetUpper[i]) isCorrect = false;
-                        displaySpelled += (char || "_") + " "; // Show an underscore if empty/failed
                     } else {
-                        // Outside the word: Ensure these extra boxes are empty
-                        if (char !== "") {
+                        // Outside the word: any stroke is an extra letter attempt
+                        if (hasStrokes) {
                             isCorrect = false;
-                            displaySpelled += char + " "; // Show them the extra letters they wrote
                         }
                     }
                 }
@@ -422,10 +422,13 @@
                 if (isCorrect) {
                     resultDiv.innerText = "🎉 CORRECT! 🎉"; resultDiv.className = "text-green-500 mb-6 text-3xl font-black h-10 w-full animate-bounce";
                 } else {
-                    resultDiv.innerText = `You wrote: ${displaySpelled.trim()} ❌`; resultDiv.className = "text-red-500 mb-6 text-3xl font-black h-10 w-full tracking-[0.5em]";
+                    resultDiv.innerText = `You wrote: ${displaySlots.join(" ")} ❌`; resultDiv.className = "text-red-500 mb-6 text-3xl font-black h-10 w-full tracking-[0.5em]";
                 }
-            } catch (err) { resultDiv.innerText = "Error reading letters."; }
-            checkBtn.innerText = "Check Spelling"; checkBtn.disabled = false;
+            } catch (err) {
+                resultDiv.innerText = "Error reading letters.";
+            } finally {
+                checkBtn.innerText = "Check Spelling"; checkBtn.disabled = false;
+            }
         }
 
         // Init on load
