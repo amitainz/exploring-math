@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sight Words Flashcards</title>
+    <title>Bronze Words Flashcards</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
+        /* Rock-Solid 3D Flip Card CSS */
         .flip-card {
             perspective: 1000px;
-            touch-action: pan-y;
-            height: 80px;
+            touch-action: pan-y; /* Allows vertical scrolling but captures horizontal swipes */
+            height: 80px; /* Fixed height for cards */
         }
+
         .flip-card-inner {
             position: relative;
             width: 100%;
@@ -18,24 +21,30 @@
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
             transform-style: preserve-3d;
         }
+
         .flip-card.flipped .flip-card-inner {
             transform: rotateY(180deg);
         }
+
         .flip-card-front, .flip-card-back {
             position: absolute;
             width: 100%;
             height: 100%;
-            -webkit-backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Crucial for Safari */
             backface-visibility: hidden;
             border-radius: 1rem;
         }
+
         .flip-card-back {
             transform: rotateY(180deg);
         }
+
+        /* Prevent text highlighting when swiping/dragging */
         .no-select {
             user-select: none;
             -webkit-user-select: none;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -46,28 +55,12 @@
 
     <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 max-w-md w-full relative overflow-hidden">
 
-        <div class="text-center mb-5">
-            <h1 id="levelTitle" class="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight transition-colors duration-300">Bronze Words</h1>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm font-medium text-slate-600 bg-slate-50 py-3 px-4 rounded-xl border border-slate-100 flex-wrap">
-                <span class="flex items-center gap-1"><span class="text-xl">🔊</span> Tap Left: Listen</span>
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-extrabold text-amber-700 mb-2 tracking-tight">Listen & Spell</h1>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm font-medium text-slate-600 bg-slate-50 py-3 px-4 rounded-xl border border-slate-100">
+                <span class="flex items-center gap-1"><span class="text-xl">👆</span> Tap to Listen</span>
                 <span class="hidden sm:inline text-slate-300">|</span>
-                <span class="flex items-center gap-1"><span class="text-xl">🎙️</span> Tap Right: Spell</span>
-                <span class="hidden sm:inline text-slate-300">|</span>
-                <span class="flex items-center gap-1"><span class="text-xl">↔️</span> Swipe: Reveal</span>
-            </div>
-        </div>
-
-        <div class="mb-6 relative">
-            <label for="categorySelect" class="block text-sm font-semibold text-slate-500 mb-2 pl-1 uppercase tracking-wider">Select Level:</label>
-            <select id="categorySelect" onchange="displayRandomWords()" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 text-lg font-medium rounded-xl focus:ring-amber-500 focus:border-amber-500 block p-3 outline-none transition-all shadow-sm cursor-pointer appearance-none">
-                <option value="Bronze">🥉 Bronze (48 words)</option>
-                <option value="Silver">🥈 Silver (48 words)</option>
-                <option value="Gold">🥇 Gold (60 words)</option>
-                <option value="Platinum">💎 Platinum (70 words)</option>
-                <option value="All">🌟 All Categories (226 words)</option>
-            </select>
-            <div class="pointer-events-none absolute right-4 top-[42px] flex items-center px-2 text-slate-500">
-                <svg class="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                <span class="flex items-center gap-1"><span class="text-xl">↔️</span> Swipe to Reveal</span>
             </div>
         </div>
 
@@ -76,157 +69,115 @@
         </ul>
 
         <button
-            id="shuffleBtn"
             onclick="displayRandomWords()"
-            class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+            class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Shuffle 10 Words
+            Shuffle New Words
         </button>
     </div>
 
+    <div id="spellingModal" class="hidden fixed inset-0 bg-slate-900/95 z-50 flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-4xl shadow-2xl flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold text-slate-700">Spell the word:</h2>
+                    <button onclick="speakWord(currentTargetWord)" class="bg-amber-100 hover:bg-amber-200 p-2 rounded-full text-xl" title="Listen Again">🔊</button>
+                </div>
+                <button onclick="closeSpelling()" class="text-slate-400 hover:text-red-500 font-bold text-3xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">Write one CAPITAL letter per box.</p>
+            <div class="w-full overflow-x-auto pb-4 mb-4 flex justify-start sm:justify-center">
+                <div id="boxContainer" class="flex gap-2 min-w-max px-2">
+                </div>
+            </div>
+            <div id="spellingResult" class="text-center mb-6 text-3xl font-black h-10 w-full"></div>
+            <div class="flex justify-center gap-4 w-full flex-wrap">
+                <button onclick="clearAllBoxes()" class="bg-slate-200 hover:bg-slate-300 px-6 py-4 rounded-xl font-bold text-slate-700">Clear All</button>
+                <button id="checkBtn" onclick="checkSpelling()" class="bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-xl font-bold text-xl shadow-lg">Check Spelling</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const wordsData = {
-            Bronze: ["I", "am", "a", "in", "it", "is", "to", "put", "on", "of", "and", "no", "so", "go", "up", "the", "as", "can", "will", "he", "she", "we", "be", "me", "my", "his", "her", "see", "all", "fall", "call", "you", "for", "like", "come", "some", "they", "what", "old", "here", "said", "are", "look", "with", "do", "away", "went", "want"],
-            Silver: ["going", "this", "out", "there", "where", "saw", "very", "have", "from", "could", "should", "would", "than", "then", "when", "after", "back", "little", "your", "down", "came", "were", "that", "them", "your", "water", "any", "made", "make", "Mr", "Mrs", "who", "looked", "ask", "their", "much", "these", "don't", "how", "now", "use", "many", "brother", "sister", "sure", "our", "try", "why"],
-            Gold: ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "woke", "buy", "began", "does", "watch", "once", "great", "bought", "thought", "caught", "know", "knew", "being", "can't", "gone", "live", "love", "laugh", "change", "coming", "found", "sound", "didn't", "hear", "jumped", "called", "before", "high", "might", "year", "brought", "opened", "started", "stopped", "people", "leave", "show", "mother", "father", "told", "tries", "think", "talk", "walk", "almost", "always", "never", "also", "used", "turn"],
-            Platinum: ["turned", "woken", "walked", "show", "write", "better", "often", "first", "second", "third", "walking", "still", "during", "every", "half", "those", "while", "until", "today", "only", "outside", "inside", "around", "under", "below", "between", "along", "upon", "across", "near", "number", "different", "also", "small", "paper", "other", "place", "great", "children", "clothes", "young", "suddenly", "both", "year", "birthday", "together", "without", "garden", "through", "such", "own", "eyes", "friend", "earth", "world", "work", "morning", "money", "sometimes", "something", "small", "whole", "head", "heard", "white", "window", "sound", "word", "animal", "light"]
-        };
+        // The complete list of 56 Bronze words
+        const allWords = [
+            "I", "am", "a", "in", "it", "is", "to", "put",
+            "on", "of", "and", "no", "so", "go", "up", "the",
+            "as", "can", "will", "he", "she", "we", "be", "me",
+            "my", "his", "her", "see", "all", "fall", "call", "you",
+            "for", "like", "come", "some", "they", "what", "old", "here",
+            "said", "are", "look", "with", "do", "away", "went", "want",
+            "going", "this", "out", "there", "where", "saw", "very", "have"
+        ];
 
-        const themes = {
-            Bronze: { text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', btn: 'bg-amber-600 hover:bg-amber-700' },
-            Silver: { text: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-300', btn: 'bg-slate-500 hover:bg-slate-600' },
-            Gold: { text: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200', btn: 'bg-yellow-500 hover:bg-yellow-600' },
-            Platinum: { text: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200', btn: 'bg-cyan-600 hover:bg-cyan-700' },
-            All: { text: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', btn: 'bg-indigo-600 hover:bg-indigo-700' }
-        };
-
+        // Trigger voices to load early
         if ('speechSynthesis' in window) {
             window.speechSynthesis.getVoices();
         }
 
         function speakWord(word) {
-            if (!('speechSynthesis' in window)) return;
+            if (!('speechSynthesis' in window)) {
+                console.warn("Text-to-speech is not supported in this browser/environment.");
+                return;
+            }
+
+            // Cancel any current speech to prevent overlapping
             window.speechSynthesis.cancel();
+
             const utterance = new SpeechSynthesisUtterance(word);
             const voices = window.speechSynthesis.getVoices();
-            const ukVoice = voices.find(v => v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('Great Britain'));
-            if (ukVoice) utterance.voice = ukVoice;
-            else utterance.lang = 'en-GB';
+
+            // Look for a British English voice
+            const ukVoice = voices.find(voice =>
+                voice.lang === 'en-GB' ||
+                voice.name.includes('UK') ||
+                voice.name.includes('Great Britain')
+            );
+
+            if (ukVoice) {
+                utterance.voice = ukVoice;
+            } else {
+                utterance.lang = 'en-GB'; // Fallback
+            }
+
+            // Speak slightly slower for learning clarity
             utterance.rate = 0.85;
             window.speechSynthesis.speak(utterance);
         }
 
-        // We still keep a tiny map just for the absolute worst offenders that bypass grammar
-        // like "double u" because it's technically how you pronounce 'w'
-        const tinyMap = { 'double you': 'w', 'double u': 'w' };
-
-        function startSpelling(word, cardLi, spellZone) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
-
-            if (!SpeechRecognition) {
-                spellZone.innerHTML = `<span class="text-red-500 font-bold text-sm text-center px-2">Mic Not Supported</span>`;
-                return;
-            }
-
-            if (cardLi.isListening) return;
-            cardLi.isListening = true;
-
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            // --- THE GRAMMAR CONSTRAINT ---
-            // Tell the engine to heavily bias towards ONLY these letters.
-            if (SpeechGrammarList) {
-                const speechRecognitionList = new SpeechGrammarList();
-                const grammar = '#JSGF V1.0; grammar letters; public <letter> = a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z ;';
-                speechRecognitionList.addFromString(grammar, 1);
-                recognition.grammars = speechRecognitionList;
-            }
-
-            const originalHtml = spellZone.innerHTML;
-            spellZone.innerHTML = `<span class="animate-pulse text-red-500 font-bold text-sm">Listening...</span>`;
-
-            recognition.onresult = (event) => {
-                let transcript = event.results[0][0].transcript.toLowerCase().trim();
-                let targetWord = word.toLowerCase();
-
-                // Still check if they just read the word aloud
-                if (targetWord.length > 1 && transcript.replace(/[^a-z]/g, '') === targetWord) {
-                    spellZone.innerHTML = `<span class="text-orange-500 font-bold text-xs text-center leading-tight px-1">Spell it out,<br/>don't say it!</span>`;
-                    setTimeout(() => { spellZone.innerHTML = originalHtml; }, 2500);
-                    return;
-                }
-
-                let translatedTranscript = transcript;
-                for (let key in tinyMap) {
-                    translatedTranscript = translatedTranscript.replace(new RegExp(`\\b${key}\\b`, 'g'), tinyMap[key]);
-                }
-
-                let normalizedSpelling = translatedTranscript.replace(/[^a-z]/g, '');
-                let targetClean = targetWord.replace(/[^a-z]/g, '');
-
-                if (normalizedSpelling === targetClean) {
-                    spellZone.innerHTML = `<span class="text-green-600 font-bold text-sm">✅ Correct!</span>`;
-                    setTimeout(() => {
-                        cardLi.classList.add('flipped');
-                        setTimeout(() => { spellZone.innerHTML = originalHtml; }, 500);
-                    }, 1000);
-                } else {
-                    spellZone.innerHTML = `<span class="text-red-500 font-bold text-xs text-center leading-tight px-1">❌ Heard:<br/>"${transcript}"</span>`;
-                    setTimeout(() => { spellZone.innerHTML = originalHtml; }, 2500);
-                }
-            };
-
-            recognition.onerror = () => {
-                spellZone.innerHTML = `<span class="text-slate-500 font-bold text-xs text-center">Didn't catch that</span>`;
-                setTimeout(() => { spellZone.innerHTML = originalHtml; }, 2000);
-            };
-
-            recognition.onend = () => {
-                cardLi.isListening = false;
-            };
-
-            recognition.start();
-        }
-
-        function createCard(word, theme) {
+        function createCard(word) {
             const li = document.createElement('li');
             li.className = 'flip-card w-full no-select cursor-pointer';
 
             li.innerHTML = `
                 <div class="flip-card-inner shadow-sm hover:shadow-md">
-                    <div class="flip-card-front ${theme.bg} border-2 ${theme.border} flex items-stretch overflow-hidden transition-colors">
-                        <div class="listen-zone w-1/2 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 border-r-2 ${theme.border} hover:bg-black/5 transition-colors">
-                            <div class="bg-white/50 p-1 sm:p-2 rounded-full backdrop-blur-sm ${theme.text}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- FRONT OF CARD (Hidden State) -->
+                    <div class="flip-card-front bg-amber-50 border-2 border-amber-200 flex items-center justify-between px-6 transition-colors">
+                        <div class="flex items-center gap-3 text-amber-800">
+                            <div class="bg-amber-200 p-2 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                                 </svg>
                             </div>
-                            <span class="font-semibold text-sm sm:text-lg ${theme.text}">Listen</span>
+                            <span class="font-semibold text-lg">Listen</span>
                         </div>
-
-                        <div class="spell-zone w-1/2 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 hover:bg-black/5 transition-colors relative">
-                            <div class="bg-white/50 p-1 sm:p-2 rounded-full backdrop-blur-sm text-red-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                                </svg>
-                            </div>
-                            <span class="font-semibold text-sm sm:text-lg text-red-600">Spell</span>
-                        </div>
+                        <button class="spell-btn bg-amber-200 hover:bg-amber-300 text-2xl p-2 rounded-full shadow-sm active:scale-90" aria-label="Spell Word">✏️</button>
                     </div>
 
+                    <!-- BACK OF CARD (Revealed State) -->
                     <div class="flip-card-back bg-green-50 border-2 border-green-400 flex items-center justify-center shadow-inner">
+                    <div class="flip-card-back bg-green-50 border-2 border-green-400 flex items-center justify-between px-4 shadow-inner">
+                        <div class="w-10"></div>
                         <span class="text-3xl font-bold text-green-800 tracking-wide">${word}</span>
+                        <div class="w-10"></div>
                     </div>
                 </div>
             `;
 
+            // Gesture logic using pointer events (Works for both Mouse and Touch)
             let startX, startY;
             let isSwiping = false;
 
@@ -237,71 +188,163 @@
             });
 
             li.addEventListener('pointermove', (e) => {
-                if (startX === undefined) return;
+                if (startX === undefined) return; // Not holding down
+
                 let diffX = e.clientX - startX;
                 let diffY = e.clientY - startY;
-                if (Math.abs(diffX) > 15 || Math.abs(diffY) > 15) isSwiping = true;
+
+                // If they move more than 15 pixels, count it as a swipe/drag
+                if (Math.abs(diffX) > 15 || Math.abs(diffY) > 15) {
+                    isSwiping = true;
+                }
             });
 
             li.addEventListener('pointerup', (e) => {
                 if (startX === undefined) return;
+
                 let diffX = e.clientX - startX;
 
                 if (isSwiping) {
-                    if (Math.abs(diffX) > 40) li.classList.toggle('flipped');
+                    // Check if horizontal swipe distance is long enough
+                    if (Math.abs(diffX) > 40) {
+                        li.classList.toggle('flipped'); // Reveal or hide
+                    }
                 } else {
-                    const spellZone = e.target.closest('.spell-zone');
-                    if (spellZone) startSpelling(word, li, spellZone);
-                    else speakWord(word);
+                    // It was just a tap/click
+                    speakWord(word);
                 }
 
+                // Reset
                 startX = undefined;
                 startY = undefined;
             });
 
+            // Prevent drag from breaking if mouse leaves element
             li.addEventListener('pointerleave', () => {
                 startX = undefined;
                 startY = undefined;
+            });
+
+            // Prevent swipe/tap logic when clicking the spelling button
+            const spellBtn = li.querySelector('.spell-btn');
+            spellBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+            spellBtn.addEventListener('pointerup', (e) => {
+                e.stopPropagation();
+                openSpelling(word);
             });
 
             return li;
         }
 
         function displayRandomWords() {
-            const category = document.getElementById('categorySelect').value;
-            const titleEl = document.getElementById('levelTitle');
-            const shuffleBtn = document.getElementById('shuffleBtn');
-            const theme = themes[category];
-
-            titleEl.textContent = category === 'All' ? 'All Words' : category + ' Words';
-            titleEl.className = `text-3xl font-extrabold mb-2 tracking-tight transition-colors duration-300 ${theme.text}`;
-            shuffleBtn.className = `w-full text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 text-lg ${theme.btn}`;
-
-            let currentWords = [];
-            if (category === 'All') {
-                const allSet = new Set([...wordsData.Bronze, ...wordsData.Silver, ...wordsData.Gold, ...wordsData.Platinum]);
-                currentWords = Array.from(allSet);
-            } else {
-                currentWords = [...wordsData[category]];
-            }
-
-            for (let i = currentWords.length - 1; i > 0; i--) {
+            // Shuffle array using Fisher-Yates
+            let shuffled = [...allWords];
+            for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [currentWords[i], currentWords[j]] = [currentWords[j], currentWords[i]];
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
 
-            const selectedWords = currentWords.slice(0, 10);
+            // Get 10 words
+            const selectedWords = shuffled.slice(0, 10);
+
             const listElement = document.getElementById('wordList');
             listElement.innerHTML = '';
 
             selectedWords.forEach((word, index) => {
-                const card = createCard(word, theme);
+                const card = createCard(word);
+                // Staggered fade in animation
                 card.style.animation = `fadeIn 0.4s ease forwards ${index * 0.05}s`;
                 card.style.opacity = '0';
                 listElement.appendChild(card);
             });
         }
 
+        // ==========================================
+        // HANDWRITING SPELLING LOGIC
+        // ==========================================
+        let currentTargetWord = "";
+        const TOTAL_BOXES = 10;
+        let canvases = [];
+        let contexts = [];
+
+        function initBoxes() {
+            const container = document.getElementById('boxContainer');
+            container.innerHTML = '';
+            canvases = []; contexts = [];
+
+            for (let i = 0; i < TOTAL_BOXES; i++) {
+                const wrap = document.createElement('div');
+                wrap.className = 'border-4 border-slate-300 bg-slate-50 rounded-xl overflow-hidden shadow-inner flex-shrink-0';
+                
+                const c = document.createElement('canvas');
+                c.width = 60; c.height = 80; 
+                c.className = 'touch-none cursor-crosshair block';
+                c.dataset.hasStrokes = 'false';
+
+                const ctx = c.getContext('2d');
+                ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e293b';
+
+                let isDrawing = false;
+                c.onpointerdown = (e) => {
+                    isDrawing = true; c.dataset.hasStrokes = 'true';
+                    const rect = c.getBoundingClientRect();
+                    ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+                };
+                c.onpointermove = (e) => {
+                    if (!isDrawing) return;
+                    const rect = c.getBoundingClientRect();
+                    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); ctx.stroke();
+                };
+                c.onpointerup = () => isDrawing = false;
+                c.onpointerleave = () => isDrawing = false;
+
+                wrap.appendChild(c); container.appendChild(wrap);
+                canvases.push(c); contexts.push(ctx);
+            }
+        }
+
+        function openSpelling(word) {
+            currentTargetWord = word;
+            document.getElementById('spellingModal').classList.remove('hidden');
+            document.getElementById('spellingResult').innerText = "";
+            initBoxes();
+        }
+
+        function closeSpelling() { document.getElementById('spellingModal').classList.add('hidden'); }
+
+        function clearAllBoxes() {
+            canvases.forEach((c, i) => { contexts[i].clearRect(0, 0, c.width, c.height); c.dataset.hasStrokes = 'false'; });
+            document.getElementById('spellingResult').innerText = "";
+        }
+
+        async function checkSpelling() {
+            const checkBtn = document.getElementById('checkBtn');
+            const resultDiv = document.getElementById('spellingResult');
+            checkBtn.innerText = "Checking..."; checkBtn.disabled = true; resultDiv.innerText = "";
+
+            const promises = canvases.map(c => {
+                if (c.dataset.hasStrokes === 'true') {
+                    return Tesseract.recognize(c, 'eng', {
+                        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                        tessedit_pageseg_mode: '10' // 10 = Treat as single character
+                    }).then(res => res.data.text.trim().toUpperCase());
+                }
+                return Promise.resolve('');
+            });
+
+            try {
+                const letters = await Promise.all(promises);
+                const spelledWord = letters.join('').replace(/[^A-Z]/g, '');
+                if (spelledWord === currentTargetWord.toUpperCase()) {
+                    resultDiv.innerText = "🎉 CORRECT! 🎉"; resultDiv.className = "text-green-500 mb-6 text-3xl font-black h-10 w-full animate-bounce";
+                } else {
+                    resultDiv.innerText = `You wrote: ${spelledWord || "?"} ❌`; resultDiv.className = "text-red-500 mb-6 text-3xl font-black h-10 w-full";
+                }
+            } catch (err) { resultDiv.innerText = "Error reading letters."; }
+            checkBtn.innerText = "Check Spelling"; checkBtn.disabled = false;
+        }
+
+        // Init on load
         window.onload = displayRandomWords;
     </script>
 </body>
