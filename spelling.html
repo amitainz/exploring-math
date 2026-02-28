@@ -282,6 +282,10 @@
                 c.dataset.hasStrokes = 'false';
 
                 const ctx = c.getContext('2d');
+                // Fill canvas with white so the AI can actually "see" the ink
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, c.width, c.height);
+
                 ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e293b';
 
                 let isDrawing = false;
@@ -313,7 +317,12 @@
         function closeSpelling() { document.getElementById('spellingModal').classList.add('hidden'); }
 
         function clearAllBoxes() {
-            canvases.forEach((c, i) => { contexts[i].clearRect(0, 0, c.width, c.height); c.dataset.hasStrokes = 'false'; });
+            canvases.forEach((c, i) => { 
+                contexts[i].clearRect(0, 0, c.width, c.height); 
+                contexts[i].fillStyle = '#ffffff';
+                contexts[i].fillRect(0, 0, c.width, c.height);
+                c.dataset.hasStrokes = 'false'; 
+            });
             document.getElementById('spellingResult').innerText = "";
         }
 
@@ -334,11 +343,32 @@
 
             try {
                 const letters = await Promise.all(promises);
-                const spelledWord = letters.join('').replace(/[^A-Z]/g, '');
-                if (spelledWord === currentTargetWord.toUpperCase()) {
+                
+                let isCorrect = true;
+                let displaySpelled = "";
+                const targetUpper = currentTargetWord.toUpperCase();
+
+                // STRICT POSITIONAL CHECKING
+                for (let i = 0; i < TOTAL_BOXES; i++) {
+                    const char = letters[i].replace(/[^A-Z]/g, '').charAt(0) || "";
+                    
+                    if (i < targetUpper.length) {
+                        // Inside the word: Check if the letter matches the box position
+                        if (char !== targetUpper[i]) isCorrect = false;
+                        displaySpelled += (char || "_") + " "; // Show an underscore if empty/failed
+                    } else {
+                        // Outside the word: Ensure these extra boxes are empty
+                        if (char !== "") {
+                            isCorrect = false;
+                            displaySpelled += char + " "; // Show them the extra letters they wrote
+                        }
+                    }
+                }
+
+                if (isCorrect) {
                     resultDiv.innerText = "🎉 CORRECT! 🎉"; resultDiv.className = "text-green-500 mb-6 text-3xl font-black h-10 w-full animate-bounce";
                 } else {
-                    resultDiv.innerText = `You wrote: ${spelledWord || "?"} ❌`; resultDiv.className = "text-red-500 mb-6 text-3xl font-black h-10 w-full";
+                    resultDiv.innerText = `You wrote: ${displaySpelled.trim()} ❌`; resultDiv.className = "text-red-500 mb-6 text-3xl font-black h-10 w-full tracking-[0.5em]";
                 }
             } catch (err) { resultDiv.innerText = "Error reading letters."; }
             checkBtn.innerText = "Check Spelling"; checkBtn.disabled = false;
