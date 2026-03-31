@@ -38,6 +38,10 @@
             border: 1px solid #000;
             cursor: crosshair;
             max-width: 100%;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
         }
         .matrix-container {
             display: flex;
@@ -250,6 +254,8 @@ return [newR, newG, newB];
             const scaleY = canvas.height / rect.height;
             markerX = Math.floor((e.clientX - rect.left) * scaleX);
             markerY = Math.floor((e.clientY - rect.top) * scaleY);
+            markerX = Math.max(0, Math.min(canvas.width - 1, markerX));
+            markerY = Math.max(0, Math.min(canvas.height - 1, markerY));
             updateInspectorAndMarker();
         }
 
