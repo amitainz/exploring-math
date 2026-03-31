@@ -15,18 +15,17 @@
             height: 100vh;
             box-sizing: border-box;
         }
-        /* Left Pane: Code & Logic */
-        .left-panel {
+        .left-panel, .right-panel {
             flex: 1;
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #ccc;
             display: flex;
             flex-direction: column;
             min-width: 320px;
+            overflow-y: auto;
         }
-        /* Center Pane: Image Workspace */
         .center-panel {
             flex: 2;
             display: flex;
@@ -34,26 +33,12 @@
             align-items: center;
             overflow: auto;
         }
-        /* Right Pane: Magnified Inspector */
-        .right-panel {
-            flex: 1;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            min-width: 380px;
-            overflow-y: auto;
-        }
-
         canvas {
             margin-top: 15px;
-            border: 2px dashed #ccc;
+            border: 1px solid #000;
             cursor: crosshair;
             max-width: 100%;
         }
-
         .matrix-container {
             display: flex;
             flex-direction: column;
@@ -74,10 +59,9 @@
         .matrix-r { color: #ff6b6b; border-left: 4px solid #ff6b6b; }
         .matrix-g { color: #51cf66; border-left: 4px solid #51cf66; }
         .matrix-b { color: #339af0; border-left: 4px solid #339af0; }
-
         textarea {
             width: 100%;
-            flex-grow: 1;
+            height: 100px;
             font-family: monospace;
             padding: 10px;
             box-sizing: border-box;
@@ -91,57 +75,59 @@
         button {
             padding: 10px 15px;
             cursor: pointer;
-            background-color: #0056b3;
+            background-color: #333;
             color: white;
             border: none;
             border-radius: 4px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        button:hover { background-color: #004494; }
-        .controls { margin-bottom: 10px; text-align: center; }
-        h3 { margin-top: 0; }
+        .controls { margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
         .code-header { font-family: monospace; font-weight: bold; margin-bottom: 5px; color: #333;}
+        .logic-controls { display: flex; gap: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
     <div class="left-panel">
-        <h3>Custom Garble Logic</h3>
-        <p style="font-size: 13px; color: #555;">Write JavaScript for the center pixel. You receive three <strong>3x3 matrices</strong> (r, g, b). The center pixel is at index <code>[1][1]</code>.</p>
+        <div class="logic-controls">
+            <button id="saveLogicBtn">Save Logic Pair</button>
+            <input type="file" id="loadLogicLoader" accept=".json" style="display:none;">
+            <button id="loadLogicBtn">Load Logic Pair</button>
+        </div>
+
+        <div class="code-header">function condition(x, y) {</div>
+        <textarea id="condCode">
+// Return true to apply transformation
+return true;
+        </textarea>
+        <div class="code-header">}</div>
 
         <div class="code-header">function processPixel(r, g, b) {</div>
         <textarea id="customCode">
-// Example: Invert the center pixel's Red channel,
-// and apply the Green and Blue from 1 pixel to the left.
-
 let newR = 255 - r[1][1];
-let newG = g[1][0]; // 1 pixel left of center
-let newB = b[1][0]; // 1 pixel left of center
-
+let newG = g[1][0];
+let newB = b[1][0];
 return [newR, newG, newB];
         </textarea>
         <div class="code-header">}</div>
 
-        <button id="applyBtn">Apply Custom Code</button>
-        <button id="resetBtn" style="background-color: #555;">Reset Image</button>
+        <button id="applyBtn">Apply Logic</button>
+        <button id="resetBtn">Reset Image</button>
     </div>
 
     <div class="center-panel">
         <div class="controls">
-            <h2>Image Workspace</h2>
             <input type="file" id="imageLoader" accept="image/*"/>
-            <p style="font-size: 14px; color: #555;">Click and drag on the image to place the 7x7 inspector marker.</p>
+            <button id="saveImageBtn">Save Image</button>
         </div>
         <canvas id="imageCanvas"></canvas>
     </div>
 
     <div class="right-panel">
-        <h3>Magnified Inspector (7x7)</h3>
         <div class="matrix-container">
-            <div id="matR" class="matrix matrix-r">Load an image and click...</div>
-            <div id="matG" class="matrix matrix-g">Load an image and click...</div>
-            <div id="matB" class="matrix matrix-b">Load an image and click...</div>
+            <div id="matR" class="matrix matrix-r">Load image</div>
+            <div id="matG" class="matrix matrix-g">Load image</div>
+            <div id="matB" class="matrix matrix-b">Load image</div>
         </div>
     </div>
 
@@ -149,9 +135,17 @@ return [newR, newG, newB];
         const imageLoader = document.getElementById('imageLoader');
         const canvas = document.getElementById('imageCanvas');
         const ctx = canvas.getContext('2d');
+
         const applyBtn = document.getElementById('applyBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const saveImageBtn = document.getElementById('saveImageBtn');
+
+        const saveLogicBtn = document.getElementById('saveLogicBtn');
+        const loadLogicBtn = document.getElementById('loadLogicBtn');
+        const loadLogicLoader = document.getElementById('loadLogicLoader');
+
         const customCodeInput = document.getElementById('customCode');
+        const condCodeInput = document.getElementById('condCode');
 
         const matR = document.getElementById('matR');
         const matG = document.getElementById('matG');
@@ -165,7 +159,6 @@ return [newR, newG, newB];
         let markerY = -1;
         let isDragging = false;
 
-        // Load image
         imageLoader.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -178,7 +171,6 @@ return [newR, newG, newB];
                 originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                // Reset marker
                 markerX = Math.floor(canvas.width / 2);
                 markerY = Math.floor(canvas.height / 2);
                 updateInspectorAndMarker();
@@ -192,30 +184,24 @@ return [newR, newG, newB];
             return (y * width + x) * 4;
         }
 
-        // Format array to HTML string
         function formatMatrix(mat) {
             return mat.map(row =>
                 row.map(val => String(val).padStart(3, '0')).join(' ')
             ).join('<br>');
         }
 
-        // Draw the image and overlay the 7x7 marker
         function renderCanvas() {
             if (!currentImageData) return;
             ctx.putImageData(currentImageData, 0, 0);
-
             if (markerX >= 0 && markerY >= 0) {
                 ctx.strokeStyle = '#ff0000';
                 ctx.lineWidth = 1;
-                // Draw a 7x7 box centered on the clicked pixel
                 ctx.strokeRect(markerX - 3, markerY - 3, 7, 7);
             }
         }
 
-        // Extract 7x7 matrices for the inspector
         function updateInspectorAndMarker() {
             if (!currentImageData || markerX < 0 || markerY < 0) return;
-
             renderCanvas();
 
             const data = currentImageData.data;
@@ -228,9 +214,8 @@ return [newR, newG, newB];
 
             for (let dy = -3; dy <= 3; dy++) {
                 for (let dx = -3; dx <= 3; dx++) {
-                    let nx = Math.max(0, Math.min(w - 1, markerX + dx));
-                    let ny = Math.max(0, Math.min(h - 1, markerY + dy));
-
+                    let nx = (markerX + dx + w) % w;
+                    let ny = (markerY + dy + h) % h;
                     let idx = getIdx(nx, ny, w);
                     r[dy+3][dx+3] = data[idx];
                     g[dy+3][dx+3] = data[idx+1];
@@ -243,7 +228,6 @@ return [newR, newG, newB];
             matB.innerHTML = formatMatrix(b);
         }
 
-        // Handle Mouse Events for clicking and dragging the marker
         function updateMarkerPosition(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -267,18 +251,15 @@ return [newR, newG, newB];
             isDragging = false;
         });
 
-        // Apply Custom Code
         applyBtn.addEventListener('click', function() {
-            if (!currentImageData) {
-                alert("Upload an image first!");
-                return;
-            }
+            if (!currentImageData) return;
 
-            let userFunc;
+            let condFunc, userFunc;
             try {
+                condFunc = new Function('x', 'y', condCodeInput.value);
                 userFunc = new Function('r', 'g', 'b', customCodeInput.value);
             } catch (err) {
-                alert("Syntax Error in your code:\n" + err.message);
+                alert("Syntax Error:\n" + err.message);
                 return;
             }
 
@@ -298,12 +279,29 @@ return [newR, newG, newB];
 
                 for (let y = 0; y < h; y++) {
                     for (let x = 0; x < w; x++) {
+                        let targetIdx = getIdx(x, y, w);
 
-                        // Build 3x3 matrices for the user function
+                        let applyTransform = false;
+                        try {
+                            applyTransform = condFunc(x, y);
+                        } catch (err) {
+                            alert("Error in condition execution:\n" + err.message);
+                            applyBtn.innerText = "Apply Logic";
+                            return;
+                        }
+
+                        if (!applyTransform) {
+                            out[targetIdx] = data[targetIdx];
+                            out[targetIdx+1] = data[targetIdx+1];
+                            out[targetIdx+2] = data[targetIdx+2];
+                            out[targetIdx+3] = data[targetIdx+3];
+                            continue;
+                        }
+
                         for (let dy = -1; dy <= 1; dy++) {
                             for (let dx = -1; dx <= 1; dx++) {
-                                let nx = Math.max(0, Math.min(w - 1, x + dx));
-                                let ny = Math.max(0, Math.min(h - 1, y + dy));
+                                let nx = (x + dx + w) % w;
+                                let ny = (y + dy + h) % h;
                                 let idx = getIdx(nx, ny, w);
                                 r[dy+1][dx+1] = data[idx];
                                 g[dy+1][dx+1] = data[idx+1];
@@ -313,14 +311,13 @@ return [newR, newG, newB];
 
                         try {
                             const result = userFunc(r, g, b);
-                            let targetIdx = getIdx(x, y, w);
-                            out[targetIdx] = result[0];     // Red
-                            out[targetIdx+1] = result[1];   // Green
-                            out[targetIdx+2] = result[2];   // Blue
-                            out[targetIdx+3] = data[targetIdx+3]; // Alpha
+                            out[targetIdx] = result[0];
+                            out[targetIdx+1] = result[1];
+                            out[targetIdx+2] = result[2];
+                            out[targetIdx+3] = data[targetIdx+3];
                         } catch (err) {
-                            alert("Error during execution:\n" + err.message);
-                            applyBtn.innerText = "Apply Custom Code";
+                            alert("Error in transformation execution:\n" + err.message);
+                            applyBtn.innerText = "Apply Logic";
                             return;
                         }
                     }
@@ -328,11 +325,10 @@ return [newR, newG, newB];
 
                 currentImageData = outputData;
                 updateInspectorAndMarker();
-                applyBtn.innerText = "Apply Custom Code";
+                applyBtn.innerText = "Apply Logic";
             }, 10);
         });
 
-        // Reset the image
         resetBtn.addEventListener('click', function() {
             if (originalImageData) {
                 currentImageData = new ImageData(
@@ -342,6 +338,49 @@ return [newR, newG, newB];
                 );
                 updateInspectorAndMarker();
             }
+        });
+
+        saveImageBtn.addEventListener('click', function() {
+            if (!currentImageData) return;
+            ctx.putImageData(currentImageData, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'garbled_image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            updateInspectorAndMarker();
+        });
+
+        saveLogicBtn.addEventListener('click', function() {
+            const logicObj = {
+                condition: condCodeInput.value,
+                transformation: customCodeInput.value
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logicObj));
+            const link = document.createElement('a');
+            link.download = "logic_pair.json";
+            link.href = dataStr;
+            link.click();
+        });
+
+        loadLogicBtn.addEventListener('click', function() {
+            loadLogicLoader.click();
+        });
+
+        loadLogicLoader.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const logicObj = JSON.parse(event.target.result);
+                    if (logicObj.condition !== undefined) condCodeInput.value = logicObj.condition;
+                    if (logicObj.transformation !== undefined) customCodeInput.value = logicObj.transformation;
+                } catch (err) {
+                    alert("Invalid JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            loadLogicLoader.value = "";
         });
 
     </script>
