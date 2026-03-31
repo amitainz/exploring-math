@@ -9,19 +9,34 @@ but they seem determined to keep growing up).
 Some of them form parts of an escape-room-like game, but they can each be done independently.
 
 ## TOC
-- [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
-- [Discover Euler's Beautiful Formula](euler.html)
-- [Prove There Are Only Five Regular Solids](only_five.html) - continues where the previous formula left off.
-- [Locate Your Stranded Boat](tutorial.html)
-- [Your Ear is Doing Math](mind_frequencies/index.html)
-- [Open a Safe By Hitting the Right Frequencies](humming.html)
+### [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
+And how is this related to polyrhythms?
+### [Discover Euler's Beautiful Formula](euler.html)
+Help a farmer crack mysterious patterns in his fence diagrams.
+### [Prove There Are Only Five Regular Solids](only_five.html)
+this continues where the previous formula left off.
+### [Locate Your Stranded Boat](tutorial.html)
+Plot your position and save our ship!
 
-- [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
-- [Find the Inverse of a Transformation to Uncover the Secret Image](image_garbler.html) - this one will require you 
+### [Your Ear is Doing Math](mind_frequencies/index.html)
+
+### [Open a Safe By Hitting the Right Frequencies](humming.html)
+
+### [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
+### [Find the Inverse of a Transformation to Uncover the Secret Image](image_garbler.html)
+- this one will require you 
 to load an image - you can use [this image](garbled_image.png) which was obtained from a secret image ([SPOILER](well_done.png))
-using the transformation shown. To make it a somewhat more difficult - change the number of iterations from 101 to 100.
-To test your ideas and get a feel for things, you can use this simple [10 x 10 pixelated H](h_pixel.png) and apply
+using the transformation shown. 
+- To test your ideas and get a feel for things, you can use this simple [10 x 10 pixelated H](h_pixel.png) and apply
 just 1 or 2 iterations. 
+
+- For a somewhat more involved challenge - change the number of iterations from 101 to 100 (or any even number)
+
+(you'll have to re-create the garbled image from some plain image 
+ yourself, then let the kids try to unscramble it as before)
+
+- you can let the kids try to design their own pairs of inverse transformations.
+
 
 ## WIP
 - [modulo math quiz](modulo_math.html), or just the [modulo calculator](modulo_calculator.html)
