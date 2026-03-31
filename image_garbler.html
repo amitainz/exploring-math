@@ -81,9 +81,14 @@
             border-radius: 4px;
             margin-bottom: 5px;
         }
-        .controls { margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+        button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+        .controls { margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; width: 100%; }
         .code-header { font-family: monospace; font-weight: bold; margin-bottom: 5px; color: #333;}
-        .logic-controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        .logic-controls { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
+        progress { width: 100%; margin-bottom: 10px; height: 20px; display: none; }
     </style>
 </head>
 <body>
@@ -93,6 +98,9 @@
             <button id="saveLogicBtn">Save Logic Pair</button>
             <input type="file" id="loadLogicLoader" accept=".json" style="display:none;">
             <button id="loadLogicBtn">Load Logic Pair</button>
+            <label style="font-size: 14px; font-weight: bold;">Iterations:
+                <input type="number" id="iterationsInput" value="1" min="1" style="width: 60px; padding: 5px;">
+            </label>
         </div>
 
         <div class="code-header">function condition(x, y) {</div>
@@ -111,6 +119,7 @@ return [newR, newG, newB];
         </textarea>
         <div class="code-header">}</div>
 
+        <progress id="progressBar" value="0" max="100"></progress>
         <button id="applyBtn">Apply Logic</button>
         <button id="resetBtn">Reset Image</button>
     </div>
@@ -146,6 +155,8 @@ return [newR, newG, newB];
 
         const customCodeInput = document.getElementById('customCode');
         const condCodeInput = document.getElementById('condCode');
+        const iterationsInput = document.getElementById('iterationsInput');
+        const progressBar = document.getElementById('progressBar');
 
         const matR = document.getElementById('matR');
         const matG = document.getElementById('matG');
@@ -251,7 +262,13 @@ return [newR, newG, newB];
             isDragging = false;
         });
 
-        applyBtn.addEventListener('click', function() {
+        function resetUI() {
+            applyBtn.innerText = "Apply Logic";
+            applyBtn.disabled = false;
+            progressBar.style.display = "none";
+        }
+
+        applyBtn.addEventListener('click', async function() {
             if (!currentImageData) return;
 
             let condFunc, userFunc;
@@ -263,16 +280,21 @@ return [newR, newG, newB];
                 return;
             }
 
-            const data = currentImageData.data;
+            const iterations = parseInt(iterationsInput.value, 10) || 1;
             const w = canvas.width;
             const h = canvas.height;
 
-            const outputData = new ImageData(new Uint8ClampedArray(data), w, h);
-            const out = outputData.data;
-
+            progressBar.max = iterations;
+            progressBar.value = 0;
+            progressBar.style.display = "block";
+            applyBtn.disabled = true;
             applyBtn.innerText = "Processing...";
 
-            setTimeout(() => {
+            for (let iter = 0; iter < iterations; iter++) {
+                const data = currentImageData.data;
+                const outputData = new ImageData(new Uint8ClampedArray(data), w, h);
+                const out = outputData.data;
+
                 let r = Array.from({length: 3}, () => Array(3).fill(0));
                 let g = Array.from({length: 3}, () => Array(3).fill(0));
                 let b = Array.from({length: 3}, () => Array(3).fill(0));
@@ -286,7 +308,7 @@ return [newR, newG, newB];
                             applyTransform = condFunc(x, y);
                         } catch (err) {
                             alert("Error in condition execution:\n" + err.message);
-                            applyBtn.innerText = "Apply Logic";
+                            resetUI();
                             return;
                         }
 
@@ -317,16 +339,21 @@ return [newR, newG, newB];
                             out[targetIdx+3] = data[targetIdx+3];
                         } catch (err) {
                             alert("Error in transformation execution:\n" + err.message);
-                            applyBtn.innerText = "Apply Logic";
+                            resetUI();
                             return;
                         }
                     }
                 }
 
                 currentImageData = outputData;
-                updateInspectorAndMarker();
-                applyBtn.innerText = "Apply Logic";
-            }, 10);
+                progressBar.value = iter + 1;
+
+                // Yield thread to update UI
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            updateInspectorAndMarker();
+            resetUI();
         });
 
         resetBtn.addEventListener('click', function() {
