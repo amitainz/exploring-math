@@ -35,9 +35,15 @@
         }
         canvas {
             margin-top: 15px;
-            border: 1px solid #000;
+            border: 2px solid #333;
             cursor: crosshair;
-            max-width: 100%;
+            /* This forces the canvas to be large regardless of its internal pixel count */
+            width: 500px;
+            height: auto;
+            /* These ensure the 10x10 pixels look like sharp squares, not a blur */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
