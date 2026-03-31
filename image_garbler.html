@@ -103,17 +103,17 @@
             </label>
         </div>
 
-        <div class="code-header">function condition(x, y) {</div>
+        <div class="code-header">function condition(x, y, iter) {</div>
         <textarea id="condCode">
-return true;
+return (x + y) % 2 === iter % 2;
         </textarea>
         <div class="code-header">}</div>
 
         <div class="code-header">function processPixel(r, g, b) {</div>
         <textarea id="customCode">
-let newR = 255 - r[1][1];
-let newG = g[1][0];
-let newB = b[1][0];
+let newR = (r[0][1] + r[2][1] + r[1][0] + r[1][2]) / 4;
+let newG = (g[0][1] + g[2][1] + g[1][0] + g[1][2]) / 4;
+let newB = (b[0][1] + b[2][1] + b[1][0] + b[1][2]) / 4;
 return [newR, newG, newB];
         </textarea>
         <div class="code-header">}</div>
@@ -272,7 +272,7 @@ return [newR, newG, newB];
 
             let condFunc, userFunc;
             try {
-                condFunc = new Function('x', 'y', condCodeInput.value);
+                condFunc = new Function('x', 'y', 'iter', condCodeInput.value);
                 userFunc = new Function('r', 'g', 'b', customCodeInput.value);
             } catch (err) {
                 alert("Syntax Error:\n" + err.message);
@@ -304,7 +304,7 @@ return [newR, newG, newB];
 
                         let applyTransform = false;
                         try {
-                            applyTransform = condFunc(x, y);
+                            applyTransform = condFunc(x, y, iter);
                         } catch (err) {
                             alert("Error in condition execution:\n" + err.message);
                             resetUI();
