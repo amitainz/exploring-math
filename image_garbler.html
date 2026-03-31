@@ -3,110 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Garbler</title>
+    <title>Interactive Image Matrix Garbler</title>
     <style>
         body {
             font-family: sans-serif;
             background-color: #f4f4f9;
+            margin: 0;
             padding: 20px;
             display: flex;
+            gap: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .left-panel {
+            flex: 2;
+            display: flex;
             flex-direction: column;
-            align-items: center;
+            overflow: auto;
+        }
+        .right-panel {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-width: 300px;
         }
         canvas {
-            margin-top: 20px;
+            margin-top: 15px;
             border: 2px dashed #ccc;
+            cursor: crosshair;
             max-width: 100%;
-            height: auto;
         }
-        .controls {
+        .matrix-container {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 20px;
         }
+        .matrix {
+            font-family: monospace;
+            background: #222;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            width: 30%;
+        }
+        .matrix-r { color: #ff6b6b; }
+        .matrix-g { color: #51cf66; }
+        .matrix-b { color: #339af0; }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            padding: 10px;
+            box-sizing: border-box;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
         button {
-            padding: 8px 16px;
+            padding: 10px 15px;
             cursor: pointer;
             background-color: #0056b3;
             color: white;
             border: none;
             border-radius: 4px;
+            font-weight: bold;
         }
-        button:hover {
-            background-color: #004494;
-        }
+        button:hover { background-color: #004494; }
+        .controls { margin-bottom: 10px; }
+        h3 { margin-top: 0; }
+        .code-header { font-family: monospace; font-weight: bold; margin-bottom: 5px; color: #333;}
     </style>
 </head>
 <body>
 
-    <h2>Local Image Garbler</h2>
-
-    <div class="controls">
-        <input type="file" id="imageLoader" accept="image/*"/>
-        <button id="garbleBtn">Garble Image!</button>
+    <div class="left-panel">
+        <div class="controls">
+            <h2>Image Workspace</h2>
+            <input type="file" id="imageLoader" accept="image/*"/>
+        </div>
+        <p><em>Hover over the image to see the 3x3 pixel matrix around your cursor.</em></p>
+        <canvas id="imageCanvas"></canvas>
     </div>
 
-    <canvas id="imageCanvas"></canvas>
+    <div class="right-panel">
+        <h3>Lens (3x3 Matrix)</h3>
+        <div class="matrix-container">
+            <div id="matR" class="matrix matrix-r">000 000 000<br>000 000 000<br>000 000 000</div>
+            <div id="matG" class="matrix matrix-g">000 000 000<br>000 000 000<br>000 000 000</div>
+            <div id="matB" class="matrix matrix-b">000 000 000<br>000 000 000<br>000 000 000</div>
+        </div>
+
+        <h3>Custom Garble Logic</h3>
+        <p style="font-size: 13px; color: #555;">Write JavaScript for the center pixel. You are provided with three 3x3 matrices (r, g, b) representing the neighborhood.</p>
+
+        <div class="code-header">function processPixel(r, g, b) {</div>
+        <textarea id="customCode">
+// Example: Average the surrounding Red pixels,
+// invert Green, keep Blue the same.
+
+let avgR = (r[0][0] + r[0][1] + r[0][2] +
+            r[1][0] + r[1][1] + r[1][2] +
+            r[2][0] + r[2][1] + r[2][2]) / 9;
+
+let newR = avgR;
+let newG = 255 - g[1][1];
+let newB = b[1][1];
+
+return [newR, newG, newB];
+        </textarea>
+        <div class="code-header">}</div>
+
+        <button id="applyBtn">Apply Custom Code</button>
+        <button id="resetBtn" style="background-color: #555; margin-top: 10px;">Reset Image</button>
+    </div>
 
     <script>
         const imageLoader = document.getElementById('imageLoader');
-        const garbleBtn = document.getElementById('garbleBtn');
         const canvas = document.getElementById('imageCanvas');
         const ctx = canvas.getContext('2d');
+        const applyBtn = document.getElementById('applyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const customCodeInput = document.getElementById('customCode');
+
+        const matR = document.getElementById('matR');
+        const matG = document.getElementById('matG');
+        const matB = document.getElementById('matB');
+
+        let originalImageData = null;
         let currentImage = new Image();
 
-        // 1. Handle the local file upload
+        // Load image
         imageLoader.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            // Create a temporary local URL for the selected file
             const objectURL = URL.createObjectURL(file);
-
             currentImage.onload = function() {
-                // Resize canvas to match the image
                 canvas.width = currentImage.width;
                 canvas.height = currentImage.height;
-                // Draw the original image
                 ctx.drawImage(currentImage, 0, 0);
-
-                // Free up memory once the image is loaded
+                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 URL.revokeObjectURL(objectURL);
             }
-
             currentImage.src = objectURL;
         });
 
-        // 2. Manipulate the pixels to "garble" the image
-        garbleBtn.addEventListener('click', function() {
-            if (canvas.width === 0) {
-                alert("Please upload an image first!");
+        // Helper: Get pixel index
+        function getIdx(x, y, width) {
+            return (y * width + x) * 4;
+        }
+
+        // Helper: Format 3x3 array to HTML string
+        function formatMatrix(mat) {
+            return mat.map(row =>
+                row.map(val => String(val).padStart(3, '0')).join(' ')
+            ).join('<br>');
+        }
+
+        // The Lens: Hovering over the image
+        canvas.addEventListener('mousemove', function(e) {
+            if (!originalImageData) return;
+
+            const rect = canvas.getBoundingClientRect();
+            // Calculate scale in case canvas is resized by CSS
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            let r = [[0,0,0],[0,0,0],[0,0,0]];
+            let g = [[0,0,0],[0,0,0],[0,0,0]];
+            let b = [[0,0,0],[0,0,0],[0,0,0]];
+
+            // Build the 3x3 matrices
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    let nx = x + dx;
+                    let ny = y + dy;
+
+                    // Clamp to edges
+                    nx = Math.max(0, Math.min(w - 1, nx));
+                    ny = Math.max(0, Math.min(h - 1, ny));
+
+                    let idx = getIdx(nx, ny, w);
+                    r[dy+1][dx+1] = data[idx];
+                    g[dy+1][dx+1] = data[idx+1];
+                    b[dy+1][dx+1] = data[idx+2];
+                }
+            }
+
+            matR.innerHTML = formatMatrix(r);
+            matG.innerHTML = formatMatrix(g);
+            matB.innerHTML = formatMatrix(b);
+        });
+
+        // Apply Custom Code
+        applyBtn.addEventListener('click', function() {
+            if (!originalImageData) {
+                alert("Upload an image first!");
                 return;
             }
 
-            // Get the raw pixel data from the canvas
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
+            let userFunc;
+            try {
+                // Dynamically create a function from the textarea
+                userFunc = new Function('r', 'g', 'b', customCodeInput.value);
+            } catch (err) {
+                alert("Syntax Error in your code:\n" + err.message);
+                return;
+            }
 
-            // Loop through the pixels (each pixel has 4 values: Red, Green, Blue, Alpha)
-            for (let i = 0; i < data.length; i += 4) {
-                // Randomly mess with the colors to create a garbled/glitch effect
-                if (Math.random() > 0.8) {
-                    data[i] = 255 - data[i];         // Invert Red
-                    data[i + 1] = Math.random() * 255; // Randomize Green
-                    // Leave Blue (data[i+2]) and Alpha (data[i+3]) alone for this effect
-                }
+            // Get current canvas state
+            const currentData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = currentData.data;
+            const w = canvas.width;
+            const h = canvas.height;
 
-                // Optional: shift pixels horizontally slightly for a glitchy look
-                if (Math.random() > 0.95 && i > 40) {
-                    data[i] = data[i - 40];
-                    data[i+1] = data[i - 39];
-                    data[i+2] = data[i - 38];
+            // Create a copy to write to (so we don't read modified pixels as we go)
+            const outputData = new ImageData(new Uint8ClampedArray(data), w, h);
+            const out = outputData.data;
+
+            // Warning for large images (browser might freeze briefly)
+            if (w * h > 1000000) {
+                console.log("Processing a large image, this might take a moment...");
+            }
+
+            // Loop through every pixel
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+
+                    let r = [[0,0,0],[0,0,0],[0,0,0]];
+                    let g = [[0,0,0],[0,0,0],[0,0,0]];
+                    let b = [[0,0,0],[0,0,0],[0,0,0]];
+
+                    // Build the 3x3 matrices for the user function
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            let nx = Math.max(0, Math.min(w - 1, x + dx));
+                            let ny = Math.max(0, Math.min(h - 1, y + dy));
+                            let idx = getIdx(nx, ny, w);
+                            r[dy+1][dx+1] = data[idx];
+                            g[dy+1][dx+1] = data[idx+1];
+                            b[dy+1][dx+1] = data[idx+2];
+                        }
+                    }
+
+                    try {
+                        // Execute user code
+                        const result = userFunc(r, g, b);
+
+                        let targetIdx = getIdx(x, y, w);
+                        out[targetIdx] = result[0];     // Red
+                        out[targetIdx+1] = result[1];   // Green
+                        out[targetIdx+2] = result[2];   // Blue
+                        out[targetIdx+3] = data[targetIdx+3]; // Keep original Alpha
+                    } catch (err) {
+                        alert("Error during execution:\n" + err.message);
+                        return; // Stop processing on first error
+                    }
                 }
             }
 
-            // Put the modified pixels back onto the canvas
-            ctx.putImageData(imageData, 0, 0);
+            ctx.putImageData(outputData, 0, 0);
         });
-    </script>
 
+        // Reset the image
+        resetBtn.addEventListener('click', function() {
+            if (originalImageData) {
+                ctx.putImageData(originalImageData, 0, 0);
+            }
+        });
+
+    </script>
 </body>
 </html>
