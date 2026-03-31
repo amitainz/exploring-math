@@ -105,7 +105,6 @@
 
         <div class="code-header">function condition(x, y) {</div>
         <textarea id="condCode">
-// Return true to apply transformation
 return true;
         </textarea>
         <div class="code-header">}</div>
@@ -348,7 +347,6 @@ return [newR, newG, newB];
                 currentImageData = outputData;
                 progressBar.value = iter + 1;
 
-                // Yield thread to update UI
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
 
@@ -369,22 +367,26 @@ return [newR, newG, newB];
 
         saveImageBtn.addEventListener('click', function() {
             if (!currentImageData) return;
+            const filename = prompt("Enter filename:", "garbled_image");
+            if (!filename) return;
             ctx.putImageData(currentImageData, 0, 0);
             const link = document.createElement('a');
-            link.download = 'garbled_image.png';
+            link.download = filename.endsWith('.png') ? filename : filename + '.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
             updateInspectorAndMarker();
         });
 
         saveLogicBtn.addEventListener('click', function() {
+            const filename = prompt("Enter filename:", "logic_pair");
+            if (!filename) return;
             const logicObj = {
                 condition: condCodeInput.value,
                 transformation: customCodeInput.value
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logicObj));
             const link = document.createElement('a');
-            link.download = "logic_pair.json";
+            link.download = filename.endsWith('.json') ? filename : filename + '.json';
             link.href = dataStr;
             link.click();
         });
