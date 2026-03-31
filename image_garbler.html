@@ -33,8 +33,12 @@
             align-items: center;
             overflow: auto;
         }
-        canvas {
+        .canvas-container {
+            position: relative;
             margin-top: 15px;
+            display: inline-block;
+        }
+        canvas {
             border: 2px solid #333;
             cursor: crosshair;
             /* This forces the canvas to be large regardless of its internal pixel count */
@@ -48,6 +52,13 @@
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             image-rendering: pixelated;
+        }
+        .marker-fragment {
+            position: absolute;
+            border: 0px solid #000;
+            pointer-events: none;
+            display: none;
+            box-sizing: border-box;
         }
         .matrix-container {
             display: flex;
@@ -109,7 +120,7 @@
             <input type="file" id="loadLogicLoader" accept=".json" style="display:none;">
             <button id="loadLogicBtn">Load Logic Pair</button>
             <label style="font-size: 14px; font-weight: bold;">Iterations:
-                <input type="number" id="iterationsInput" value="1" min="1" style="width: 60px; padding: 5px;">
+                <input type="number" id="iterationsInput" value="101" min="1" style="width: 60px; padding: 5px;">
             </label>
         </div>
 
@@ -143,7 +154,13 @@ return [newR, newG, newB];
             <input type="file" id="imageLoader" accept="image/*"/>
             <button id="saveImageBtn">Save Image</button>
         </div>
-        <canvas id="imageCanvas"></canvas>
+        <div class="canvas-container">
+            <div class="marker-fragment"></div>
+            <div class="marker-fragment"></div>
+            <div class="marker-fragment"></div>
+            <div class="marker-fragment"></div>
+            <canvas id="imageCanvas"></canvas>
+        </div>
     </div>
 
     <div class="right-panel">
@@ -157,6 +174,7 @@ return [newR, newG, newB];
     <script>
         const imageLoader = document.getElementById('imageLoader');
         const canvas = document.getElementById('imageCanvas');
+        const markerFragments = document.getElementsByClassName('marker-fragment');
         const ctx = canvas.getContext('2d');
 
         const applyBtn = document.getElementById('applyBtn');
@@ -219,10 +237,44 @@ return [newR, newG, newB];
         function renderCanvas() {
             if (!currentImageData) return;
             ctx.putImageData(currentImageData, 0, 0);
+
+            for (let f of markerFragments) f.style.display = 'none';
+
             if (markerX >= 0 && markerY >= 0) {
-                ctx.strokeStyle = '#ff0000';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(markerX - 3, markerY - 3, 7, 7);
+                const rect = canvas.getBoundingClientRect();
+                const pSize = rect.width / canvas.width;
+                const W = canvas.width;
+                const H = canvas.height;
+
+                const getRanges = (val, dim) => {
+                    let start = val - 3, end = val + 3;
+                    if (start < 0) return [[dim + start, dim - 1, true, false], [0, end, false, true]];
+                    if (end >= dim) return [[start, dim - 1, true, false], [0, end - dim, false, true]];
+                    return [[start, end, true, true]];
+                };
+
+                const xRanges = getRanges(markerX, W);
+                const yRanges = getRanges(markerY, H);
+
+                let fragIdx = 0;
+                xRanges.forEach(([xS, xE, bL, bR]) => {
+                    yRanges.forEach(([yS, yE, bT, bB]) => {
+                        const f = markerFragments[fragIdx++];
+                        if (!f) return;
+
+                        f.style.display = 'block';
+                        f.style.left = xS * pSize + 'px';
+                        f.style.top = yS * pSize + 'px';
+                        f.style.width = (xE - xS + 1) * pSize + 'px';
+                        f.style.height = (yE - yS + 1) * pSize + 'px';
+
+                        // Only draw borders on the "outer" limits of the 7x7 area
+                        f.style.borderLeft = bL ? '3px solid #000' : 'none';
+                        f.style.borderRight = bR ? '3px solid #000' : 'none';
+                        f.style.borderTop = bT ? '3px solid #000' : 'none';
+                        f.style.borderBottom = bB ? '3px solid #000' : 'none';
+                    });
+                });
             }
         }
 

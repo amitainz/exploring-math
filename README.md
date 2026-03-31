@@ -17,7 +17,11 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 - [Open a Safe By Hitting the Right Frequencies](humming.html)
 
 - [See Capture Recapture Population Estimation In Action](capture_recapture_explanation.html)
-
+- [Find the Inverse of a Transformation to Uncover the Secret Image](image_garbler.html) - this one will require you 
+to load an image - you can use [this image](garbled_image.png) which was obtained from a secret image ([SPOILER](well_done.png))
+using the transformation shown. To make it a somewhat more difficult - change the number of iterations from 101 to 100.
+To test your ideas and get a feel for things, you can use this simple [10 x 10 pixelated H](h_pixel.png) and apply
+just 1 or 2 iterations. 
 
 ## WIP
 - [modulo math quiz](modulo_math.html), or just the [modulo calculator](modulo_calculator.html)
