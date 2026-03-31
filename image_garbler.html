@@ -193,6 +193,7 @@ return [newR, newG, newB];
                 URL.revokeObjectURL(objectURL);
             }
             currentImage.src = objectURL;
+            e.target.value = '';
         });
 
         function getIdx(x, y, width) {
