@@ -115,9 +115,9 @@ let avgR = Math.floor((r[0][1] + r[2][1] + r[1][0] + r[1][2]) / 4);
 let avgG = Math.floor((g[0][1] + g[2][1] + g[1][0] + g[1][2]) / 4);
 let avgB = Math.floor((b[0][1] + b[2][1] + b[1][0] + b[1][2]) / 4);
 
-let newR = (r[1][1] + avgR) % 256;
-let newG = (g[1][1] + avgG) % 256;
-let newB = (b[1][1] + avgB) % 256;
+let newR = (r[1][1] + avgR + 256) % 256;
+let newG = (g[1][1] + avgG + 256) % 256;
+let newB = (b[1][1] + avgB + 256) % 256;
 
 return [newR, newG, newB];
         </textarea>
