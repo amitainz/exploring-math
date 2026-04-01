@@ -11,6 +11,11 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 ## TOC
 ### [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
 And how is this related to polyrhythms?
+
+Addendum: you can practice polyrhythms in a group. One kid conducts
+(or just counts modulo 12)  "left hand" group claps every multiple of 3,
+"right hand" group stamps their foot every multiple of 4.
+
 ### [Discover Euler's Beautiful Formula](euler.html)
 Help a farmer crack mysterious patterns in his fence diagrams.
 ### [Prove There Are Only Five Regular Solids](only_five.html)
