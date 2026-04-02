@@ -9,16 +9,6 @@ but they seem determined to keep growing up).
 Some of them form parts of an escape-room-like game, but they can each be done independently.
 
 ## TOC
-### [Artemis II Is Headed to the Moon!](artemis_2.html)
-Ever wondered how the "burns" are scheduled?
-This simple sim allows you to see how the trajectory of Orion would change 
-if you change the velocity
-- a change in velocity is effected by an engine burn; to a good approximation you can treat these as sudden momentary changes, to analyze their effect.
-- the simulator removes the 3d orientation of the conic section to 
-help you focus on the essential features - e.g. the changes to the perigee (lowest point) and apogee (highest point)
-of the orbit. that's why you only get to change Orion's distance from the earth and the velocity vector in 
-2d.
-
 
 ### [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
 And how is this related to polyrhythms?
@@ -53,9 +43,23 @@ just 1 or 2 iterations.
 
 - you can let the kids try to design their own pairs of inverse transformations.
 
+### [Modulo Math is All Around Us](modulo_math.html) 
+or you can just use the [modulo calculator](modulo_calculator.html)
 
-## WIP
-- [modulo math quiz](modulo_math.html), or just the [modulo calculator](modulo_calculator.html)
+## Other Stuff
+
+### [Artemis II Is Headed to the Moon!](artemis_2.html)
+Ever wondered how the "burns" are scheduled?
+This simple sim allows you to see how the trajectory of Orion would change 
+if you change the velocity
+- a change in velocity is effected by an engine burn; to a good approximation you can treat these as sudden momentary changes, to analyze their effect.
+- the simulator removes the 3d orientation of the conic section to 
+help you focus on the essential features - e.g. the changes to the perigee (lowest point) and apogee (highest point)
+of the orbit. that's why you only get to change Orion's distance from the earth and the velocity vector in 
+2d.
+
+
+
 ### Stubs
 - [Fourier Analysis WIP](fourier.html)
 - [Key Spelling Words](spelling.html)
