@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Orbit Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d0d12;
+            color: #eeeeee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(20, 20, 30, 0.85);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #00FF88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat {
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #aaa;
+            display: inline-block;
+            width: 130px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-panel">
+        <h2>Keplerian Orbit</h2>
+        <div class="stat"><span class="stat-label">Radius (r):</span> <span id="stat-r">0</span></div>
+        <div class="stat"><span class="stat-label">Velocity X (v_r):</span> <span id="stat-vx">0</span></div>
+        <div class="stat"><span class="stat-label">Velocity Y (v_t):</span> <span id="stat-vy">0</span></div>
+        <div class="stat"><span class="stat-label">Eccentricity (e):</span> <span id="stat-e">0</span></div>
+        <div class="stat"><span class="stat-label">Semi-Major (a):</span> <span id="stat-a">0</span></div>
+        <div class="stat"><span class="stat-label">Trajectory:</span> <span id="stat-type" style="color: #00FF88">Ellipse</span></div>
+    </div>
+
+    <canvas id="sim"></canvas>
+
+    <script>
+        const canvas = document.getElementById('sim');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, cx, cy;
+
+        // Constants for the simulation scale
+        const MU = 2000000;      // Standard gravitational parameter (scaled for pixels)
+        const EARTH_RADIUS = 30; // Radius of the central body
+
+        // Initial State Variables
+        let r = 200;             // Distance from center along X-axis
+        let vx = 0;              // Velocity component in X (Radial)
+        let vy = -100;           // Velocity component in Y (Transverse)
+
+        // Interaction state
+        let draggingP = false;   // Dragging the position node
+        let draggingV = false;   // Dragging the velocity vector head
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            cx = width / 2;
+            cy = height / 2;
+            draw();
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Normalize pointer coordinates to world center
+        function getPointerPos(e) {
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            // Handle touch events
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return {
+                x: clientX - cx,
+                y: clientY - cy
+            };
+        }
+
+        // --- Event Listeners for Interaction --- //
+        canvas.addEventListener('mousedown', onDown);
+        canvas.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+
+        canvas.addEventListener('touchstart', onDown, {passive: false});
+        canvas.addEventListener('touchmove', onMove, {passive: false});
+        window.addEventListener('touchend', onUp);
+
+        function onDown(e) {
+            const pos = getPointerPos(e);
+
+            // Check distance to Velocity Arrow Head first (prioritize over position dot)
+            const distV = Math.hypot(pos.x - (r + vx), pos.y - vy);
+            if (distV < 20) {
+                draggingV = true;
+                canvas.style.cursor = 'grabbing';
+                return;
+            }
+
+            // Check distance to Position Dot
+            const distP = Math.hypot(pos.x - r, pos.y);
+            if (distP < 20) {
+                draggingP = true;
+                canvas.style.cursor = 'grabbing';
+                return;
+            }
+        }
+
+        function onMove(e) {
+            const pos = getPointerPos(e);
+
+            // Update cursor style for hover
+            if (!draggingP && !draggingV) {
+                const distV = Math.hypot(pos.x - (r + vx), pos.y - vy);
+                const distP = Math.hypot(pos.x - r, pos.y);
+                if (distV < 20 || distP < 20) {
+                    canvas.style.cursor = 'grab';
+                } else {
+                    canvas.style.cursor = 'default';
+                }
+                return;
+            }
+
+            // Prevent scrolling on touch devices while dragging
+            if (e.type === 'touchmove') e.preventDefault();
+
+            if (draggingV) {
+                vx = pos.x - r;
+                vy = pos.y;
+            } else if (draggingP) {
+                r = Math.max(EARTH_RADIUS + 10, pos.x); // Prevent dragging inside the Earth
+            }
+
+            // Force redraw immediately
+            requestAnimationFrame(draw);
+        }
+
+        function onUp() {
+            draggingP = false;
+            draggingV = false;
+            canvas.style.cursor = 'default';
+        }
+
+        // --- Core Rendering and Mechanics --- //
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // 1. Draw horizontal axis (radial constraint)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-cx, 0);
+            ctx.lineTo(cx, 0);
+            ctx.stroke();
+
+            // 2. Calculate Orbital Elements
+            // Position vector: r_vec = [r, 0, 0]
+            // Velocity vector: v_vec = [vx, vy, 0]
+
+            // Specific angular momentum: h_vec = r_vec x v_vec = [0, 0, r * vy]
+            let hz = r * vy;
+            if (Math.abs(hz) < 0.001) hz = hz < 0 ? -0.001 : 0.001; // Avoid strict division by zero
+
+            // Eccentricity vector: e_vec = (v_vec x h_vec)/mu - (r_vec/|r_vec|)
+            let ex = (vy * hz) / MU - 1;
+            let ey = (-vx * hz) / MU;
+
+            let e = Math.sqrt(ex*ex + ey*ey);
+            let p = (hz * hz) / MU;              // Semi-latus rectum
+            let a = p / (1 - e*e);               // Semi-major axis
+            let omega = Math.atan2(ey, ex);      // Argument of periapsis
+
+            // 3. Draw Orbit Path
+            ctx.strokeStyle = e < 1 ? '#00FF88' : '#FF4444'; // Green for closed, Red for escape
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            let maxTheta = Math.PI; // Go from -pi to +pi for ellipse
+            if (e >= 1) {
+                // If escape trajectory, limit the drawn true anomaly so it doesn't approach infinity
+                let safe_asymptote = Math.max(-1, Math.min(1, -1/e));
+                maxTheta = Math.acos(safe_asymptote) - 0.02;
+            }
+
+            // Plot points using polar coordinates in perifocal frame, then rotate by omega
+            const resolution = 250;
+            for (let i = -resolution; i <= resolution; i++) {
+                let theta = (i / resolution) * maxTheta;
+                let radius = p / (1 + e * Math.cos(theta));
+
+                let px_peri = radius * Math.cos(theta);
+                let py_peri = radius * Math.sin(theta);
+
+                // Rotate into global frame
+                let ox = px_peri * Math.cos(omega) - py_peri * Math.sin(omega);
+                let oy = px_peri * Math.sin(omega) + py_peri * Math.cos(omega);
+
+                if (i === -resolution) ctx.moveTo(ox, oy);
+                else ctx.lineTo(ox, oy);
+            }
+            ctx.stroke();
+
+            // 4. Draw Earth (Focus)
+            ctx.fillStyle = '#2A75D3';
+            ctx.beginPath();
+            ctx.arc(0, 0, EARTH_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 5. Draw Position Node (P)
+            ctx.fillStyle = '#FF3333';
+            ctx.beginPath();
+            ctx.arc(r, 0, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 6. Draw Velocity Vector Arrow
+            ctx.strokeStyle = '#FFFF00';
+            ctx.fillStyle = '#FFFF00';
+            ctx.lineWidth = 3;
+            drawArrow(ctx, r, 0, r + vx, vy);
+
+            // Draw Draggable Velocity Head
+            ctx.beginPath();
+            ctx.arc(r + vx, vy, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // 7. Update UI Stats
+            document.getElementById('stat-r').innerText = r.toFixed(1);
+            document.getElementById('stat-vx').innerText = vx.toFixed(1);
+            document.getElementById('stat-vy').innerText = vy.toFixed(1);
+            document.getElementById('stat-e').innerText = e.toFixed(4);
+            document.getElementById('stat-a').innerText = e === 1 ? '∞' : Math.abs(a).toFixed(1);
+
+            const typeLabel = document.getElementById('stat-type');
+            if (e < 1) {
+                typeLabel.innerText = 'Ellipse (Bound)';
+                typeLabel.style.color = '#00FF88';
+            } else if (e === 1) {
+                typeLabel.innerText = 'Parabola (Escape)';
+                typeLabel.style.color = '#FFAA00';
+            } else {
+                typeLabel.innerText = 'Hyperbola (Escape)';
+                typeLabel.style.color = '#FF4444';
+            }
+        }
+
+        // Utility to draw a vector arrow
+        function drawArrow(ctx, fromX, fromY, toX, toY) {
+            const headlen = 14;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>
