@@ -59,6 +59,7 @@
         <div class="stat"><span class="stat-label">Semi-Major (a):</span> <span id="stat-a">0</span></div>
         <div class="stat"><span class="stat-label">Perigee (r_p):</span> <span id="stat-rp">0</span></div>
         <div class="stat"><span class="stat-label">Apogee (r_a):</span> <span id="stat-ra">0</span></div>
+        <div class="stat"><span class="stat-label">Period (T):</span> <span id="stat-T">0</span></div>
         <div class="stat"><span class="stat-label">Trajectory:</span> <span id="stat-type" style="color: #00FF88">Ellipse</span></div>
     </div>
 
@@ -276,6 +277,15 @@
             document.getElementById('stat-a').innerText = e >= 1 ? '∞' : (a * KM_PER_PX).toFixed(0) + ' km';
             document.getElementById('stat-rp').innerText = (rp * KM_PER_PX).toFixed(0) + ' km';
             document.getElementById('stat-ra').innerText = e >= 1 ? '∞' : (ra * KM_PER_PX).toFixed(0) + ' km';
+
+            // Orbital Period: T = 2*pi * sqrt(a^3 / mu)
+            let periodText = '∞';
+            if (e < 1) {
+                let a_real = a * KM_PER_PX;
+                let T_sec = 2 * Math.PI * Math.sqrt(Math.pow(a_real, 3) / 398600.4418); // using real Earth mu (km^3/s^2)
+                periodText = (T_sec / 60).toFixed(1) + ' min';
+            }
+            document.getElementById('stat-T').innerText = periodText;
 
             const typeLabel = document.getElementById('stat-type');
             if (e < 1) {
