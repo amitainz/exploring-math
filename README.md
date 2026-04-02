@@ -49,7 +49,9 @@ or you can just use the [modulo calculator](modulo_calculator.html)
 ## Other Stuff
 
 ### [Artemis II Is Headed to the Moon!](artemis_2.html)
-Ever wondered how the "burns" are scheduled?
+Ever wondered how the "burns" are scheduled? Why did they wait 49 minutes after launch
+before making the second burn?
+
 This simple sim allows you to see how the trajectory of Orion would change 
 if you change the velocity
 - a change in velocity is effected by an engine burn; to a good approximation you can treat these as sudden momentary changes, to analyze their effect.
@@ -57,6 +59,18 @@ if you change the velocity
 help you focus on the essential features - e.g. the changes to the perigee (lowest point) and apogee (highest point)
 of the orbit. that's why you only get to change Orion's distance from the earth and the velocity vector in 
 2d.
+
+**So why *did* they have to wait 49 minutes?**
+
+the second burn was meant to raise the perigee (lowest point) of Orion's orbit so it goes above earth's atmosphere
+(or it, like it's lower stages, would have re-entered the atmosphere). But to raise
+the perigee, you have to wait until you're near the apogee (highest point) - at least 
+if you want to keep things efficient while staying in a bound orbit around the earth (the Orion mission
+is supposed to stay in a bound Orbit for a few more days before actually heading to the moon)
+
+You can use the sim to convince yourself that the last statement is true - it's very hard
+to raise the perigee when you're near the perigee - no matter which way you try to accelerate.
+
 
 
 
