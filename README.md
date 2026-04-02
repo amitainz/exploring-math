@@ -15,7 +15,7 @@ This simple sim allows you to see how the trajectory of Orion would change
 if you change the velocity
 - a change in velocity is effected by an engine burn; to a good approximation you can treat these as sudden momentary changes, to analyze their effect.
 - the simulator removes the 3d orientation of the conic section to 
-help you focus on the essential features - e.g. the changes to the perigee (lowest point) and apigee (highest point)
+help you focus on the essential features - e.g. the changes to the perigee (lowest point) and apogee (highest point)
 of the orbit. that's why you only get to change Orion's distance from the earth and the velocity vector in 
 2d.
 
