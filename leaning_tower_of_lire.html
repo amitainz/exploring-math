@@ -30,7 +30,7 @@
             color: white;
             border: none;
             border-radius: 4px;
-            width: 180px; /* Fixed width to prevent jumping when text changes */
+            width: 180px;
             height: 35px;
         }
         button:hover {
@@ -66,7 +66,7 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
-        <button id="letGoBtn">Let Go</button>
+        <button id="letGoBtn">Let Go (Run Physics)</button>
         <button id="repositionBtn">Reposition</button>
         <button id="resetBtn">Reset Tower</button>
     </div>
@@ -90,9 +90,13 @@
         const BLOCK_H = 30;
         const EPSILON = 0.5;
 
+        // Physics Tuning Parameters
+        const AIR_GAP = 0.5;
+        const PHYSICS_HZ = 120;
+
         // State
         let blocks = [];
-        let snapshot = []; // Holds authoritative pre-sim state
+        let snapshot = [];
         let active = false;
         let draggedIndex = -1;
         let dragOffsetX = 0;
@@ -131,12 +135,12 @@
             physicsMode = false;
             letGoBtn.style.display = 'inline-block';
             repositionBtn.style.display = 'none';
-            
+
             blocks = [];
             snapshot = [];
             violations = [];
             const n = parseInt(select.value);
-            const startX = LEDGE_X + LEDGE_W - BLOCK_W; // Flush with ledge right edge
+            const startX = LEDGE_X + LEDGE_W - BLOCK_W;
 
             for(let i = 0; i < n; i++) {
                 blocks.push({
@@ -235,25 +239,21 @@
         function startPhysics() {
             if(physicsMode) return;
             physicsMode = true;
-            
-            // Toggle UI
+
             letGoBtn.style.display = 'none';
             repositionBtn.style.display = 'inline-block';
-            
+
             hoveredIndex = -1;
             canvas.style.cursor = 'default';
 
-            // 1. Take Snapshot
             snapshot = blocks.map(b => ({ ...b }));
 
-            // 2. Setup Engine with Jitter Mitigation (High Iterations)
             engine = Engine.create({
-                positionIterations: 16, // Default is 6. Higher = stiffer stack
-                velocityIterations: 12  // Default is 4. Higher = faster energy dissipation
+                positionIterations: 16,
+                velocityIterations: 16
             });
             matterBlocks = [];
 
-            // Add Ledge (Static)
             const ledgeBody = Bodies.rectangle(
                 LEDGE_X + LEDGE_W / 2,
                 LEDGE_Y + LEDGE_H / 2,
@@ -263,45 +263,49 @@
             );
             World.add(engine.world, ledgeBody);
 
-            // Add Blocks (Dynamic)
             for(let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
+
+                // AIR GAP LOGIC: Stack upwards with tiny separations
+                const yOffset = -(i * AIR_GAP);
+
                 const body = Bodies.rectangle(
                     b.x + b.w / 2,
-                    b.y + b.h / 2,
+                    (b.y + b.h / 2) + yOffset,
                     b.w,
                     b.h,
-                    { 
-                        friction: 1.0,         // High friction so they don't slide easily
-                        density: 0.005, 
-                        restitution: 0,        // 0 bounciness to prevent the jump/sponginess
-                        frictionAir: 0.02,     // Slight air drag to settle micro-movements
-                        sleepThreshold: 15     // Go to sleep slightly faster
+                    {
+                        friction: 1.0,
+                        density: 0.005,
+                        restitution: 0,
+                        frictionAir: 0.02,
+                        sleepThreshold: 15
                     }
                 );
                 matterBlocks.push(body);
                 World.add(engine.world, body);
             }
 
-            runner = Runner.create();
+            // High-frequency fixed timestep runner
+            runner = Runner.create({
+                isFixed: true,
+                delta: 1000 / PHYSICS_HZ
+            });
             Runner.run(runner, engine);
         }
 
         function reposition() {
             if(!physicsMode) return;
-            
-            // 1. Halt Simulation completely to purge momentum
+
             if(runner) Runner.stop(runner);
             if(engine) Engine.clear(engine);
-            
-            // 2. Restore State from Snapshot
+
             blocks = snapshot.map(s => ({ ...s }));
-            
-            // 3. Reset Variables and UI
+
             physicsMode = false;
             letGoBtn.style.display = 'inline-block';
             repositionBtn.style.display = 'none';
-            
+
             checkViolations();
         }
 
@@ -309,7 +313,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if(physicsMode && matterBlocks.length > 0) {
-                // Sync Matter.js bodies back to our draw loop
                 for(let i = 0; i < blocks.length; i++) {
                     const body = matterBlocks[i];
                     blocks[i].x = body.position.x - blocks[i].w / 2;
@@ -318,11 +321,9 @@
                 }
             }
 
-            // Draw Ledge
             ctx.fillStyle = '#444';
             ctx.fillRect(LEDGE_X, LEDGE_Y, LEDGE_W, LEDGE_H);
 
-            // Draw Base Blocks
             for(let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
                 ctx.save();
@@ -338,9 +339,7 @@
                 ctx.restore();
             }
 
-            // Draw Violation / Hover states and CMs (Only in manual mode)
             if(!physicsMode) {
-                // Highlight Hovered Substack
                 if(hoveredIndex !== -1) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
                     for(let i = hoveredIndex; i < blocks.length; i++) {
@@ -348,7 +347,6 @@
                     }
                 }
 
-                // Highlight Violating Substacks (Stacking red alpha)
                 ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
                 for(let i = 0; i < violations.length; i++) {
                     if(violations[i]) {
@@ -358,7 +356,6 @@
                     }
                 }
 
-                // Draw CM Crosshairs and Bobs
                 for(let i = 0; i < blocks.length; i++) {
                     let sumX = 0, sumY = 0;
                     let numMoving = blocks.length - i;
@@ -380,18 +377,15 @@
                     ctx.fillStyle = isViolating ? '#c0392b' : '#2c3e50';
                     ctx.lineWidth = isEmphasized ? 2 : 1;
 
-                    // Drop Line
                     ctx.beginPath();
                     ctx.moveTo(cmX, cmY);
                     ctx.lineTo(cmX, pivotY);
                     ctx.stroke();
 
-                    // Pivot Dot
                     ctx.beginPath();
                     ctx.arc(cmX, pivotY, 4, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // CM Crosshair
                     ctx.beginPath();
                     ctx.arc(cmX, cmY, 8, 0, Math.PI * 2);
                     ctx.stroke();
@@ -410,7 +404,6 @@
             animationFrameId = requestAnimationFrame(loop);
         }
 
-        // Start
         init();
     </script>
 </body>
