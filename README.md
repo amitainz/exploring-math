@@ -29,9 +29,7 @@ some tick marks which you may find helpful (or confusing)
 you might find some inspiration in [this argument](https://en.wikipedia.org/wiki/Harmonic_series_(mathematics)#Comparison_test).
 
 
-[^1:] the simulation is a bit jittery, so you might find that 
-some towers which should, in an ideal world, be stable, topple. You should nudge things a tiny bit inward to add extra stability
-to your tower if you see this happens. 
+[^1:] the simulation is a bit jittery, so you might find that some towers which should, in an ideal world, be stable, topple. You should nudge things a tiny bit inward to add extra stability to your tower if you see this happens. 
 
 ### [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
 And how is this related to polyrhythms?
