@@ -73,6 +73,7 @@
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
         <button id="zoomBtn">Zoom (and hint)</button>
+        <span id="zoomHint" style="display:none; color:#8e44ad; font-weight:bold; font-size:14px;">now click a block to zoom in on</span>
         <button id="letGoBtn">Let Go</button>
         <button id="repositionBtn">Reposition</button>
         <button id="resetBtn">Reset Tower</button>
@@ -89,6 +90,7 @@
         const repositionBtn = document.getElementById('repositionBtn');
         const resetBtn = document.getElementById('resetBtn');
         const zoomBtn = document.getElementById('zoomBtn');
+        const zoomHint = document.getElementById('zoomHint');
         const zoomCanvas = document.getElementById('zoomCanvas');
         const zoomCtx = zoomCanvas.getContext('2d');
 
@@ -143,6 +145,7 @@
         zoomBtn.addEventListener('click', () => {
             zoomMode = !zoomMode;
             zoomBtn.style.border = zoomMode ? "2px solid #2c3e50" : "none";
+            zoomHint.style.display = zoomMode ? "inline-block" : "none";
             if (!zoomMode) {
                 zoomedBlockIndex = -1;
                 zoomCanvas.style.display = 'none';
@@ -164,6 +167,7 @@
             zoomedBlockIndex = -1;
             zoomCanvas.style.display = 'none';
             zoomBtn.style.border = "none";
+            zoomHint.style.display = "none";
 
             blocks = [];
             snapshot = [];
@@ -251,6 +255,7 @@
             if(zoomMode) {
                 zoomedBlockIndex = hoveredIndex;
                 zoomCanvas.style.display = 'block';
+                zoomHint.style.display = 'none';
             }
             active = true;
             draggedIndex = hoveredIndex;
@@ -320,6 +325,12 @@
         function startPhysics() {
             if(physicsMode) return;
             physicsMode = true;
+            
+            zoomMode = false;
+            zoomedBlockIndex = -1;
+            zoomCanvas.style.display = 'none';
+            zoomBtn.style.border = "none";
+            zoomHint.style.display = "none";
 
             letGoBtn.style.display = 'none';
             repositionBtn.style.display = 'inline-block';
