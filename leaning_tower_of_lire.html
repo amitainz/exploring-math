@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Stacking Simulation</title>
+    <title>Block Stacking Physics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
         body {
             display: flex;
@@ -17,15 +18,30 @@
         .controls {
             margin-bottom: 15px;
             font-size: 16px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        button {
+            padding: 5px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
         }
         canvas {
             background-color: white;
             border: 1px solid #ccc;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            cursor: grab;
-        }
-        canvas:active {
-            cursor: grabbing;
         }
     </style>
 </head>
@@ -34,6 +50,8 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
+        <button id="letGoBtn">Let Go (Run Physics)</button>
+        <button id="resetBtn">Reset</button>
     </div>
 
     <canvas id="simCanvas" width="800" height="600"></canvas>
@@ -42,20 +60,35 @@
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
         const select = document.getElementById('numBlocks');
+        const letGoBtn = document.getElementById('letGoBtn');
+        const resetBtn = document.getElementById('resetBtn');
 
         // Simulation Constants
-        const LEDGE_X = 100;
+        const LEDGE_X = 200;
         const LEDGE_Y = 450;
         const LEDGE_W = 300;
         const LEDGE_H = 150;
-
         const BLOCK_W = 120;
         const BLOCK_H = 30;
+        const EPSILON = 0.5;
 
+        // State
         let blocks = [];
         let active = false;
         let draggedIndex = -1;
         let dragOffsetX = 0;
+        let hoveredIndex = -1;
+        let violations = [];
+        let physicsMode = false;
+        let animationFrameId;
+
+        // Matter.js setup
+        const Engine = Matter.Engine,
+              World = Matter.World,
+              Bodies = Matter.Bodies,
+              Runner = Matter.Runner;
+
+        let engine, runner, matterBlocks = [];
 
         // Initialize Dropdown
         for(let i = 1; i <= 15; i++) {
@@ -67,23 +100,59 @@
         }
 
         select.addEventListener('change', init);
+        resetBtn.addEventListener('click', init);
+        letGoBtn.addEventListener('click', startPhysics);
 
         function init() {
+            if(runner) Runner.stop(runner);
+            if(engine) Engine.clear(engine);
+            cancelAnimationFrame(animationFrameId);
+
+            physicsMode = false;
+            letGoBtn.disabled = false;
             blocks = [];
+            violations = [];
             const n = parseInt(select.value);
-            const startX = LEDGE_X + LEDGE_W - BLOCK_W; // Flush with ledge's right edge
+            const startX = LEDGE_X + LEDGE_W - BLOCK_W; // Flush with ledge right edge
 
             for(let i = 0; i < n; i++) {
                 blocks.push({
                     x: startX,
                     y: LEDGE_Y - (i + 1) * BLOCK_H,
                     w: BLOCK_W,
-                    h: BLOCK_H
+                    h: BLOCK_H,
+                    angle: 0
                 });
+                violations.push(false);
             }
             active = false;
             draggedIndex = -1;
-            draw();
+            hoveredIndex = -1;
+
+            checkViolations();
+            loop();
+        }
+
+        function checkViolations() {
+            for(let i = 0; i < blocks.length; i++) {
+                let sumX = 0;
+                let numMoving = blocks.length - i;
+                for(let j = i; j < blocks.length; j++) {
+                    sumX += (blocks[j].x + blocks[j].w / 2);
+                }
+                const cmX = sumX / numMoving;
+
+                let pivotLeft, pivotRight;
+                if(i === 0) {
+                    pivotLeft = LEDGE_X;
+                    pivotRight = LEDGE_X + LEDGE_W;
+                } else {
+                    pivotLeft = blocks[i - 1].x;
+                    pivotRight = blocks[i - 1].x + blocks[i - 1].w;
+                }
+
+                violations[i] = (cmX < pivotLeft - EPSILON || cmX > pivotRight + EPSILON);
+            }
         }
 
         function getMousePos(e) {
@@ -94,162 +163,196 @@
             };
         }
 
-        canvas.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('mousemove', (e) => {
+            if(physicsMode) return;
             const pos = getMousePos(e);
-            // Check top-down to select the highest block if overlapping perfectly
-            for(let i = blocks.length - 1; i >= 0; i--) {
-                const b = blocks[i];
-                if(pos.x >= b.x && pos.x <= b.x + b.w &&
-                   pos.y >= b.y && pos.y <= b.y + b.h) {
-                    active = true;
-                    draggedIndex = i;
-                    dragOffsetX = pos.x - b.x;
-                    draw();
-                    break;
+
+            if(active && draggedIndex !== -1) {
+                const proposedX = pos.x - dragOffsetX;
+                const dx = proposedX - blocks[draggedIndex].x;
+
+                for(let i = draggedIndex; i < blocks.length; i++) {
+                    blocks[i].x += dx;
+                }
+                checkViolations();
+            } else {
+                hoveredIndex = -1;
+                canvas.style.cursor = 'default';
+                for(let i = blocks.length - 1; i >= 0; i--) {
+                    const b = blocks[i];
+                    if(pos.x >= b.x && pos.x <= b.x + b.w &&
+                       pos.y >= b.y && pos.y <= b.y + b.h) {
+                        hoveredIndex = i;
+                        canvas.style.cursor = 'grab';
+                        break;
+                    }
                 }
             }
         });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if(!active || draggedIndex === -1) return;
-
-            const pos = getMousePos(e);
-            const proposedX = pos.x - dragOffsetX;
-            let dx = proposedX - blocks[draggedIndex].x;
-
-            const numMoving = blocks.length - draggedIndex;
-
-            // Calculate current CM X of the moving stack
-            let sumX = 0;
-            for(let i = draggedIndex; i < blocks.length; i++) {
-                sumX += (blocks[i].x + blocks[i].w / 2);
-            }
-            const currentCMX = sumX / numMoving;
-
-            // Determine pivot constraints (edges of the supporting structure below)
-            let pivotLeft, pivotRight;
-            if(draggedIndex === 0) {
-                pivotLeft = LEDGE_X;
-                pivotRight = LEDGE_X + LEDGE_W;
-            } else {
-                const support = blocks[draggedIndex - 1];
-                pivotLeft = support.x;
-                pivotRight = support.x + support.w;
-            }
-
-            // Constrain movement so CM does not cross the pivot lines
-            const max_dx = pivotRight - currentCMX;
-            const min_dx = pivotLeft - currentCMX;
-
-            dx = Math.max(min_dx, Math.min(max_dx, dx));
-
-            // Apply constrained movement
-            for(let i = draggedIndex; i < blocks.length; i++) {
-                blocks[i].x += dx;
-            }
-
-            draw();
+        canvas.addEventListener('mousedown', (e) => {
+            if(physicsMode || hoveredIndex === -1) return;
+            active = true;
+            draggedIndex = hoveredIndex;
+            dragOffsetX = getMousePos(e).x - blocks[draggedIndex].x;
+            canvas.style.cursor = 'grabbing';
         });
 
         window.addEventListener('mouseup', () => {
+            if(physicsMode) return;
             active = false;
             draggedIndex = -1;
-            draw();
+            canvas.style.cursor = hoveredIndex !== -1 ? 'grab' : 'default';
         });
 
-        function draw() {
+        canvas.addEventListener('mouseleave', () => {
+            if(!active) hoveredIndex = -1;
+        });
+
+        function startPhysics() {
+            if(physicsMode) return;
+            physicsMode = true;
+            letGoBtn.disabled = true;
+            hoveredIndex = -1;
+            canvas.style.cursor = 'default';
+
+            engine = Engine.create();
+            matterBlocks = [];
+
+            // Add Ledge (Static)
+            const ledgeBody = Bodies.rectangle(
+                LEDGE_X + LEDGE_W / 2,
+                LEDGE_Y + LEDGE_H / 2,
+                LEDGE_W,
+                LEDGE_H,
+                { isStatic: true, friction: 0.8 }
+            );
+            World.add(engine.world, ledgeBody);
+
+            // Add Blocks (Dynamic)
+            for(let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                const body = Bodies.rectangle(
+                    b.x + b.w / 2,
+                    b.y + b.h / 2,
+                    b.w,
+                    b.h,
+                    { friction: 0.8, density: 0.002, restitution: 0.1 }
+                );
+                matterBlocks.push(body);
+                World.add(engine.world, body);
+            }
+
+            runner = Runner.create();
+            Runner.run(runner, engine);
+        }
+
+        function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if(physicsMode && matterBlocks.length > 0) {
+                // Sync Matter.js bodies back to our draw loop
+                for(let i = 0; i < blocks.length; i++) {
+                    const body = matterBlocks[i];
+                    blocks[i].x = body.position.x - blocks[i].w / 2;
+                    blocks[i].y = body.position.y - blocks[i].h / 2;
+                    blocks[i].angle = body.angle;
+                }
+            }
 
             // Draw Ledge
             ctx.fillStyle = '#444';
             ctx.fillRect(LEDGE_X, LEDGE_Y, LEDGE_W, LEDGE_H);
 
-            // Draw Blocks
+            // Draw Base Blocks
             for(let i = 0; i < blocks.length; i++) {
                 const b = blocks[i];
+                ctx.save();
+                ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+                ctx.rotate(b.angle);
+
                 ctx.fillStyle = '#3498db';
-                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
                 ctx.strokeStyle = '#2980b9';
                 ctx.lineWidth = 2;
-                ctx.strokeRect(b.x, b.y, b.w, b.h);
+                ctx.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h);
+
+                ctx.restore();
             }
 
-            // Draw Active Stack Overlay
-            if(active && draggedIndex !== -1) {
-                const numMoving = blocks.length - draggedIndex;
-                let sumX = 0, sumY = 0;
-
-                for(let i = draggedIndex; i < blocks.length; i++) {
-                    sumX += (blocks[i].x + blocks[i].w / 2);
-                    sumY += (blocks[i].y + blocks[i].h / 2);
-                }
-                const cmX = sumX / numMoving;
-                const cmY = sumY / numMoving;
-
-                // Pivot bounds computation for dashed lines
-                let pivotLeft, pivotRight;
-                if(draggedIndex === 0) {
-                    pivotLeft = LEDGE_X;
-                    pivotRight = LEDGE_X + LEDGE_W;
-                } else {
-                    pivotLeft = blocks[draggedIndex - 1].x;
-                    pivotRight = blocks[draggedIndex - 1].x + blocks[draggedIndex - 1].w;
+            // Draw Violation / Hover states and CMs (Only in manual mode)
+            if(!physicsMode) {
+                // Highlight Hovered Substack
+                if(hoveredIndex !== -1) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    for(let i = hoveredIndex; i < blocks.length; i++) {
+                        ctx.fillRect(blocks[i].x, blocks[i].y, blocks[i].w, blocks[i].h);
+                    }
                 }
 
-                // Draw Dashed Pivot Lines
-                ctx.beginPath();
-                ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 1;
+                // Highlight Violating Substacks (Stacking red alpha)
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
+                for(let i = 0; i < violations.length; i++) {
+                    if(violations[i]) {
+                        for(let j = i; j < blocks.length; j++) {
+                            ctx.fillRect(blocks[j].x, blocks[j].y, blocks[j].w, blocks[j].h);
+                        }
+                    }
+                }
 
-                ctx.moveTo(pivotLeft, 0);
-                ctx.lineTo(pivotLeft, canvas.height);
+                // Draw CM Crosshairs and Bobs
+                for(let i = 0; i < blocks.length; i++) {
+                    let sumX = 0, sumY = 0;
+                    let numMoving = blocks.length - i;
+                    for(let j = i; j < blocks.length; j++) {
+                        sumX += (blocks[j].x + blocks[j].w / 2);
+                        sumY += (blocks[j].y + blocks[j].h / 2);
+                    }
+                    const cmX = sumX / numMoving;
+                    const cmY = sumY / numMoving;
 
-                ctx.moveTo(pivotRight, 0);
-                ctx.lineTo(pivotRight, canvas.height);
+                    const pivotY = i === 0 ? LEDGE_Y : blocks[i - 1].y;
 
-                ctx.stroke();
-                ctx.setLineDash([]); // Reset dash
+                    const isViolating = violations[i];
+                    const isHovered = (i === hoveredIndex) || (active && i === draggedIndex);
+                    const isEmphasized = isViolating || isHovered;
 
-                // Draw CM Circle & Crosshair
-                ctx.beginPath();
-                ctx.arc(cmX, cmY, 12, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(231, 76, 60, 0.4)';
-                ctx.fill();
-                ctx.strokeStyle = '#c0392b';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                    ctx.globalAlpha = isEmphasized ? 1.0 : 0.3;
+                    ctx.strokeStyle = isViolating ? '#c0392b' : '#2c3e50';
+                    ctx.fillStyle = isViolating ? '#c0392b' : '#2c3e50';
+                    ctx.lineWidth = isEmphasized ? 2 : 1;
 
-                ctx.beginPath();
-                ctx.moveTo(cmX - 16, cmY);
-                ctx.lineTo(cmX + 16, cmY);
-                ctx.moveTo(cmX, cmY - 16);
-                ctx.lineTo(cmX, cmY + 16);
-                ctx.stroke();
+                    // Drop Line
+                    ctx.beginPath();
+                    ctx.moveTo(cmX, cmY);
+                    ctx.lineTo(cmX, pivotY);
+                    ctx.stroke();
 
-                // Draw Gravity Vector
-                const gThickness = Math.max(2, numMoving * 2);
-                const gLength = numMoving * 15;
-                const arrowSize = gThickness * 1.5 + 4;
+                    // Pivot Dot
+                    ctx.beginPath();
+                    ctx.arc(cmX, pivotY, 4, 0, Math.PI * 2);
+                    ctx.fill();
 
-                ctx.beginPath();
-                ctx.moveTo(cmX, cmY);
-                ctx.lineTo(cmX, cmY + gLength);
-                ctx.strokeStyle = '#2c3e50';
-                ctx.lineWidth = gThickness;
-                ctx.stroke();
+                    // CM Crosshair
+                    ctx.beginPath();
+                    ctx.arc(cmX, cmY, 8, 0, Math.PI * 2);
+                    ctx.stroke();
 
-                // Arrow head
-                ctx.beginPath();
-                ctx.moveTo(cmX - arrowSize, cmY + gLength);
-                ctx.lineTo(cmX + arrowSize, cmY + gLength);
-                ctx.lineTo(cmX, cmY + gLength + arrowSize * 1.2);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(cmX - 12, cmY);
+                    ctx.lineTo(cmX + 12, cmY);
+                    ctx.moveTo(cmX, cmY - 12);
+                    ctx.lineTo(cmX, cmY + 12);
+                    ctx.stroke();
+
+                    ctx.globalAlpha = 1.0;
+                }
             }
+
+            animationFrameId = requestAnimationFrame(loop);
         }
 
-        // Start Simulation
+        // Start
         init();
     </script>
 </body>
