@@ -10,6 +10,22 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 
 ## TOC
 
+### [Leaning Tower of Tire](leaning_tower_of_lire.html)
+Use this tutorial to build a tower of blocks. 
+How far away from the ledge can you go? 
+Here are some questions to guide you on your quest:
+1. Use the center of gravity markers to build your tower and 
+the red highlights to 
+You can click "Let Go" to run a simulation of what would 
+happen, to see if your tower is stable or not [^1]
+2. 
+
+[^1]: the simulation is a bit jittery, so you might find that 
+some towers which should, in an ideal world, be stable, topple.
+
+You should nudge things a tiny bit inward to add extra stability
+to your tower if you see this happens. 
+
 ### [To Avoid Trolls You Must Know Your 3 and 4 Times Table](trolls.html)
 And how is this related to polyrhythms?
 

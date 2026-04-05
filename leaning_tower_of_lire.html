@@ -60,6 +60,13 @@
         #zoomBtn:hover {
             background-color: #8e44ad;
         }
+        #highlightBtn {
+            background-color: #16a085;
+            width: auto;
+        }
+        #highlightBtn:hover {
+            background-color: #1abc9c;
+        }
         canvas {
             background-color: white;
             border: 1px solid #ccc;
@@ -72,11 +79,14 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
-        <button id="zoomBtn">Zoom (and hint)</button>
-        <span id="zoomHint" style="display:none; color:#8e44ad; font-weight:bold; font-size:14px;">now click a block to zoom in on</span>
         <button id="letGoBtn">Let Go</button>
         <button id="repositionBtn">Reposition</button>
         <button id="resetBtn">Reset Tower</button>
+    </div>
+    <div class="controls" style="margin-top: -5px;">
+        <button id="zoomBtn">Zoom (and hint)</button>
+        <button id="highlightBtn">Highlight Unstable Substacks</button>
+        <span id="zoomHint" style="display:none; color:#8e44ad; font-weight:bold; font-size:14px;">now click a block to zoom in on</span>
     </div>
 
     <canvas id="simCanvas" width="800" height="600"></canvas>
@@ -90,6 +100,7 @@
         const repositionBtn = document.getElementById('repositionBtn');
         const resetBtn = document.getElementById('resetBtn');
         const zoomBtn = document.getElementById('zoomBtn');
+        const highlightBtn = document.getElementById('highlightBtn');
         const zoomHint = document.getElementById('zoomHint');
         const zoomCanvas = document.getElementById('zoomCanvas');
         const zoomCtx = zoomCanvas.getContext('2d');
@@ -120,6 +131,7 @@
         let zoomHovered = false;
         let zoomDragOffsetX = 0;
         let violations = [];
+        let showHighlight = true;
         let physicsMode = false;
         let animationFrameId;
 
@@ -150,6 +162,10 @@
                 zoomedBlockIndex = -1;
                 zoomCanvas.style.display = 'none';
             }
+        });
+        highlightBtn.addEventListener('click', () => {
+            showHighlight = !showHighlight;
+            highlightBtn.style.opacity = showHighlight ? "1" : "0.5";
         });
         letGoBtn.addEventListener('click', startPhysics);
         repositionBtn.addEventListener('click', reposition);
@@ -439,11 +455,13 @@
                     }
                 }
 
-                ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
-                for(let i = 0; i < violations.length; i++) {
-                    if(violations[i]) {
-                        for(let j = i; j < blocks.length; j++) {
-                            ctx.fillRect(blocks[j].x, blocks[j].y, blocks[j].w, blocks[j].h);
+                if (showHighlight) {
+                    ctx.fillStyle = 'rgba(231, 76, 60, 0.25)';
+                    for(let i = 0; i < violations.length; i++) {
+                        if(violations[i]) {
+                            for(let j = i; j < blocks.length; j++) {
+                                ctx.fillRect(blocks[j].x, blocks[j].y, blocks[j].w, blocks[j].h);
+                            }
                         }
                     }
                 }
@@ -460,7 +478,7 @@
 
                     const pivotY = i === 0 ? LEDGE_Y : blocks[i - 1].y;
 
-                    const isViolating = violations[i];
+                    const isViolating = showHighlight && violations[i];
                     const isHovered = (i === hoveredIndex) || (active && i === draggedIndex);
                     const isEmphasized = isViolating || isHovered;
 
@@ -562,7 +580,7 @@
                 const cmX = sumX / numMoving;
                 const cmY = sumY / numMoving;
 
-                const isViolating = violations[zoomedBlockIndex];
+                const isViolating = showHighlight && violations[zoomedBlockIndex];
                 zoomCtx.strokeStyle = isViolating ? '#c0392b' : '#2c3e50';
                 zoomCtx.fillStyle = isViolating ? '#c0392b' : '#2c3e50';
                 zoomCtx.lineWidth = 2/scale;
