@@ -18,15 +18,15 @@ Here are some questions to guide you on your quest:
 center of gravity markers to predict if, and where, your
 tower would topple? Click "Let Go" to check your ideas [^1].
 
-2. If you want extra hint, use the "highlight unstable substacks" 
-button to see problems areas that need fixing.
+2. If you want an extra hint, use the "Highlight Unstable Substacks" 
+button to see problem areas that require fixing. What makes a substack turn red?
 
-3. you're probably ready to try and make the tower reach far. 
-You can click "Zoom (and hint)" to enlarge a block and see 
+3. By now, you're probably ready to try and make the tower reach far. 
+You can click the "Zoom (and hint)" button to enlarge a block and see 
 some tick marks which you may find helpful (or confusing)
 
-4. Can you show that you can go as far as you'd like, if you
-have enough blocks? you might find some inspiration in [this argument](https://en.wikipedia.org/wiki/Harmonic_series_(mathematics)#Comparison_test).
+4. Can you show that, with enough blocks, you can go as far as you'd like?
+you might find some inspiration in [this argument](https://en.wikipedia.org/wiki/Harmonic_series_(mathematics)#Comparison_test).
 
 
 [^1]: the simulation is a bit jittery, so you might find that 
