@@ -507,6 +507,7 @@
                     zoomCtx.lineWidth = 2/scale;
                     zoomCtx.strokeRect(sb.x, sb.y, sb.w, sb.h);
                 }
+                zoomCtx.stroke();
 
                 zoomCtx.fillStyle = zoomHovered || zoomActive ? 'rgba(52, 152, 219, 0.8)' : '#3498db';
                 zoomCtx.fillRect(b.x, b.y, b.w, b.h);
@@ -514,14 +515,23 @@
                 zoomCtx.lineWidth = 2/scale;
                 zoomCtx.strokeRect(b.x, b.y, b.w, b.h);
 
-                zoomCtx.strokeStyle = 'white';
+                zoomCtx.strokeStyle = 'black';
+                zoomCtx.fillStyle = 'black';
+                zoomCtx.font = `${12/scale}px sans-serif`;
+                zoomCtx.textAlign = 'center';
                 zoomCtx.lineWidth = 1.5/scale;
-                for(let n = 1; n <= 15; n++) {
+                
+                zoomCtx.beginPath();
+                let n = 1;
+                while(b.w / (2 * n) >= 0.5 / scale) {
                     const tickX = b.x + b.w - b.w / (2 * n);
-                    zoomCtx.beginPath();
                     zoomCtx.moveTo(tickX, b.y + b.h - 8/scale);
                     zoomCtx.lineTo(tickX, b.y + b.h);
-                    zoomCtx.stroke();
+                    if (n <= 10) {
+                        const yOffset = n % 2 === 1 ? 24 : 12;
+                        zoomCtx.fillText(`1/${2*n}`, tickX, b.y + b.h - yOffset/scale);
+                    }
+                    n++;
                 }
 
                 let sumX = 0, sumY = 0;
