@@ -66,7 +66,7 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
-        <button id="letGoBtn">Let Go (Run Physics)</button>
+        <button id="letGoBtn">Let Go</button>
         <button id="repositionBtn">Reposition</button>
         <button id="resetBtn">Reset Tower</button>
     </div>
@@ -118,7 +118,7 @@
             let opt = document.createElement('option');
             opt.value = i;
             opt.textContent = i;
-            if(i === 5) opt.selected = true;
+            if(i === 12) opt.selected = true;
             select.appendChild(opt);
         }
 
