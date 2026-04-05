@@ -10,15 +10,24 @@ Some of them form parts of an escape-room-like game, but they can each be done i
 
 ## TOC
 
-### [Leaning Tower of Tire](leaning_tower_of_lire.html)
+### [Leaning Tower of Lire](leaning_tower_of_lire.html)
 Use this tutorial to build a tower of blocks. 
 How far away from the ledge can you go? 
 Here are some questions to guide you on your quest:
-1. Use the center of gravity markers to build your tower and 
-the red highlights to 
-You can click "Let Go" to run a simulation of what would 
-happen, to see if your tower is stable or not [^1]
-2. 
+1. Drag the blocks to play with your tower. Can you use the 
+center of gravity markers to predict if, and where, your
+tower would topple? Click "Let Go" to check your ideas [^1].
+
+2. If you want extra hint, use the "highlight unstable substacks" 
+button to see problems areas that need fixing.
+
+3. you're probably ready to try and make the tower reach far. 
+You can click "Zoom (and hint)" to enlarge a block and see 
+some tick marks which you may find helpful (or confusing)
+
+4. Can you show that you can go as far as you'd like, if you
+have enough blocks? you might find some inspiration in [this argument](https://en.wikipedia.org/wiki/Harmonic_series_(mathematics)#Comparison_test).
+
 
 [^1]: the simulation is a bit jittery, so you might find that 
 some towers which should, in an ideal world, be stable, topple.
