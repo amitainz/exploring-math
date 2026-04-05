@@ -30,6 +30,8 @@
             color: white;
             border: none;
             border-radius: 4px;
+            width: 180px; /* Fixed width to prevent jumping when text changes */
+            height: 35px;
         }
         button:hover {
             background-color: #c0392b;
@@ -37,6 +39,20 @@
         button:disabled {
             background-color: #95a5a6;
             cursor: not-allowed;
+        }
+        #repositionBtn {
+            background-color: #f39c12;
+            display: none;
+        }
+        #repositionBtn:hover {
+            background-color: #d68910;
+        }
+        #resetBtn {
+            background-color: #7f8c8d;
+            width: auto;
+        }
+        #resetBtn:hover {
+            background-color: #616a6b;
         }
         canvas {
             background-color: white;
@@ -50,8 +66,9 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
-        <button id="letGoBtn">Let Go (Run Physics)</button>
-        <button id="resetBtn">Reset</button>
+        <button id="letGoBtn">Let Go</button>
+        <button id="repositionBtn">Reposition</button>
+        <button id="resetBtn">Reset Tower</button>
     </div>
 
     <canvas id="simCanvas" width="800" height="600"></canvas>
@@ -61,6 +78,7 @@
         const ctx = canvas.getContext('2d');
         const select = document.getElementById('numBlocks');
         const letGoBtn = document.getElementById('letGoBtn');
+        const repositionBtn = document.getElementById('repositionBtn');
         const resetBtn = document.getElementById('resetBtn');
 
         // Simulation Constants
@@ -74,6 +92,7 @@
 
         // State
         let blocks = [];
+        let snapshot = []; // Holds authoritative pre-sim state
         let active = false;
         let draggedIndex = -1;
         let dragOffsetX = 0;
@@ -102,6 +121,7 @@
         select.addEventListener('change', init);
         resetBtn.addEventListener('click', init);
         letGoBtn.addEventListener('click', startPhysics);
+        repositionBtn.addEventListener('click', reposition);
 
         function init() {
             if(runner) Runner.stop(runner);
@@ -109,8 +129,11 @@
             cancelAnimationFrame(animationFrameId);
 
             physicsMode = false;
-            letGoBtn.disabled = false;
+            letGoBtn.style.display = 'inline-block';
+            repositionBtn.style.display = 'none';
+            
             blocks = [];
+            snapshot = [];
             violations = [];
             const n = parseInt(select.value);
             const startX = LEDGE_X + LEDGE_W - BLOCK_W; // Flush with ledge right edge
@@ -212,11 +235,22 @@
         function startPhysics() {
             if(physicsMode) return;
             physicsMode = true;
-            letGoBtn.disabled = true;
+            
+            // Toggle UI
+            letGoBtn.style.display = 'none';
+            repositionBtn.style.display = 'inline-block';
+            
             hoveredIndex = -1;
             canvas.style.cursor = 'default';
 
-            engine = Engine.create();
+            // 1. Take Snapshot
+            snapshot = blocks.map(b => ({ ...b }));
+
+            // 2. Setup Engine with Jitter Mitigation (High Iterations)
+            engine = Engine.create({
+                positionIterations: 16, // Default is 6. Higher = stiffer stack
+                velocityIterations: 12  // Default is 4. Higher = faster energy dissipation
+            });
             matterBlocks = [];
 
             // Add Ledge (Static)
@@ -225,7 +259,7 @@
                 LEDGE_Y + LEDGE_H / 2,
                 LEDGE_W,
                 LEDGE_H,
-                { isStatic: true, friction: 0.8 }
+                { isStatic: true, friction: 1.0 }
             );
             World.add(engine.world, ledgeBody);
 
@@ -237,7 +271,13 @@
                     b.y + b.h / 2,
                     b.w,
                     b.h,
-                    { friction: 0.8, density: 0.002, restitution: 0.1 }
+                    { 
+                        friction: 1.0,         // High friction so they don't slide easily
+                        density: 0.005, 
+                        restitution: 0,        // 0 bounciness to prevent the jump/sponginess
+                        frictionAir: 0.02,     // Slight air drag to settle micro-movements
+                        sleepThreshold: 15     // Go to sleep slightly faster
+                    }
                 );
                 matterBlocks.push(body);
                 World.add(engine.world, body);
@@ -245,6 +285,24 @@
 
             runner = Runner.create();
             Runner.run(runner, engine);
+        }
+
+        function reposition() {
+            if(!physicsMode) return;
+            
+            // 1. Halt Simulation completely to purge momentum
+            if(runner) Runner.stop(runner);
+            if(engine) Engine.clear(engine);
+            
+            // 2. Restore State from Snapshot
+            blocks = snapshot.map(s => ({ ...s }));
+            
+            // 3. Reset Variables and UI
+            physicsMode = false;
+            letGoBtn.style.display = 'inline-block';
+            repositionBtn.style.display = 'none';
+            
+            checkViolations();
         }
 
         function loop() {
