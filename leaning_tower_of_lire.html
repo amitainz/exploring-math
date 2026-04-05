@@ -54,6 +54,12 @@
         #resetBtn:hover {
             background-color: #616a6b;
         }
+        #zoomBtn {
+            background-color: #9b59b6;
+        }
+        #zoomBtn:hover {
+            background-color: #8e44ad;
+        }
         canvas {
             background-color: white;
             border: 1px solid #ccc;
@@ -66,12 +72,14 @@
     <div class="controls">
         <label for="numBlocks">Number of Blocks: </label>
         <select id="numBlocks"></select>
+        <button id="zoomBtn">Zoom</button>
         <button id="letGoBtn">Let Go</button>
         <button id="repositionBtn">Reposition</button>
         <button id="resetBtn">Reset Tower</button>
     </div>
 
     <canvas id="simCanvas" width="800" height="600"></canvas>
+    <canvas id="zoomCanvas" width="800" height="250" style="display:none; margin-top:15px;"></canvas>
 
     <script>
         const canvas = document.getElementById('simCanvas');
@@ -80,6 +88,9 @@
         const letGoBtn = document.getElementById('letGoBtn');
         const repositionBtn = document.getElementById('repositionBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const zoomBtn = document.getElementById('zoomBtn');
+        const zoomCanvas = document.getElementById('zoomCanvas');
+        const zoomCtx = zoomCanvas.getContext('2d');
 
         // Simulation Constants
         const LEDGE_X = 200;
@@ -101,6 +112,11 @@
         let draggedIndex = -1;
         let dragOffsetX = 0;
         let hoveredIndex = -1;
+        let zoomMode = false;
+        let zoomedBlockIndex = -1;
+        let zoomActive = false;
+        let zoomHovered = false;
+        let zoomDragOffsetX = 0;
         let violations = [];
         let physicsMode = false;
         let animationFrameId;
@@ -124,6 +140,14 @@
 
         select.addEventListener('change', init);
         resetBtn.addEventListener('click', init);
+        zoomBtn.addEventListener('click', () => {
+            zoomMode = !zoomMode;
+            zoomBtn.style.border = zoomMode ? "2px solid #2c3e50" : "none";
+            if (!zoomMode) {
+                zoomedBlockIndex = -1;
+                zoomCanvas.style.display = 'none';
+            }
+        });
         letGoBtn.addEventListener('click', startPhysics);
         repositionBtn.addEventListener('click', reposition);
 
@@ -135,6 +159,11 @@
             physicsMode = false;
             letGoBtn.style.display = 'inline-block';
             repositionBtn.style.display = 'none';
+
+            zoomMode = false;
+            zoomedBlockIndex = -1;
+            zoomCanvas.style.display = 'none';
+            zoomBtn.style.border = "none";
 
             blocks = [];
             snapshot = [];
@@ -219,6 +248,10 @@
 
         canvas.addEventListener('mousedown', (e) => {
             if(physicsMode || hoveredIndex === -1) return;
+            if(zoomMode) {
+                zoomedBlockIndex = hoveredIndex;
+                zoomCanvas.style.display = 'block';
+            }
             active = true;
             draggedIndex = hoveredIndex;
             dragOffsetX = getMousePos(e).x - blocks[draggedIndex].x;
@@ -229,11 +262,58 @@
             if(physicsMode) return;
             active = false;
             draggedIndex = -1;
+            zoomActive = false;
             canvas.style.cursor = hoveredIndex !== -1 ? 'grab' : 'default';
+            if (zoomHovered && zoomedBlockIndex !== -1) zoomCanvas.style.cursor = 'grab';
         });
 
         canvas.addEventListener('mouseleave', () => {
             if(!active) hoveredIndex = -1;
+        });
+
+        function getZoomWorldPos(e) {
+            if (zoomedBlockIndex === -1) return {x:0, y:0};
+            const rect = zoomCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            const b = blocks[zoomedBlockIndex];
+            const pivotY = zoomedBlockIndex === 0 ? LEDGE_Y : blocks[zoomedBlockIndex - 1].y;
+            const cx = b.x + b.w / 2;
+            const cy = pivotY - b.h / 2;
+            const scale = 4;
+            return {
+                x: (mx - zoomCanvas.width / 2) / scale + cx,
+                y: (my - zoomCanvas.height / 2) / scale + cy
+            };
+        }
+
+        zoomCanvas.addEventListener('mousemove', (e) => {
+            if(physicsMode || zoomedBlockIndex === -1) return;
+            const pos = getZoomWorldPos(e);
+            const b = blocks[zoomedBlockIndex];
+            if(zoomActive) {
+                const proposedX = pos.x - zoomDragOffsetX;
+                const dx = proposedX - b.x;
+                for(let i = zoomedBlockIndex; i < blocks.length; i++) {
+                    blocks[i].x += dx;
+                }
+                checkViolations();
+            } else {
+                if(pos.x >= b.x && pos.x <= b.x + b.w && pos.y >= b.y && pos.y <= b.y + b.h) {
+                    zoomHovered = true;
+                    zoomCanvas.style.cursor = 'grab';
+                } else {
+                    zoomHovered = false;
+                    zoomCanvas.style.cursor = 'default';
+                }
+            }
+        });
+
+        zoomCanvas.addEventListener('mousedown', (e) => {
+            if(physicsMode || !zoomHovered || zoomedBlockIndex === -1) return;
+            zoomActive = true;
+            zoomDragOffsetX = getZoomWorldPos(e).x - blocks[zoomedBlockIndex].x;
+            zoomCanvas.style.cursor = 'grabbing';
         });
 
         function startPhysics() {
@@ -399,6 +479,75 @@
 
                     ctx.globalAlpha = 1.0;
                 }
+            }
+
+            if (!physicsMode && zoomedBlockIndex !== -1) {
+                zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+                const b = blocks[zoomedBlockIndex];
+                const pivotY = zoomedBlockIndex === 0 ? LEDGE_Y : blocks[zoomedBlockIndex - 1].y;
+                const cx = b.x + b.w / 2;
+                const cy = pivotY - b.h / 2;
+                const scale = 4;
+
+                zoomCtx.save();
+                zoomCtx.translate(zoomCanvas.width / 2, zoomCanvas.height / 2);
+                zoomCtx.scale(scale, scale);
+                zoomCtx.translate(-cx, -cy);
+
+                if (zoomedBlockIndex === 0) {
+                    zoomCtx.fillStyle = '#444';
+                    zoomCtx.fillRect(LEDGE_X, LEDGE_Y, LEDGE_W, LEDGE_H);
+                } else {
+                    const sb = blocks[zoomedBlockIndex - 1];
+                    zoomCtx.fillStyle = '#bdc3c7';
+                    zoomCtx.fillRect(sb.x, sb.y, sb.w, sb.h);
+                    zoomCtx.strokeStyle = '#7f8c8d';
+                    zoomCtx.lineWidth = 2/scale;
+                    zoomCtx.strokeRect(sb.x, sb.y, sb.w, sb.h);
+                }
+
+                zoomCtx.fillStyle = zoomHovered || zoomActive ? 'rgba(52, 152, 219, 0.8)' : '#3498db';
+                zoomCtx.fillRect(b.x, b.y, b.w, b.h);
+                zoomCtx.strokeStyle = '#2980b9';
+                zoomCtx.lineWidth = 2/scale;
+                zoomCtx.strokeRect(b.x, b.y, b.w, b.h);
+
+                zoomCtx.strokeStyle = 'white';
+                zoomCtx.lineWidth = 1.5/scale;
+                for(let n = 1; n <= 15; n++) {
+                    const tickX = b.x + b.w - b.w / (2 * n);
+                    zoomCtx.beginPath();
+                    zoomCtx.moveTo(tickX, b.y);
+                    zoomCtx.lineTo(tickX, b.y + b.h);
+                    zoomCtx.stroke();
+                }
+
+                let sumX = 0, sumY = 0;
+                let numMoving = blocks.length - zoomedBlockIndex;
+                for(let j = zoomedBlockIndex; j < blocks.length; j++) {
+                    sumX += (blocks[j].x + blocks[j].w / 2);
+                    sumY += (blocks[j].y + blocks[j].h / 2);
+                }
+                const cmX = sumX / numMoving;
+                const cmY = sumY / numMoving;
+
+                const isViolating = violations[zoomedBlockIndex];
+                zoomCtx.strokeStyle = isViolating ? '#c0392b' : '#2c3e50';
+                zoomCtx.fillStyle = isViolating ? '#c0392b' : '#2c3e50';
+                zoomCtx.lineWidth = 2/scale;
+
+                zoomCtx.beginPath();
+                zoomCtx.arc(cmX, pivotY, 4/scale, 0, Math.PI * 2);
+                zoomCtx.fill();
+
+                zoomCtx.beginPath();
+                zoomCtx.setLineDash([4/scale, 4/scale]);
+                zoomCtx.moveTo(cmX, pivotY);
+                zoomCtx.lineTo(cmX, cmY);
+                zoomCtx.stroke();
+                zoomCtx.setLineDash([]);
+
+                zoomCtx.restore();
             }
 
             animationFrameId = requestAnimationFrame(loop);
