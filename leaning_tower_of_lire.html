@@ -60,12 +60,42 @@
         #zoomBtn:hover {
             background-color: #8e44ad;
         }
-        #highlightBtn {
-            background-color: #16a085;
-            width: auto;
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 16px;
         }
-        #highlightBtn:hover {
-            background-color: #1abc9c;
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
         canvas {
             background-color: white;
@@ -85,7 +115,12 @@
     </div>
     <div class="controls" style="margin-top: -5px;">
         <button id="zoomBtn">Zoom (and hint)</button>
-        <button id="highlightBtn">Highlight Unstable Substacks</button>
+        <label class="toggle-container">
+            Highlight Unstable Substacks
+            <div class="switch">
+                <input type="checkbox" id="highlightToggle">
+                <span class="slider"></span>
+            </div>
         <span id="zoomHint" style="display:none; color:#8e44ad; font-weight:bold; font-size:14px;">now click a block to zoom in on</span>
     </div>
 
@@ -100,7 +135,7 @@
         const repositionBtn = document.getElementById('repositionBtn');
         const resetBtn = document.getElementById('resetBtn');
         const zoomBtn = document.getElementById('zoomBtn');
-        const highlightBtn = document.getElementById('highlightBtn');
+        const highlightToggle = document.getElementById('highlightToggle');
         const zoomHint = document.getElementById('zoomHint');
         const zoomCanvas = document.getElementById('zoomCanvas');
         const zoomCtx = zoomCanvas.getContext('2d');
@@ -131,7 +166,7 @@
         let zoomHovered = false;
         let zoomDragOffsetX = 0;
         let violations = [];
-        let showHighlight = true;
+        let showHighlight = false;
         let physicsMode = false;
         let animationFrameId;
 
@@ -163,9 +198,8 @@
                 zoomCanvas.style.display = 'none';
             }
         });
-        highlightBtn.addEventListener('click', () => {
-            showHighlight = !showHighlight;
-            highlightBtn.style.opacity = showHighlight ? "1" : "0.5";
+        highlightToggle.addEventListener('change', (e) => {
+            showHighlight = e.target.checked;
         });
         letGoBtn.addEventListener('click', startPhysics);
         repositionBtn.addEventListener('click', reposition);
