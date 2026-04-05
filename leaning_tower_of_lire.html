@@ -74,17 +74,22 @@
             height: 24px;
         }
         .switch input {
+            position: absolute;
             opacity: 0;
-            width: 0;
-            height: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            z-index: 2;
+            cursor: pointer;
         }
         .slider {
             position: absolute;
-            cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: #ccc;
             transition: .4s;
             border-radius: 24px;
+            z-index: 1;
+            pointer-events: none;
         }
         .slider:before {
             position: absolute;
@@ -96,6 +101,12 @@
             background-color: white;
             transition: .4s;
             border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #16a085;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
         canvas {
             background-color: white;
@@ -115,12 +126,13 @@
     </div>
     <div class="controls" style="margin-top: -5px;">
         <button id="zoomBtn">Zoom (and hint)</button>
-        <label class="toggle-container">
+        <label class="toggle-container" for="highlightToggle">
             Highlight Unstable Substacks
-            <div class="switch">
+            <span class="switch">
                 <input type="checkbox" id="highlightToggle">
                 <span class="slider"></span>
-            </div>
+            </span>
+        </label>
         <span id="zoomHint" style="display:none; color:#8e44ad; font-weight:bold; font-size:14px;">now click a block to zoom in on</span>
     </div>
 
