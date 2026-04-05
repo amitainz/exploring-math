@@ -278,8 +278,9 @@
             const my = e.clientY - rect.top;
             const b = blocks[zoomedBlockIndex];
             const pivotY = zoomedBlockIndex === 0 ? LEDGE_Y : blocks[zoomedBlockIndex - 1].y;
-            const cx = b.x + b.w / 2;
-            const cy = pivotY - b.h / 2;
+            const pivotRight = zoomedBlockIndex === 0 ? LEDGE_X + LEDGE_W : blocks[zoomedBlockIndex - 1].x + blocks[zoomedBlockIndex - 1].w;
+            const cx = pivotRight;
+            const cy = pivotY;
             const scale = 4;
             return {
                 x: (mx - zoomCanvas.width / 2) / scale + cx,
@@ -485,8 +486,9 @@
                 zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
                 const b = blocks[zoomedBlockIndex];
                 const pivotY = zoomedBlockIndex === 0 ? LEDGE_Y : blocks[zoomedBlockIndex - 1].y;
-                const cx = b.x + b.w / 2;
-                const cy = pivotY - b.h / 2;
+                const pivotRight = zoomedBlockIndex === 0 ? LEDGE_X + LEDGE_W : blocks[zoomedBlockIndex - 1].x + blocks[zoomedBlockIndex - 1].w;
+                const cx = pivotRight;
+                const cy = pivotY;
                 const scale = 4;
 
                 zoomCtx.save();
@@ -495,13 +497,13 @@
                 zoomCtx.translate(-cx, -cy);
 
                 if (zoomedBlockIndex === 0) {
-                    zoomCtx.fillStyle = '#444';
+                    zoomCtx.fillStyle = 'black';
                     zoomCtx.fillRect(LEDGE_X, LEDGE_Y, LEDGE_W, LEDGE_H);
                 } else {
                     const sb = blocks[zoomedBlockIndex - 1];
-                    zoomCtx.fillStyle = '#bdc3c7';
+                    zoomCtx.fillStyle = '#3498db';
                     zoomCtx.fillRect(sb.x, sb.y, sb.w, sb.h);
-                    zoomCtx.strokeStyle = '#7f8c8d';
+                    zoomCtx.strokeStyle = '#2980b9';
                     zoomCtx.lineWidth = 2/scale;
                     zoomCtx.strokeRect(sb.x, sb.y, sb.w, sb.h);
                 }
@@ -517,7 +519,7 @@
                 for(let n = 1; n <= 15; n++) {
                     const tickX = b.x + b.w - b.w / (2 * n);
                     zoomCtx.beginPath();
-                    zoomCtx.moveTo(tickX, b.y);
+                    zoomCtx.moveTo(tickX, b.y + b.h - 8/scale);
                     zoomCtx.lineTo(tickX, b.y + b.h);
                     zoomCtx.stroke();
                 }
