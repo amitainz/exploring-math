@@ -525,13 +525,21 @@
                 let n = 1;
                 while(b.w / (2 * n) >= 0.5 / scale) {
                     const tickX = b.x + b.w - b.w / (2 * n);
-                    zoomCtx.moveTo(tickX, b.y + b.h - 8/scale);
-                    zoomCtx.lineTo(tickX, b.y + b.h);
-                    if (n <= 10) {
-                        const yOffset = n % 2 === 1 ? 24 : 12;
-                        zoomCtx.fillText(`1/${2*n}`, tickX, b.y + b.h - yOffset/scale);
-                    }
+                    zoomCtx.moveTo(tickX, b.y + b.h - 6/scale);
+                    zoomCtx.lineTo(tickX, b.y + b.h + 6/scale);
                     n++;
+                }
+                zoomCtx.stroke();
+
+                for (let i = 1; i <= 6; i++) {
+                    const tickX = b.x + b.w - b.w / (2 * i);
+                    if (i % 2 === 1) {
+                        zoomCtx.textBaseline = 'bottom';
+                        zoomCtx.fillText(`1/${2*i}`, tickX, b.y + b.h - 8/scale);
+                    } else {
+                        zoomCtx.textBaseline = 'top';
+                        zoomCtx.fillText(`1/${2*i}`, tickX, b.y + b.h + 8/scale);
+                    }
                 }
 
                 let sumX = 0, sumY = 0;
