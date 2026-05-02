@@ -157,7 +157,7 @@
 
         .toolbar {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
 
@@ -274,7 +274,6 @@
                     <button id="scrambleButton" class="command" type="button">Scramble</button>
                     <button id="resetButton" class="command" type="button">Reset</button>
                     <button id="undoButton" class="command" type="button">Undo</button>
-                    <button id="viewButton" class="command" type="button">View</button>
                 </div>
             </section>
 
@@ -294,11 +293,11 @@
             const scrambleButton = document.getElementById("scrambleButton");
             const resetButton = document.getElementById("resetButton");
             const undoButton = document.getElementById("undoButton");
-            const viewButton = document.getElementById("viewButton");
 
             const FACE_DISTANCE = 1.5;
             const STICKER_STEP = 1;
             const STICKER_HALF = 0.42;
+            const FACE_HALF = 1.5;
             const MOVE_MS = 210;
             const HALF_MOVE_MS = 290;
 
@@ -366,6 +365,7 @@
             let dragging = false;
             let lastPointer = { x: 0, y: 0 };
             let animation = null;
+            let arrowId = 0;
             let queue = [];
             let moveHistory = [];
             let logicalWidth = 1;
@@ -564,7 +564,7 @@
                 return { center, normal, right, up };
             }
 
-            function drawSticker(points, color) {
+            function drawPolygon(points, color, strokeStyle, lineWidth) {
                 ctx.beginPath();
                 ctx.moveTo(points[0].x, points[0].y);
                 for (let index = 1; index < points.length; index += 1) {
@@ -574,13 +574,42 @@
                 ctx.fillStyle = color;
                 ctx.fill();
                 ctx.lineJoin = "round";
-                ctx.lineWidth = 3.5;
-                ctx.strokeStyle = "#111315";
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = strokeStyle;
                 ctx.stroke();
+            }
+
+            function faceBacking(faceKey) {
+                const face = faces[faceKey];
+                const center = scale(face.normal, FACE_DISTANCE);
+                const corners = [
+                    add(add(center, scale(face.right, -FACE_HALF)), scale(face.up, -FACE_HALF)),
+                    add(add(center, scale(face.right, FACE_HALF)), scale(face.up, -FACE_HALF)),
+                    add(add(center, scale(face.right, FACE_HALF)), scale(face.up, FACE_HALF)),
+                    add(add(center, scale(face.right, -FACE_HALF)), scale(face.up, FACE_HALF))
+                ];
+                const viewCorners = corners.map(transformForView);
+
+                return {
+                    depth: viewCorners.reduce((sum, point) => sum + point[2], 0) / viewCorners.length - 0.001,
+                    points: viewCorners.map(project),
+                    color: "#0c0f12",
+                    strokeStyle: "#0c0f12",
+                    lineWidth: 1
+                };
             }
 
             function drawCube(extraAngle) {
                 const polygons = [];
+
+                for (const faceKey of faceOrder) {
+                    const face = faces[faceKey];
+                    const viewNormal = transformForView(face.normal);
+
+                    if (viewNormal[2] > 0.03) {
+                        polygons.push(faceBacking(faceKey));
+                    }
+                }
 
                 for (const sticker of stickers) {
                     const geometry = stickerGeometry(sticker, extraAngle);
@@ -598,13 +627,19 @@
                     const points = viewCorners.map(project);
                     const depth = viewCorners.reduce((sum, point) => sum + point[2], 0) / viewCorners.length;
 
-                    polygons.push({ depth, points, color: sticker.color });
+                    polygons.push({
+                        depth,
+                        points,
+                        color: sticker.color,
+                        strokeStyle: "#111315",
+                        lineWidth: 3.5
+                    });
                 }
 
                 polygons.sort((a, b) => a.depth - b.depth);
 
                 for (const polygon of polygons) {
-                    drawSticker(polygon.points, polygon.color);
+                    drawPolygon(polygon.points, polygon.color, polygon.strokeStyle, polygon.lineWidth);
                 }
             }
 
@@ -652,11 +687,21 @@
             }
 
             function arrowSvg(kind) {
+                const markerId = `arrow-head-${kind}-${arrowId}`;
+                arrowId += 1;
+                const marker = `
+                    <defs>
+                        <marker id="${markerId}" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0 0 L6 3 L0 6 Z" fill="currentColor"></path>
+                        </marker>
+                    </defs>
+                `;
+
                 if (kind === "ccw") {
                     return `
                         <svg viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M30 11A16 16 0 1 0 43 27" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-                            <path d="M29 4 18 12 31 18Z" fill="currentColor"/>
+                            ${marker}
+                            <path d="M39 24 A15 15 0 0 0 24 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
                         </svg>
                     `;
                 }
@@ -664,18 +709,16 @@
                 if (kind === "cw") {
                     return `
                         <svg viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M18 11A16 16 0 1 1 5 27" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-                            <path d="M19 4 30 12 17 18Z" fill="currentColor"/>
+                            ${marker}
+                            <path d="M9 24 A15 15 0 0 1 24 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
                         </svg>
                     `;
                 }
 
                 return `
                     <svg viewBox="0 0 48 48" aria-hidden="true">
-                        <path d="M13 29A13 13 0 0 1 32 13" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M30 7 41 14 29 20Z" fill="currentColor"/>
-                        <path d="M35 19A13 13 0 0 1 16 35" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-                        <path d="M18 41 7 34 19 28Z" fill="currentColor"/>
+                        ${marker}
+                        <path d="M9 24 A15 15 0 0 0 39 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
                     </svg>
                 `;
             }
@@ -789,12 +832,6 @@
                 });
             }
 
-            function resetView() {
-                yaw = -0.56;
-                pitch = 0.48;
-                render();
-            }
-
             canvas.addEventListener("pointerdown", (event) => {
                 dragging = true;
                 lastPointer = { x: event.clientX, y: event.clientY };
@@ -826,7 +863,6 @@
             scrambleButton.addEventListener("click", scrambleCube);
             resetButton.addEventListener("click", resetCube);
             undoButton.addEventListener("click", undoMove);
-            viewButton.addEventListener("click", resetView);
             window.addEventListener("resize", render);
 
             buildMoveGrid();
