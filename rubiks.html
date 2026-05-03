@@ -149,10 +149,21 @@
             color: var(--ink);
         }
 
-        .sticker-face svg {
-            width: 33px;
-            height: 33px;
-            overflow: visible;
+        .turn-symbol {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+            font-size: 31px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .turn-symbol.half {
+            align-items: end;
+            padding-bottom: 4px;
+            font-size: 16px;
+            letter-spacing: 0;
         }
 
         .toolbar {
@@ -211,9 +222,17 @@
             border-radius: 3px;
         }
 
-        .history-chip svg {
+        .history-chip .turn-symbol {
             width: 18px;
             height: 18px;
+            color: #1f2933;
+            font-size: 17px;
+        }
+
+        .history-chip .turn-symbol.half {
+            align-items: center;
+            padding-bottom: 0;
+            font-size: 11px;
             color: #1f2933;
         }
 
@@ -296,7 +315,8 @@
 
             const FACE_DISTANCE = 1.5;
             const STICKER_STEP = 1;
-            const STICKER_HALF = 0.455;
+            const STICKER_HALF = 0.39;
+            const PLASTIC_HALF = 0.5;
             const MOVE_MS = 210;
             const HALF_MOVE_MS = 290;
 
@@ -364,7 +384,6 @@
             let dragging = false;
             let lastPointer = { x: 0, y: 0 };
             let animation = null;
-            let arrowId = 0;
             let queue = [];
             let moveHistory = [];
             let logicalWidth = 1;
@@ -563,7 +582,22 @@
                 return { center, normal, right, up };
             }
 
-            function drawPolygon(points, color, strokeStyle, lineWidth) {
+            function pointsForSquare(geometry, halfSize) {
+                const corners = [
+                    add(add(geometry.center, scale(geometry.right, -halfSize)), scale(geometry.up, -halfSize)),
+                    add(add(geometry.center, scale(geometry.right, halfSize)), scale(geometry.up, -halfSize)),
+                    add(add(geometry.center, scale(geometry.right, halfSize)), scale(geometry.up, halfSize)),
+                    add(add(geometry.center, scale(geometry.right, -halfSize)), scale(geometry.up, halfSize))
+                ];
+                const viewCorners = corners.map(transformForView);
+
+                return {
+                    points: viewCorners.map(project),
+                    depth: viewCorners.reduce((sum, point) => sum + point[2], 0) / viewCorners.length
+                };
+            }
+
+            function drawPolygon(points, color, strokeStyle = null, lineWidth = 0) {
                 ctx.beginPath();
                 ctx.moveTo(points[0].x, points[0].y);
                 for (let index = 1; index < points.length; index += 1) {
@@ -572,14 +606,17 @@
                 ctx.closePath();
                 ctx.fillStyle = color;
                 ctx.fill();
-                ctx.lineJoin = "round";
-                ctx.lineWidth = lineWidth;
-                ctx.strokeStyle = strokeStyle;
-                ctx.stroke();
+
+                if (strokeStyle && lineWidth > 0) {
+                    ctx.lineJoin = "round";
+                    ctx.lineWidth = lineWidth;
+                    ctx.strokeStyle = strokeStyle;
+                    ctx.stroke();
+                }
             }
 
             function drawCube(extraAngle) {
-                const polygons = [];
+                const tiles = [];
 
                 for (const sticker of stickers) {
                     const geometry = stickerGeometry(sticker, extraAngle);
@@ -587,29 +624,24 @@
 
                     if (viewNormal[2] <= 0.03) continue;
 
-                    const corners = [
-                        add(add(geometry.center, scale(geometry.right, -STICKER_HALF)), scale(geometry.up, -STICKER_HALF)),
-                        add(add(geometry.center, scale(geometry.right, STICKER_HALF)), scale(geometry.up, -STICKER_HALF)),
-                        add(add(geometry.center, scale(geometry.right, STICKER_HALF)), scale(geometry.up, STICKER_HALF)),
-                        add(add(geometry.center, scale(geometry.right, -STICKER_HALF)), scale(geometry.up, STICKER_HALF))
-                    ];
-                    const viewCorners = corners.map(transformForView);
-                    const points = viewCorners.map(project);
-                    const depth = viewCorners.reduce((sum, point) => sum + point[2], 0) / viewCorners.length;
+                    const plastic = pointsForSquare(geometry, PLASTIC_HALF);
+                    const stickerFace = pointsForSquare(geometry, STICKER_HALF);
 
-                    polygons.push({
-                        depth,
-                        points,
+                    tiles.push({
+                        depth: plastic.depth,
+                        plasticPoints: plastic.points,
+                        stickerPoints: stickerFace.points,
                         color: sticker.color,
                         strokeStyle: "#111315",
-                        lineWidth: 4.75
+                        lineWidth: 1.5
                     });
                 }
 
-                polygons.sort((a, b) => a.depth - b.depth);
+                tiles.sort((a, b) => a.depth - b.depth);
 
-                for (const polygon of polygons) {
-                    drawPolygon(polygon.points, polygon.color, polygon.strokeStyle, polygon.lineWidth);
+                for (const tile of tiles) {
+                    drawPolygon(tile.plasticPoints, "#0b0e11");
+                    drawPolygon(tile.stickerPoints, tile.color, tile.strokeStyle, tile.lineWidth);
                 }
             }
 
@@ -656,41 +688,16 @@
                 if (animation) requestAnimationFrame(render);
             }
 
-            function arrowSvg(kind) {
-                const markerId = `arrow-head-${kind}-${arrowId}`;
-                arrowId += 1;
-                const marker = `
-                    <defs>
-                        <marker id="${markerId}" markerWidth="8" markerHeight="8" refX="5.5" refY="3" orient="auto" markerUnits="strokeWidth">
-                            <path d="M0 0 L6 3 L0 6 Z" fill="currentColor"></path>
-                        </marker>
-                    </defs>
-                `;
-
+            function arrowSymbol(kind) {
                 if (kind === "ccw") {
-                    return `
-                        <svg viewBox="0 0 48 48" aria-hidden="true">
-                            ${marker}
-                            <path d="M39 24 A15 15 0 0 0 24 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
-                        </svg>
-                    `;
+                    return `<span class="turn-symbol" aria-hidden="true">↺</span>`;
                 }
 
                 if (kind === "cw") {
-                    return `
-                        <svg viewBox="0 0 48 48" aria-hidden="true">
-                            ${marker}
-                            <path d="M9 24 A15 15 0 0 1 24 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
-                        </svg>
-                    `;
+                    return `<span class="turn-symbol" aria-hidden="true">↻</span>`;
                 }
 
-                return `
-                    <svg viewBox="0 0 48 48" aria-hidden="true">
-                        ${marker}
-                        <path d="M9 24 A15 15 0 0 0 39 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" marker-end="url(#${markerId})"/>
-                    </svg>
-                `;
+                return `<span class="turn-symbol half" aria-hidden="true">180</span>`;
             }
 
             function makeMoveButton(faceKey, moveType) {
@@ -704,7 +711,7 @@
                 button.style.setProperty("--ink", face.ink);
                 button.innerHTML = `
                     <span class="sticker-face">
-                        ${arrowSvg(moveType.key)}
+                        ${arrowSymbol(moveType.key)}
                     </span>
                 `;
                 button.addEventListener("click", () => enqueueMove(faceKey, moveType.turn));
@@ -755,7 +762,7 @@
                     chip.setAttribute("aria-label", chip.title);
                     chip.innerHTML = `
                         <span class="swatch" style="--face: ${face.color}"></span>
-                        ${arrowSvg(move.turn === 1 ? "ccw" : move.turn === -1 ? "cw" : "half")}
+                        ${arrowSymbol(move.turn === 1 ? "ccw" : move.turn === -1 ? "cw" : "half")}
                     `;
                     historyEl.append(chip);
                 }
