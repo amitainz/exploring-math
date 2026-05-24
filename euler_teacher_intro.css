@@ -1,0 +1,312 @@
+/* Reveal deck frame */
+:root {
+    --r-background-color: #f8fafc;
+    --r-main-color: #334155;
+    --r-heading-color: #0f172a;
+    --r-main-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --r-heading-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --r-link-color: #2563eb;
+    --r-selection-background-color: #bfdbfe;
+}
+
+html,
+body {
+    background-color: #f8fafc;
+}
+
+.reveal {
+    font-family: var(--r-main-font);
+}
+
+.reveal .slides {
+    text-align: left;
+}
+
+.reveal .slides section.lesson-slide {
+    box-sizing: border-box;
+    height: 100%;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.reveal .slides section.lesson-slide.present {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal p {
+    margin: 0;
+    text-transform: none;
+}
+
+.reveal .slide-card {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.reveal .slide-title {
+    font-size: 2rem;
+    line-height: 1.15;
+    letter-spacing: 0;
+}
+
+.reveal .slides img {
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+}
+
+.reveal table {
+    margin: 0;
+}
+
+.reveal button,
+.reveal input {
+    font: inherit;
+}
+
+.reveal .controls,
+.reveal .progress {
+    color: #2563eb;
+}
+
+/* Shared lesson components */
+.rule-card {
+    border-left: 4px solid #3b82f6;
+    background-color: #eff6ff;
+}
+
+.diagram-box {
+    background-color: #fcfcfc;
+    border: 1px dashed #cbd5e1;
+}
+
+.narrative-text {
+    font-family: Georgia, serif;
+}
+
+/* Quiz */
+.quiz-card {
+    transition: all 0.5s ease;
+}
+
+.btn-quiz {
+    transition: all 0.2s;
+}
+
+.btn-quiz:active {
+    transform: scale(0.95);
+}
+
+/* Interactive post-placement diagrams */
+.interactive-diagram {
+    cursor: crosshair;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.interactive-diagram:hover {
+    background-color: #f0f9ff;
+}
+
+.interactive-diagram.solved {
+    cursor: default;
+    border-color: #86efac;
+    background-color: #f0fdf4;
+}
+
+.error-popup {
+    position: fixed;
+    pointer-events: none;
+    color: #ef4444;
+    font-weight: bold;
+    font-family: sans-serif;
+    font-size: 0.9rem;
+    animation: fadeUp 1s forwards;
+    z-index: 1000;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes fadeUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    70% {
+        opacity: 1;
+        transform: translateY(-10px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Hint cards */
+.hint-container {
+    position: relative;
+    width: 100%;
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    padding-bottom: 2rem;
+}
+
+.hint-card {
+    position: relative;
+    width: 300px;
+    height: 250px;
+    cursor: pointer;
+    perspective: 1000px;
+    transition: transform 0.3s ease;
+}
+
+.hint-card:hover {
+    z-index: 50;
+    transform: scale(1.05) translateY(-5px) !important;
+}
+
+.hint-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 0.75rem;
+}
+
+.hint-card.is-flipped .hint-card-inner {
+    transform: rotateY(180deg);
+}
+
+.hint-front,
+.hint-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.hint-front {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hint-back {
+    background-color: white;
+    color: #334155;
+    transform: rotateY(180deg);
+    font-size: 0.95rem;
+    text-align: left;
+    line-height: 1.5;
+    overflow-y: auto;
+    font-style: italic;
+    padding: 1.5rem;
+    display: block;
+}
+
+/* Table and modal */
+.modal-overlay {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.vertical-header {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+    height: 100px;
+    margin: 0 auto;
+}
+
+/* Sketch tool */
+.tool-section {
+    font-family: "Segoe UI", sans-serif;
+}
+
+.tool-section .canvas-wrapper {
+    width: 100%;
+    height: min(400px, 42vh);
+    min-height: 260px;
+    position: relative;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.tool-section canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+    -webkit-user-select: none;
+}
+
+.tool-section .controls {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.tool-section button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tool-section .btn-primary {
+    background: linear-gradient(to bottom, #3b82f6, #2563eb);
+    color: white;
+}
+
+.tool-section .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.tool-section .btn-secondary {
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.tool-section .btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.tool-section #status {
+    margin-top: 5px;
+    min-height: 20px;
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
