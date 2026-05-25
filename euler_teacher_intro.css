@@ -811,6 +811,11 @@ body {
     margin-top: 0.4rem;
 }
 
+#slide-math-intro p,
+#slide-math-intro ul {
+    margin-top: 0.85rem;
+}
+
 .story-markdown h1 {
     font-size: 2.45rem;
     margin-bottom: 0.9rem;
@@ -956,6 +961,33 @@ body {
     stroke-width: 4;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+.question-table-wrap {
+    width: min(430px, 100%);
+    margin: 0.35rem 0 0.75rem;
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+}
+
+.question-tally-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.question-tally-table th {
+    width: 33.333%;
+    height: 72px;
+}
+
+.question-tally-table td {
+    padding: 0.42rem 0.25rem;
+    font-size: 1.55rem;
+}
+
+.question-new-row td {
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.26);
 }
 
 .example-label {
@@ -1584,6 +1616,40 @@ body {
     gap: 0.35rem;
     min-height: 330px;
     padding: 0.5rem;
+}
+
+.taking-stock-tool-card .taking-stock-example-diagram {
+    align-items: center;
+    display: grid;
+    justify-items: center;
+    min-height: 76px;
+    width: 100%;
+}
+
+.taking-stock-tool-card .taking-stock-example-diagram:nth-child(2) {
+    min-height: 92px;
+}
+
+.taking-stock-tool-card .taking-stock-example-diagram:nth-child(3) {
+    min-height: 158px;
+}
+
+.taking-stock-example-label {
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin-top: 0.18rem;
+    text-transform: uppercase;
+}
+
+.taking-stock-sequence-row.fragment {
+    transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.taking-stock-sequence-row.fragment.current-fragment td {
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .taking-stock-tool-card .example-region-diagram-svg {

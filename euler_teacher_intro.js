@@ -186,6 +186,9 @@ function checkAnswer(id, userChoiceIsConnected, clickedButton) {
 const state = { trident: { found1: false, found2: false } };
 
 function handleFixClick(event, type, containerId) {
+    event.stopPropagation();
+    event.preventDefault();
+
     const container = document.getElementById(containerId);
     if (container.classList.contains("solved")) return;
 

@@ -21,10 +21,16 @@
 
 - Mathematics is about discovering <span class="rose">*patterns*</span> and mapping out what's <span class="lavender">*possible*</span>.
 
+<!-- .element: class="fragment" -->
+
 Today we'll give you a chance to experience this for yourself.
 We'll be following the footsteps of the great mathematician [Leonhard Euler](https://en.wikipedia.org/wiki/Leonhard_Euler),
-and rediscover a formula that influenced our understanding of the relationship of numbers and geometry for centuries to come.
+and rediscover a formula that profoundly influenced our understanding of the relationship of numbers and geometry to this day.
+<!-- .element: class="fragment" -->
+
 - It might be quite different than what you're used to. There will be no complicated calculations. Instead, you'll need to tap into your **imagination** and **curiosity**.
+
+<!-- .element: class="fragment" -->
 
 <div class="intro-image-row">
 <img src="girl_2.png" alt="Student thinking about mathematics">
@@ -36,13 +42,15 @@ and rediscover a formula that influenced our understanding of the relationship o
             <section id="slide-dinosaur-intro" class="lesson-slide markdown-slide" data-markdown data-slide-name="Dinosaur Intro">
                 <textarea data-template>
 # The Jurassic Park Engineer
-<div class="md-image-row">
+An engineer is exploring different designs for a Dinosaur Park.
+<!-- .element: class="fragment" data-fragment-index="0" -->
+<div class="md-image-row fragment" data-fragment-index="1">
     <img src="dino_2.png" alt="Dinosaur 2">
     <img src="jurassic_engineer.png" alt="Jurassic Park engineer">
 </div>
 
-An engineer is exploring different designs for a Dinosaur Park. When creating a design she follows
-these three steps carefully, to make a sound design.
+When creating a design she follows three steps carefully, to make a sound design.
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 Note:
 Don't let the story take over. The rules should be clear and established independently of the story, or things
@@ -58,12 +66,14 @@ treat drawing diagrams as a game with rules, with the story in the background.
 
 You can draw any number of lines - straight or curved.
 We want the fences and their sensors to be controlled from a central location, so there's a rule:
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
 > **Fences Must Be Connected**
 >
 > You should be able to get between any two parts of the fence by walking along the fences only.
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
-<div class="example-grid">
+<div class="example-grid fragment" data-fragment-index="2">
 <div class="diagram-box diagram-example">
 <span class="example-label good">OK: Connected</span>
 <svg viewBox="0 0 160 120" class="fence-svg">
@@ -90,7 +100,7 @@ We want the fences and their sensors to be controlled from a central location, s
             <section id="slide-connectedness-quiz" class="lesson-slide" data-slide-name="Connectedness Quiz">
                 <div class="slide-card bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="quiz-container">
-                        <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q1">
+                        <div class="quiz-card fragment bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" data-fragment-index="0" id="q1">
                             <div class="mb-4">
                                 <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
                                     <path d="M 40 60 C 40 20, 120 20, 120 60 S 40 100, 40 60" />
@@ -98,13 +108,13 @@ We want the fences and their sensors to be controlled from a central location, s
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(1, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(1, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(1, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(1, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
 
-                        <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q2">
+                        <div class="quiz-card fragment bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" data-fragment-index="1" id="q2">
                             <div class="mb-4">
                                 <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
                                     <path d="M 50 60 m -25, 0 a 25,25 0 1,0 50,0 a 25,25 0 1,0 -50,0" />
@@ -112,13 +122,13 @@ We want the fences and their sensors to be controlled from a central location, s
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(2, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(2, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(2, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(2, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
 
-                        <div class="quiz-card bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" id="q3">
+                        <div class="quiz-card fragment bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-between" data-fragment-index="2" id="q3">
                             <div class="mb-4">
                                 <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
                                     <path d="M 30 90 C 30 30, 90 30, 90 60 S 50 80, 50 60 S 80 40, 100 40 S 130 80, 130 100" />
@@ -126,8 +136,8 @@ We want the fences and their sensors to be controlled from a central location, s
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(3, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(3, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(3, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="event.stopPropagation(); checkAnswer(3, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
@@ -142,17 +152,20 @@ We want the fences and their sensors to be controlled from a central location, s
 
 The fences are held up and controlled by special electrical posts, marked as thick dots on the diagram.
 You can add as many posts as you like, anywhere along the fences -- there's just one more rule:
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
 > **The Posts Cut the Fences into Simple Segments**
 > which means:
 > - each fence segment has a post on either side -- no "loose ends" without a post.
 > - segments cannot intersect themselves or other segments; where there's an intersection in the diagram, you
 > must add a post and separate the fence into simple segments.
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
 Let's fix the middle and right diagrams:
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 <div class="post-grid">
-<div class="diagram-box post-example">
+<div class="diagram-box post-example fragment" data-fragment-index="3">
 <span class="example-label good">Correct</span>
 <svg viewBox="0 0 120 100" class="post-svg">
 <path d="M20 20 L 100 80" fill="none" />
@@ -165,7 +178,7 @@ Let's fix the middle and right diagrams:
 <circle cx="40" cy="35" r="3.5" />
 </svg>
 </div>
-<div class="diagram-box post-example interactive-diagram" id="diag-trident" onclick="handleFixClick(event, 'trident', 'diag-trident')">
+<div class="diagram-box post-example interactive-diagram fragment" data-fragment-index="4" id="diag-trident" onclick="handleFixClick(event, 'trident', 'diag-trident')">
 <svg viewBox="0 0 120 100" class="diagram-svg post-svg">
 <line x1="60" y1="90" x2="60" y2="50" />
 <line x1="60" y1="50" x2="20" y2="20" />
@@ -176,7 +189,7 @@ Let's fix the middle and right diagrams:
 <circle cx="60" cy="10" r="3.5" />
 </svg>
 </div>
-<div class="diagram-box post-example interactive-diagram" id="diag-envelope" onclick="handleFixClick(event, 'envelope', 'diag-envelope')">
+<div class="diagram-box post-example interactive-diagram fragment" data-fragment-index="5" id="diag-envelope" onclick="handleFixClick(event, 'envelope', 'diag-envelope')">
 <svg viewBox="0 0 120 100" class="diagram-svg post-svg">
 <rect x="20" y="20" width="80" height="60" fill="none" />
 <line x1="20" y1="20" x2="100" y2="80" />
@@ -190,9 +203,10 @@ Let's fix the middle and right diagrams:
 </div>
 
 A circle is not a simple segment. Can we fix it?
+<!-- .element: class="fragment" data-fragment-index="6" -->
 
 <div class="post-circle-row">
-<div class="diagram-box post-example interactive-diagram" id="diag-circle" onclick="handleFixClick(event, 'circle', 'diag-circle')">
+<div class="diagram-box post-example interactive-diagram fragment" data-fragment-index="7" id="diag-circle" onclick="handleFixClick(event, 'circle', 'diag-circle')">
 <svg viewBox="0 0 120 100" class="diagram-svg post-svg">
 <circle cx="60" cy="50" r="30" fill="none" />
 </svg>
@@ -207,14 +221,17 @@ A circle is not a simple segment. Can we fix it?
 # Step 3. Marking the Safe Regions for the Dinosaurs
 
 Dinosaurs must be separated from each other and from the outside world by fences.
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
 > A *"safe region"* is an area of the diagram that is fenced in from all sides.
+<!-- .element: class="fragment" data-fragment-index="1" -->
 
 There's no choice in this step - the fences determine the safe regions, but the engineer likes to clearly
 mark each safe region with a different color.
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
 <div class="region-visual-row">
-<div class="region-diagram-card diagram-box">
+<div class="region-diagram-card diagram-box fragment" data-fragment-index="3">
 <svg viewBox="0 0 1000 1000" class="region-diagram-svg">
 <path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
 <path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
@@ -263,7 +280,7 @@ mark each safe region with a different color.
 </g>
 </svg>
 </div>
-<img src="dino_1.png" alt="Dinosaur in the safe regions lesson" class="region-dino-image">
+<img src="dino_1.png" alt="Dinosaur in the safe regions lesson" class="region-dino-image fragment" data-fragment-index="4">
 </div>
                 </textarea>
             </section>
@@ -288,17 +305,17 @@ For each design, the engineer tallies the number of posts, fence segments, and s
 </tr>
 </thead>
 <tbody class="bg-white">
-<tr class="border-b last:border-0 border-slate-200">
+<tr class="taking-stock-sequence-row fragment border-b last:border-0 border-slate-200" data-fragment-index="1">
 <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">3</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">3</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
 </tr>
-<tr class="border-b last:border-0 border-slate-200">
+<tr class="taking-stock-sequence-row fragment border-b last:border-0 border-slate-200" data-fragment-index="3">
 <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">5</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">5</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
 </tr>
-<tr class="border-b last:border-0 border-slate-200">
+<tr class="taking-stock-sequence-row fragment border-b last:border-0 border-slate-200" data-fragment-index="5">
 <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">18</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">21</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">4</td>
@@ -318,6 +335,7 @@ New example
 </div>
 
 <div class="example-diagram-panel bg-white rounded-lg border border-slate-200">
+<div class="taking-stock-example-diagram fragment" data-fragment-index="0">
 <svg viewBox="0 0 200 160" class="example-region-diagram-svg simple-example-diagram-svg" aria-label="Simple triangle fence diagram for the first table row">
 <path d="M 40 125 L 100 35 L 160 125 Z" fill="#baffc9" stroke="none" />
 <line x1="40" y1="125" x2="100" y2="35" />
@@ -329,6 +347,9 @@ New example
 <circle cx="160" cy="125" r="5" />
 </g>
 </svg>
+<div class="taking-stock-example-label">Example 1</div>
+</div>
+<div class="taking-stock-example-diagram fragment" data-fragment-index="2">
 <svg viewBox="0 0 200 190" class="example-region-diagram-svg antenna-example-diagram-svg" aria-label="Triangle fence diagram with two antennae for the second table row">
 <path d="M 40 145 L 100 55 L 160 145 Z" fill="#baffc9" stroke="none" />
 <line x1="40" y1="145" x2="100" y2="55" />
@@ -344,6 +365,9 @@ New example
 <circle cx="138" cy="16" r="5" />
 </g>
 </svg>
+<div class="taking-stock-example-label">Example 2</div>
+</div>
+<div class="taking-stock-example-diagram fragment" data-fragment-index="4">
 <svg viewBox="0 0 1000 1000" class="example-region-diagram-svg original-example-diagram-svg" aria-label="Original fence diagram for the third table row">
 <path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
 <path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
@@ -391,6 +415,8 @@ New example
 <circle cx="550" cy="880" r="9" />
 </g>
 </svg>
+<div class="taking-stock-example-label">Example 3</div>
+</div>
 </div>
 
 <div class="tool-section bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -418,7 +444,7 @@ I count <span id="tally-posts" class="font-bold text-slate-900">-</span> posts, 
 
 <!--For example, he wanted to see if he could design a farm with 5 regions, using only one post. He could produce various kinds of flower configurations: some "petals" could lie next to each other, or inside each other. But if he wanted to get to 5 regions with only one post he always had to use 5 fence segments.-->
 
-<!--He thought that was curious, but what was even more striking was that a similar thing happened no matter what the number of posts and regions he decided to get to. In fact, it seemed that *any* two of the three quantities (posts and fences, posts and edges, edges and fences) determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd always get 0 regions. And you couldn't draw any fence diagram with 5 posts and 3 fence segments without making the diagram disconnected.-->
+<!--He thought that was curious, but what was even more striking was that a similar thing happened no matter what the number of posts and regions he decided to get to. In fact, it seemed that *any* two of the three quantities (posts and segments, posts and regions, segments and regions) determined the third - for example if you tried drawing diagrams with 5 posts and 4 regions, you'd always get 8 segments. And you couldn't draw any fence diagram with 5 posts and 3 fence segments without making the diagram disconnected.-->
 
 <!--The farmer was sure there was some rule, some formula that would allow one to compute any quantity from the other two. But he couldn't put his finger on it. Can you figure out what the rule is? Start by taking a piece of paper and doodling some diagrams according to the rules, counting the number of posts, segments and regions, and adding each triplet of numbers to the table. You can use the doodling app to save some time, but check its diagrams are really valid and that it counted everything correctly - it can make mistakes.-->
 
@@ -435,8 +461,9 @@ I count <span id="tally-posts" class="font-bold text-slate-900">-</span> posts, 
 
 The engineer noticed something odd. If she wanted to design a park with 3 posts and two safe regions, she could do it
 in a few different ways:
+<!-- .element: class="fragment" data-fragment-index="0" -->
 
-<div class="question-diagram-grid">
+<div class="question-diagram-grid fragment" data-fragment-index="1">
 <svg viewBox="0 0 220 170" class="question-region-diagram" aria-label="Three posts, four segments, two regions example 1">
 <path d="M 35 135 L 110 35 L 185 135 Z" fill="#baffc9" stroke="none" />
 <path d="M 35 135 L 185 135 Q 110 80 35 135 Z" fill="#ffdfba" stroke="none" />
@@ -480,9 +507,45 @@ in a few different ways:
 </svg>
 </div>
 
-What is the number of edges on the left, middle and right?
+What is the number of segments on the left, middle and right?
+<!-- .element: class="fragment" data-fragment-index="2" -->
 
-She wondered - is this always the case? is there some rule, that determines the number of edges from the number of posts and regions?
+<div class="question-table-wrap fragment" data-fragment-index="3">
+<table class="question-tally-table text-slate-500">
+<thead class="bg-white">
+<tr>
+<th class="vertical-header bg-red-100 text-red-900 uppercase text-xs tracking-wider border-b border-red-200">Posts</th>
+<th class="vertical-header bg-blue-100 text-blue-900 uppercase text-xs tracking-wider border-b border-blue-200">Segments</th>
+<th class="vertical-header bg-green-100 text-green-900 uppercase text-xs tracking-wider border-b border-green-200">Regions</th>
+</tr>
+</thead>
+<tbody class="bg-white">
+<tr class="border-b border-slate-200">
+<td class="text-center font-bold bg-red-50 text-slate-700">3</td>
+<td class="text-center font-bold bg-blue-50 text-slate-700">3</td>
+<td class="text-center font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="question-new-row border-b border-slate-200">
+<td class="text-center font-bold bg-red-50 text-slate-700">3</td>
+<td class="text-center font-bold bg-blue-50 text-slate-700">4</td>
+<td class="text-center font-bold bg-green-50 text-slate-700">2</td>
+</tr>
+<tr class="border-b border-slate-200">
+<td class="text-center font-bold bg-red-50 text-slate-700">5</td>
+<td class="text-center font-bold bg-blue-50 text-slate-700">5</td>
+<td class="text-center font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr>
+<td class="text-center font-bold bg-red-50 text-slate-700">18</td>
+<td class="text-center font-bold bg-blue-50 text-slate-700">21</td>
+<td class="text-center font-bold bg-green-50 text-slate-700">4</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+She wondered - is this always the case? is there some rule, that determines the number of segments from the number of posts and regions?
+<!-- .element: class="fragment" data-fragment-index="4" -->
 
 
 Note: hit B to make the screen go black here, we'll resume after the kids do the individual worksheet and the work
@@ -522,6 +585,11 @@ Would you like to share your observations with the class?
 <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">3</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">3</td>
 <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">3</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">4</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">2</td>
 </tr>
 <tr class="border-b last:border-0 border-slate-200">
 <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">5</td>
