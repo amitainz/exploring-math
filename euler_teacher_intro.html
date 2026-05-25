@@ -5,91 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Euler Teacher Intro</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reset.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/theme/white.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="vendor/reveal/reset.min.css">
+    <link rel="stylesheet" href="vendor/reveal/reveal.min.css">
+    <link rel="stylesheet" href="vendor/reveal/white.min.css">
     <link rel="stylesheet" href="euler_teacher_intro.css">
-
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [["$", "$"], ["\\(", "\\)"]]
-            },
-            svg: {
-                fontCache: "global"
-            }
-        };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="reveal euler-teacher-intro">
         <div class="slides">
-            <!-- Slide 01: Step 1 - draw fences -->
-            <section id="slide-step-1" class="lesson-slide" data-slide-name="Step 1: Draw the Fences">
-                <div class="slide-card bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-8 items-start">
-                    <div class="flex-1 space-y-6">
-                        <p class="text-slate-700 leading-relaxed">
-                            A farmer is considering different designs for his fences. Here are the steps he uses to draw a fence diagram.
-                        </p>
+            <!-- Slide 01: Math intro -->
 
-                        <div class="space-y-4">
-                            <div>
-                                <h2 class="slide-title font-bold text-slate-800 tracking-tight">Step 1: Draw the Fences</h2>
-                                <p class="text-slate-600 mt-1">You can draw any number of lines - straight or curved. There's just one rule:</p>
-                            </div>
+<section id="slide-math-intro" class="lesson-slide markdown-slide" data-markdown data-slide-name="Math Intro">
+<textarea data-template>
+## <span class="mint">What is Mathematics?</span>
 
-                            <div class="rule-card p-4 rounded-r-lg">
-                                <h3 class="font-bold text-blue-900 text-lg">
-                                    Fences Are Connected
-                                </h3>
-                                <p class="text-blue-800 text-sm mt-1 leading-snug">
-                                    You should be able to get between any two fences by walking along the fences only.
-                                </p>
-                            </div>
+- Mathematics is about discovering <span class="rose">*patterns*</span> and mapping out what's <span class="lavender">*possible*</span>.
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                                <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                                    <span class="text-xs font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                        </svg>
-                                        Connected (Good)
-                                    </span>
-                                    <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                                        <path d="M30 60 C 40 20, 70 30, 80 50 S 120 10, 140 40" />
-                                        <path d="M80 50 L 60 90 C 70 110, 100 100, 110 80 S 130 50, 100 45" />
-                                        <path d="M60 90 L 20 100" />
-                                        <path d="M140 40 L 150 25" />
-                                    </svg>
-                                </div>
+Today we'll give you a chance to experience this for yourself.
+We'll be following the footsteps of the great mathematician [Leonhard Euler](https://en.wikipedia.org/wiki/Leonhard_Euler),
+and rediscover a formula that influenced our understanding of the relationship of numbers and geometry for centuries to come.
+- It might be quite different than what you're used to. There will be no complicated calculations. Instead, you'll need to tap into your **imagination** and **curiosity**.
 
-                                <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                                    <span class="text-xs font-bold uppercase tracking-wider text-red-600 mb-2 flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414-1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                        </svg>
-                                        Not Connected (Bad)
-                                    </span>
-                                    <svg width="160" height="120" viewBox="0 0 160 120" class="stroke-slate-800 fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
-                                        <path d="M20 60 C 20 10, 140 10, 140 60 S 20 110, 20 60" />
-                                        <path d="M140 60 L 150 75" />
-                                        <path d="M60 55 C 70 40, 90 40, 100 55 S 80 80, 60 55" />
-                                        <path d="M80 65 L 85 85" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<div class="intro-image-row">
+<img src="girl_2.png" alt="Student thinking about mathematics">
+<img src="euler_painting.png" alt="Portrait of Leonhard Euler">
+</div>
+</textarea>
+            </section>
+            <!-- Slide 02: Dinosaur intro -->
+            <section id="slide-dinosaur-intro" class="lesson-slide markdown-slide" data-markdown data-slide-name="Dinosaur Intro">
+                <textarea data-template>
+# The Jurassic Park Engineer
+<div class="md-image-row">
+    <img src="dino_2.png" alt="Dinosaur 2">
+    <img src="jurassic_engineer.png" alt="Jurassic Park engineer">
+</div>
 
-                    <div class="w-full md:w-1/3 shrink-0">
-                        <img src="Farmer.png" alt="Farmer" class="w-full h-auto rounded-lg object-cover shadow-sm">
-                    </div>
-                </div>
+An engineer is exploring different designs for a Dinosaur Park. When creating a design she follows
+these three steps carefully, to make a sound design.
+
+Note:
+Don't let the story take over. The rules should be clear and established independently of the story, or things
+can get confusing quickly (e.g. if you say you must have the fences connected so you can electrify them,
+how does that make sense where there are no dinosaurs to fence in?) It's better if the kids
+treat drawing diagrams as a game with rules, with the story in the background.
+                </textarea>
+            </section>
+            <!-- Slide 03: Step 1 - draw fences -->
+            <section id="slide-draw-fences" class="lesson-slide markdown-slide" data-markdown data-slide-name="Step 1: Draw the Fences">
+                <textarea data-template>
+# Step 1: Drawing the Fences
+
+You can draw any number of lines - straight or curved.
+We want the fences and their sensors to be controlled from a central location, so there's a rule:
+
+> **Fences Must Be Connected**
+>
+> You should be able to get between any two parts of the fence by walking along the fences only.
+
+<div class="example-grid">
+<div class="diagram-box diagram-example">
+<span class="example-label good">OK: Connected</span>
+<svg viewBox="0 0 160 120" class="fence-svg">
+<path d="M30 60 C 40 20, 70 30, 80 50 S 120 10, 140 40" />
+<path d="M80 50 L 60 90 C 70 110, 100 100, 110 80 S 130 50, 100 45" />
+<path d="M60 90 L 20 100" />
+<path d="M140 40 L 150 25" />
+</svg>
+</div>
+<div class="diagram-box diagram-example">
+<span class="example-label bad">Not OK: Disconnected</span>
+<svg viewBox="0 0 160 120" class="fence-svg">
+<path d="M20 60 C 20 10, 140 10, 140 60 S 20 110, 20 60" />
+<path d="M140 60 L 150 75" />
+<path d="M60 55 C 70 40, 90 40, 100 55 S 80 80, 60 55" />
+<path d="M80 65 L 85 85" />
+</svg>
+</div>
+</div>
+                </textarea>
             </section>
 
-            <!-- Slide 02: connectedness quiz -->
+            <!-- Slide 04: connectedness quiz -->
             <section id="slide-connectedness-quiz" class="lesson-slide" data-slide-name="Connectedness Quiz">
                 <div class="slide-card bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="quiz-container">
@@ -101,8 +98,8 @@
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(1, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(1, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="checkAnswer(1, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(1, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
@@ -115,8 +112,8 @@
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(2, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(2, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="checkAnswer(2, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(2, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
@@ -129,8 +126,8 @@
                                 </svg>
                             </div>
                             <div class="w-full flex flex-col gap-2 q-controls">
-                                <button onclick="checkAnswer(3, true)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
-                                <button onclick="checkAnswer(3, false)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
+                                <button onclick="checkAnswer(3, true, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">OK (Connected)</button>
+                                <button onclick="checkAnswer(3, false, this)" class="btn-quiz w-full py-2 bg-white border border-slate-300 text-slate-700 font-bold rounded hover:bg-slate-50 text-sm">NOT OK (Disconnected)</button>
                             </div>
                             <div class="q-feedback hidden mt-2 text-center text-sm font-bold"></div>
                         </div>
@@ -138,276 +135,426 @@
                 </div>
             </section>
 
-            <!-- Slide 03: Step 2 - add posts -->
-            <section id="slide-step-2" class="lesson-slide" data-slide-name="Step 2: Add Posts">
-                <div class="slide-card bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-                    <div class="space-y-4">
-                        <div>
-                            <h2 class="slide-title font-bold text-slate-800 tracking-tight">Step 2. Add Posts</h2>
-                            <p class="text-slate-600 mt-1">Draw dots to represent the fence posts. You can add as many posts as you like, anywhere along the fences. There's only one additional rule.</p>
-                        </div>
+            <!-- Slide 05: Step 2 - add posts -->
+            <section id="slide-step-2" class="lesson-slide markdown-slide" data-markdown data-slide-name="Step 2: Add Posts">
+                <textarea data-template>
+# Step 2. Adding Posts
 
-                        <div class="rule-card p-4 rounded-r-lg">
-                            <h3 class="font-bold text-blue-900 text-lg">
-                                The Posts Cut the Fences into Simple Segments
-                            </h3>
-                            <p class="text-blue-800 text-sm mt-1 leading-snug">
-                                That means each fence segment has a post on either side ("loose ends must have a post"), and the segments we get cannot intersect ("intersections must have a post").
-                            </p>
-                        </div>
+The fences are held up and controlled by special electrical posts, marked as thick dots on the diagram.
+You can add as many posts as you like, anywhere along the fences -- there's just one more rule:
 
-                        <div class="mt-4">
-                            <p class="text-slate-700 mb-4">
-                                Here's a good diagram. The next diagrams are missing one or more posts. Click to add posts and fix the diagram.
-                            </p>
+> **The Posts Cut the Fences into Simple Segments**
+> which means:
+> - each fence segment has a post on either side -- no "loose ends" without a post.
+> - segments cannot intersect themselves or other segments; where there's an intersection in the diagram, you
+> must add a post and separate the fence into simple segments.
 
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="diagram-box p-4 rounded-lg flex flex-col items-center">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-2 flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                        </svg>
-                                        Correct
-                                    </span>
-                                    <svg width="120" height="100" viewBox="0 0 120 100" class="stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                                        <path d="M20 20 L 100 80" fill="none" />
-                                        <path d="M100 20 L 20 80" fill="none" />
-                                        <circle cx="20" cy="20" r="3.5" />
-                                        <circle cx="100" cy="80" r="3.5" />
-                                        <circle cx="100" cy="20" r="3.5" />
-                                        <circle cx="20" cy="80" r="3.5" />
-                                        <circle cx="60" cy="50" r="3.5" />
-                                        <circle cx="40" cy="35" r="3.5" />
-                                    </svg>
-                                </div>
+Let's fix the middle and right diagrams:
 
-                                <div class="diagram-box interactive-diagram p-4 rounded-lg flex flex-col items-center justify-center" id="diag-trident" onclick="handleFixClick(event, 'trident', 'diag-trident')">
-                                    <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                                        <line x1="60" y1="90" x2="60" y2="50" />
-                                        <line x1="60" y1="50" x2="20" y2="20" />
-                                        <line x1="60" y1="50" x2="100" y2="20" />
-                                        <line x1="60" y1="50" x2="60" y2="10" />
-                                        <circle cx="60" cy="90" r="3.5" />
-                                        <circle cx="60" cy="50" r="3.5" />
-                                        <circle cx="60" cy="10" r="3.5" />
-                                    </svg>
-                                </div>
+<div class="post-grid">
+<div class="diagram-box post-example">
+<span class="example-label good">Correct</span>
+<svg viewBox="0 0 120 100" class="post-svg">
+<path d="M20 20 L 100 80" fill="none" />
+<path d="M100 20 L 20 80" fill="none" />
+<circle cx="20" cy="20" r="3.5" />
+<circle cx="100" cy="80" r="3.5" />
+<circle cx="100" cy="20" r="3.5" />
+<circle cx="20" cy="80" r="3.5" />
+<circle cx="60" cy="50" r="3.5" />
+<circle cx="40" cy="35" r="3.5" />
+</svg>
+</div>
+<div class="diagram-box post-example interactive-diagram" id="diag-trident" onclick="handleFixClick(event, 'trident', 'diag-trident')">
+<svg viewBox="0 0 120 100" class="diagram-svg post-svg">
+<line x1="60" y1="90" x2="60" y2="50" />
+<line x1="60" y1="50" x2="20" y2="20" />
+<line x1="60" y1="50" x2="100" y2="20" />
+<line x1="60" y1="50" x2="60" y2="10" />
+<circle cx="60" cy="90" r="3.5" />
+<circle cx="60" cy="50" r="3.5" />
+<circle cx="60" cy="10" r="3.5" />
+</svg>
+</div>
+<div class="diagram-box post-example interactive-diagram" id="diag-envelope" onclick="handleFixClick(event, 'envelope', 'diag-envelope')">
+<svg viewBox="0 0 120 100" class="diagram-svg post-svg">
+<rect x="20" y="20" width="80" height="60" fill="none" />
+<line x1="20" y1="20" x2="100" y2="80" />
+<line x1="100" y1="20" x2="20" y2="80" />
+<circle cx="20" cy="20" r="3.5" />
+<circle cx="100" cy="20" r="3.5" />
+<circle cx="100" cy="80" r="3.5" />
+<circle cx="20" cy="80" r="3.5" />
+</svg>
+</div>
+</div>
 
-                                <div class="diagram-box interactive-diagram p-4 rounded-lg flex flex-col items-center justify-center" id="diag-envelope" onclick="handleFixClick(event, 'envelope', 'diag-envelope')">
-                                    <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                                        <rect x="20" y="20" width="80" height="60" fill="none" />
-                                        <line x1="20" y1="20" x2="100" y2="80" />
-                                        <line x1="100" y1="20" x2="20" y2="80" />
-                                        <circle cx="20" cy="20" r="3.5" />
-                                        <circle cx="100" cy="20" r="3.5" />
-                                        <circle cx="100" cy="80" r="3.5" />
-                                        <circle cx="20" cy="80" r="3.5" />
-                                    </svg>
-                                </div>
-                            </div>
+A circle is not a simple segment. Can we fix it?
 
-                            <div class="mt-8 space-y-4">
-                                <p class="text-slate-700">
-                                    The following diagram is also not ok, because a circle is not a simple segment with a post on either side. How can you fix it?
-                                </p>
-                                <div class="flex justify-center">
-                                    <div class="diagram-box interactive-diagram p-6 rounded-lg flex flex-col items-center justify-center" id="diag-circle" onclick="handleFixClick(event, 'circle', 'diag-circle')">
-                                        <svg width="120" height="100" viewBox="0 0 120 100" class="diagram-svg stroke-slate-800 fill-slate-800 stroke-[2] stroke-linecap-round stroke-linejoin-round">
-                                            <circle cx="60" cy="50" r="30" fill="none" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="post-circle-row">
+<div class="diagram-box post-example interactive-diagram" id="diag-circle" onclick="handleFixClick(event, 'circle', 'diag-circle')">
+<svg viewBox="0 0 120 100" class="diagram-svg post-svg">
+<circle cx="60" cy="50" r="30" fill="none" />
+</svg>
+</div>
+</div>
+                </textarea>
             </section>
 
-            <!-- Slide 04: Step 3 - color fields -->
-            <section id="slide-step-3" class="lesson-slide" data-slide-name="Step 3: Color Fields">
-                <div class="slide-card bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6">
-                    <div>
-                        <h2 class="slide-title font-bold text-slate-800 tracking-tight">Step 3. Color In the Fields</h2>
-                        <p class="text-slate-600 mt-1">A field is any region of the diagram that is "fenced in" from all sides. The fences determine the fields - unlike with the posts, there's no choice involved in this step. But you can choose a nice set of colors to shade the fields with ;)</p>
-                    </div>
+            <!-- Slide 06: Step 3 - color regions -->
+            <section id="slide-step-3" class="lesson-slide markdown-slide" data-markdown data-slide-name="Step 3: Color Regions">
+                <textarea data-template>
+# Step 3. Marking the Safe Regions for the Dinosaurs
 
-                    <div class="flex flex-col-reverse md:flex-row gap-6 items-center justify-center mt-6">
-                        <div class="flex justify-center items-center">
-                            <img src="girl_2.png" alt="Girl Image" class="max-h-[350px] w-auto rounded-lg shadow-sm border border-slate-100">
-                        </div>
+Dinosaurs must be separated from each other and from the outside world by fences.
 
-                        <div class="diagram-box p-6 rounded-xl flex flex-col items-center max-w-sm w-full">
-                            <svg viewBox="0 0 1000 1000" class="stroke-slate-800 stroke-[5] fill-none stroke-linecap-round stroke-linejoin-round" style="width: 100%; height: auto; max-height: 400px;">
-                                <path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
-                                <path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
-                                <path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480 L 820 280" fill="#ffffba" stroke="none" />
-                                <path d="M 480 700 Q 580 580 680 680 Q 580 750 480 700 Z" fill="#baffc9" stroke="none" />
-                                <path d="M 50 200 Q 150 150 300 350" />
-                                <path d="M 300 350 C 180 300 180 480 300 350" />
-                                <path d="M 300 350 Q 375 335 450 320" />
-                                <line x1="450" y1="320" x2="550" y2="310" />
-                                <line x1="550" y1="310" x2="620" y2="305" />
-                                <line x1="620" y1="305" x2="700" y2="300" />
-                                <line x1="700" y1="300" x2="820" y2="280" />
-                                <line x1="450" y1="320" x2="440" y2="100" />
-                                <line x1="550" y1="310" x2="550" y2="90" />
-                                <line x1="620" y1="305" x2="640" y2="70" />
-                                <line x1="700" y1="300" x2="760" y2="70" />
-                                <line x1="820" y1="280" x2="920" y2="100" />
-                                <line x1="620" y1="305" x2="740" y2="480" />
-                                <line x1="820" y1="280" x2="740" y2="480" />
-                                <path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480" />
-                                <line x1="740" y1="480" x2="680" y2="680" />
-                                <path d="M 480 700 Q 580 580 680 680" />
-                                <path d="M 480 700 Q 580 750 680 680" />
-                                <path d="M 480 700 Q 400 800 350 850" />
-                                <path d="M 680 680 Q 750 780 800 850" />
-                                <path d="M 480 700 Q 530 800 550 880" />
-                                <g fill="black" stroke="none">
-                                    <circle cx="50" cy="200" r="9" />
-                                    <circle cx="300" cy="350" r="9" />
-                                    <circle cx="450" cy="320" r="9" />
-                                    <circle cx="550" cy="310" r="9" />
-                                    <circle cx="620" cy="305" r="9" />
-                                    <circle cx="700" cy="300" r="9" />
-                                    <circle cx="820" cy="280" r="9" />
-                                    <circle cx="440" cy="100" r="9" />
-                                    <circle cx="550" cy="90" r="9" />
-                                    <circle cx="640" cy="70" r="9" />
-                                    <circle cx="760" cy="70" r="9" />
-                                    <circle cx="920" cy="100" r="9" />
-                                    <circle cx="740" cy="480" r="9" />
-                                    <circle cx="480" cy="700" r="9" />
-                                    <circle cx="680" cy="680" r="9" />
-                                    <circle cx="350" cy="850" r="9" />
-                                    <circle cx="800" cy="850" r="9" />
-                                    <circle cx="550" cy="880" r="9" />
-                                </g>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+> A *"safe region"* is an area of the diagram that is fenced in from all sides.
+
+There's no choice in this step - the fences determine the safe regions, but the engineer likes to clearly
+mark each safe region with a different color.
+
+<div class="region-visual-row">
+<div class="region-diagram-card diagram-box">
+<svg viewBox="0 0 1000 1000" class="region-diagram-svg">
+<path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
+<path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
+<path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480 L 820 280" fill="#ffffba" stroke="none" />
+<path d="M 480 700 Q 580 580 680 680 Q 580 750 480 700 Z" fill="#baffc9" stroke="none" />
+<path d="M 50 200 Q 150 150 300 350" />
+<path d="M 300 350 C 180 300 180 480 300 350" />
+<path d="M 300 350 Q 375 335 450 320" />
+<line x1="450" y1="320" x2="550" y2="310" />
+<line x1="550" y1="310" x2="620" y2="305" />
+<line x1="620" y1="305" x2="700" y2="300" />
+<line x1="700" y1="300" x2="820" y2="280" />
+<line x1="450" y1="320" x2="440" y2="100" />
+<line x1="550" y1="310" x2="550" y2="90" />
+<line x1="620" y1="305" x2="640" y2="70" />
+<line x1="700" y1="300" x2="760" y2="70" />
+<line x1="820" y1="280" x2="920" y2="100" />
+<line x1="620" y1="305" x2="740" y2="480" />
+<line x1="820" y1="280" x2="740" y2="480" />
+<path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480" />
+<line x1="740" y1="480" x2="680" y2="680" />
+<path d="M 480 700 Q 580 580 680 680" />
+<path d="M 480 700 Q 580 750 680 680" />
+<path d="M 480 700 Q 400 800 350 850" />
+<path d="M 680 680 Q 750 780 800 850" />
+<path d="M 480 700 Q 530 800 550 880" />
+<g fill="black" stroke="none">
+<circle cx="50" cy="200" r="9" />
+<circle cx="300" cy="350" r="9" />
+<circle cx="450" cy="320" r="9" />
+<circle cx="550" cy="310" r="9" />
+<circle cx="620" cy="305" r="9" />
+<circle cx="700" cy="300" r="9" />
+<circle cx="820" cy="280" r="9" />
+<circle cx="440" cy="100" r="9" />
+<circle cx="550" cy="90" r="9" />
+<circle cx="640" cy="70" r="9" />
+<circle cx="760" cy="70" r="9" />
+<circle cx="920" cy="100" r="9" />
+<circle cx="740" cy="480" r="9" />
+<circle cx="480" cy="700" r="9" />
+<circle cx="680" cy="680" r="9" />
+<circle cx="350" cy="850" r="9" />
+<circle cx="800" cy="850" r="9" />
+<circle cx="550" cy="880" r="9" />
+</g>
+</svg>
+</div>
+<img src="dino_1.png" alt="Dinosaur in the safe regions lesson" class="region-dino-image">
+</div>
+                </textarea>
             </section>
 
-            <!-- Slide 05: Taking stock story -->
-            <section id="slide-taking-stock-story" class="lesson-slide" data-slide-name="Taking Stock">
-                <div class="slide-card bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
-                    <header>
-                        <h2 class="slide-title font-bold text-slate-900 tracking-tight">Taking Stock</h2>
-                    </header>
+            <!-- Slide 07: Taking stock story -->
+            <section id="slide-taking-stock-story" class="lesson-slide markdown-slide story-markdown" data-markdown data-slide-name="Taking Stock">
+                <textarea data-template>
+# Taking Stock
 
-                    <div class="narrative-text text-lg text-slate-800 space-y-6 leading-relaxed">
-                        <p>
-                            The farmer started drawing many of these diagrams, counting how many posts, fence segments, and fields each diagram has.
-                        </p>
-                        <p>
-                            For example, he wanted to see if he could design a farm with 5 fields, using only one post. He could produce various kinds of flower configurations: some
-                            "petals" could lie next to each other, or inside each other. But if he wanted to get to 5 fields with only one post he always had to use 5 fence segments.
-                        </p>
+For each design, the engineer tallies the number of posts, fence segments, and safe regions the design allows.
 
-                        <p>
-                            He thought that was curious, but what was even more striking was that a similar thing happened no matter what the number of posts and fields he decided to get to.
-                            In fact, it seemed that <em>any</em> two of the three quantities (posts and fences, posts and edges, edges and fences) determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd always get 0 fields. And you couldn't draw any fence diagram with 5 posts and 3 fence segments
-                            without making the diagram disconnected.
-                        </p>
+<div class="slide-card sketch-slide-card taking-stock-tool-card bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+<div class="sketch-workspace">
+<div class="sketch-table-panel flex justify-center">
+<div class="overflow-hidden rounded-lg border border-slate-200">
+<table class="text-slate-500" id="stats-table">
+<thead class="bg-white">
+<tr>
+<th class="vertical-header w-12 bg-red-100 text-red-900 uppercase text-xs tracking-wider border-b border-red-200">Posts</th>
+<th class="vertical-header w-12 bg-blue-100 text-blue-900 uppercase text-xs tracking-wider border-b border-blue-200">Segments</th>
+<th class="vertical-header w-12 bg-green-100 text-green-900 uppercase text-xs tracking-wider border-b border-green-200">Regions</th>
+</tr>
+</thead>
+<tbody class="bg-white">
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">3</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">3</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">5</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">5</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">18</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">21</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">4</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td colspan="3" class="p-3 text-center bg-slate-50 border-t border-slate-200">
+<button onclick="openModal()" class="whitespace-nowrap inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-md font-semibold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+New example
+</button>
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
 
-                        <p>
-                            The farmer was sure there was some rule, some formula that would allow one to compute any quantity from the other two. But he couldn't put his finger on it.
-                            Can you figure out what the rule is? Start by taking a piece of paper and doodling some diagrams according to the rules,
-                            counting the number of posts, segments and fields, and adding each triplet of numbers to the table. You can use the doodling app to save some
-                            time, but check it's diagrams are really valid and that it counted everything correctly - it can make mistakes.
-                        </p>
+<div class="example-diagram-panel bg-white rounded-lg border border-slate-200">
+<svg viewBox="0 0 200 160" class="example-region-diagram-svg simple-example-diagram-svg" aria-label="Simple triangle fence diagram for the first table row">
+<path d="M 40 125 L 100 35 L 160 125 Z" fill="#baffc9" stroke="none" />
+<line x1="40" y1="125" x2="100" y2="35" />
+<line x1="100" y1="35" x2="160" y2="125" />
+<line x1="160" y1="125" x2="40" y2="125" />
+<g fill="black" stroke="none">
+<circle cx="40" cy="125" r="5" />
+<circle cx="100" cy="35" r="5" />
+<circle cx="160" cy="125" r="5" />
+</g>
+</svg>
+<svg viewBox="0 0 200 190" class="example-region-diagram-svg antenna-example-diagram-svg" aria-label="Triangle fence diagram with two antennae for the second table row">
+<path d="M 40 145 L 100 55 L 160 145 Z" fill="#baffc9" stroke="none" />
+<line x1="40" y1="145" x2="100" y2="55" />
+<line x1="100" y1="55" x2="160" y2="145" />
+<line x1="160" y1="145" x2="40" y2="145" />
+<line x1="100" y1="55" x2="62" y2="16" />
+<line x1="100" y1="55" x2="138" y2="16" />
+<g fill="black" stroke="none">
+<circle cx="40" cy="145" r="5" />
+<circle cx="100" cy="55" r="5" />
+<circle cx="160" cy="145" r="5" />
+<circle cx="62" cy="16" r="5" />
+<circle cx="138" cy="16" r="5" />
+</g>
+</svg>
+<svg viewBox="0 0 1000 1000" class="example-region-diagram-svg original-example-diagram-svg" aria-label="Original fence diagram for the third table row">
+<path d="M 300 350 C 180 300 180 480 300 350 Z" fill="#bae1ff" stroke="none" />
+<path d="M 620 305 L 700 300 L 820 280 L 740 480 Z" fill="#ffdfba" stroke="none" />
+<path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480 L 820 280" fill="#ffffba" stroke="none" />
+<path d="M 480 700 Q 580 580 680 680 Q 580 750 480 700 Z" fill="#baffc9" stroke="none" />
+<path d="M 50 200 Q 150 150 300 350" />
+<path d="M 300 350 C 180 300 180 480 300 350" />
+<path d="M 300 350 Q 375 335 450 320" />
+<line x1="450" y1="320" x2="550" y2="310" />
+<line x1="550" y1="310" x2="620" y2="305" />
+<line x1="620" y1="305" x2="700" y2="300" />
+<line x1="700" y1="300" x2="820" y2="280" />
+<line x1="450" y1="320" x2="440" y2="100" />
+<line x1="550" y1="310" x2="550" y2="90" />
+<line x1="620" y1="305" x2="640" y2="70" />
+<line x1="700" y1="300" x2="760" y2="70" />
+<line x1="820" y1="280" x2="920" y2="100" />
+<line x1="620" y1="305" x2="740" y2="480" />
+<line x1="820" y1="280" x2="740" y2="480" />
+<path d="M 820 280 Q 1000 350 950 500 Q 850 520 740 480" />
+<line x1="740" y1="480" x2="680" y2="680" />
+<path d="M 480 700 Q 580 580 680 680" />
+<path d="M 480 700 Q 580 750 680 680" />
+<path d="M 480 700 Q 400 800 350 850" />
+<path d="M 680 680 Q 750 780 800 850" />
+<path d="M 480 700 Q 530 800 550 880" />
+<g fill="black" stroke="none">
+<circle cx="50" cy="200" r="9" />
+<circle cx="300" cy="350" r="9" />
+<circle cx="450" cy="320" r="9" />
+<circle cx="550" cy="310" r="9" />
+<circle cx="620" cy="305" r="9" />
+<circle cx="700" cy="300" r="9" />
+<circle cx="820" cy="280" r="9" />
+<circle cx="440" cy="100" r="9" />
+<circle cx="550" cy="90" r="9" />
+<circle cx="640" cy="70" r="9" />
+<circle cx="760" cy="70" r="9" />
+<circle cx="920" cy="100" r="9" />
+<circle cx="740" cy="480" r="9" />
+<circle cx="480" cy="700" r="9" />
+<circle cx="680" cy="680" r="9" />
+<circle cx="350" cy="850" r="9" />
+<circle cx="800" cy="850" r="9" />
+<circle cx="550" cy="880" r="9" />
+</g>
+</svg>
+</div>
 
-                        <p>
-                            if you think you have found the rule - check it again, maybe even try to prove it - and then talk to one of the guides.
-                        </p>
-                    </div>
-                </div>
+<div class="tool-section bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+<div class="canvas-wrapper">
+<canvas id="canvas"></canvas>
+</div>
+
+<div class="sketch-controls flex flex-wrap items-center gap-4 mt-4">
+<div class="flex gap-2">
+<button class="btn-secondary" onclick="clearCanvas()">Clear</button>
+<button class="btn-primary" onclick="processStrokes()">Make Fence Diagram</button>
+</div>
+<div id="tally-container" class="tally-message text-slate-700 text-lg font-medium opacity-0 transition-opacity duration-300 w-full mt-2">
+I count <span id="tally-posts" class="font-bold text-slate-900">-</span> posts, <span id="tally-segs" class="font-bold text-slate-900">-</span> segments, and <span id="tally-regions" class="font-bold text-slate-900">-</span> regions. Check my work.
+</div>
+</div>
+
+<div id="status"></div>
+</div>
+</div>
+
+</div>
+
+<!--The engineer started drawing many of these diagrams, counting how many posts, fence segments, and regions each diagram has.-->
+
+<!--For example, he wanted to see if he could design a farm with 5 regions, using only one post. He could produce various kinds of flower configurations: some "petals" could lie next to each other, or inside each other. But if he wanted to get to 5 regions with only one post he always had to use 5 fence segments.-->
+
+<!--He thought that was curious, but what was even more striking was that a similar thing happened no matter what the number of posts and regions he decided to get to. In fact, it seemed that *any* two of the three quantities (posts and fences, posts and edges, edges and fences) determined the third - for example if you tried drawing diagrams with 5 posts and 4 fences, you'd always get 0 regions. And you couldn't draw any fence diagram with 5 posts and 3 fence segments without making the diagram disconnected.-->
+
+<!--The farmer was sure there was some rule, some formula that would allow one to compute any quantity from the other two. But he couldn't put his finger on it. Can you figure out what the rule is? Start by taking a piece of paper and doodling some diagrams according to the rules, counting the number of posts, segments and regions, and adding each triplet of numbers to the table. You can use the doodling app to save some time, but check its diagrams are really valid and that it counted everything correctly - it can make mistakes.-->
+
+<!--If you think you have found the rule - check it again, maybe even try to prove it - and then talk to one of the guides.-->
+
+                </textarea>
             </section>
 
-            <!-- Slide 06: Table and sketch tool -->
-            <section id="slide-data-collection" class="lesson-slide" data-slide-name="Table and Sketch Tool">
-                <div class="slide-card bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-6">
-                    <div class="flex justify-center">
-                        <div class="overflow-hidden rounded-lg border border-slate-200">
-                            <table class="text-slate-500" id="stats-table">
-                                <thead class="bg-white">
-                                    <tr>
-                                        <th class="vertical-header w-12 bg-red-100 text-red-900 uppercase text-xs tracking-wider border-b border-red-200">Posts</th>
-                                        <th class="vertical-header w-12 bg-blue-100 text-blue-900 uppercase text-xs tracking-wider border-b border-blue-200">Segments</th>
-                                        <th class="vertical-header w-12 bg-green-100 text-green-900 uppercase text-xs tracking-wider border-b border-green-200">Fields</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white">
-                                    <tr class="border-b last:border-0 border-slate-200">
-                                        <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">18</td>
-                                        <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">21</td>
-                                        <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">4</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3" class="p-3 text-center bg-slate-50 border-t border-slate-200">
-                                            <button onclick="openModal()" class="whitespace-nowrap inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-md font-semibold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
-                                                New example
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
 
-                    <p class="text-center my-4 text-gray-400"></p>
+            <section id="slide-question" class="lesson-slide markdown-slide" data-markdown data-slide-name="Question">
+                <textarea data-template>
 
-                    <div class="tool-section bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-6">
-                        <div class="canvas-wrapper">
-                            <canvas id="canvas"></canvas>
-                        </div>
+# A Curious Thing
 
-                        <div class="controls flex flex-wrap items-center gap-4 mt-4">
-                            <div class="flex gap-2">
-                                <button class="btn-secondary" onclick="clearCanvas()">Clear</button>
-                                <button class="btn-primary" onclick="processStrokes()">Make Fence Diagram</button>
-                            </div>
-                            <div id="tally-container" class="text-slate-700 text-lg font-medium opacity-0 transition-opacity duration-300 w-full mt-2">
-                                I hope I've captured this accurately - I seem to have produced a diagram with <span id="tally-posts" class="font-bold text-slate-900">-</span> Posts, <span id="tally-segs" class="font-bold text-slate-900">-</span> Segments and <span id="tally-fields" class="font-bold text-slate-900">-</span> Fields. But don't believe me - check!
-                            </div>
-                        </div>
+The engineer noticed something odd. If she wanted to design a park with 3 posts and two safe regions, she could do it
+in a few different ways:
 
-                        <div id="status"></div>
-                    </div>
+<div class="question-diagram-grid">
+<svg viewBox="0 0 220 170" class="question-region-diagram" aria-label="Three posts, four segments, two regions example 1">
+<path d="M 35 135 L 110 35 L 185 135 Z" fill="#baffc9" stroke="none" />
+<path d="M 35 135 L 185 135 Q 110 80 35 135 Z" fill="#ffdfba" stroke="none" />
+<line x1="35" y1="135" x2="110" y2="35" />
+<line x1="110" y1="35" x2="185" y2="135" />
+<line x1="185" y1="135" x2="35" y2="135" />
+<path d="M 35 135 Q 110 80 185 135" />
+<g fill="black" stroke="none">
+<circle cx="35" cy="135" r="5" />
+<circle cx="110" cy="35" r="5" />
+<circle cx="185" cy="135" r="5" />
+</g>
+</svg>
 
-                    <p class="font-bold text-blue-900">Can you help?</p>
-                </div>
+<svg viewBox="0 0 220 170" class="question-region-diagram" aria-label="Three posts, four segments, two regions example 2">
+<path d="M 35 85 C 55 35 90 35 110 85 C 90 135 55 135 35 85 Z" fill="#bae1ff" stroke="none" />
+<path d="M 110 85 C 130 35 165 35 185 85 C 165 135 130 135 110 85 Z" fill="#ffffba" stroke="none" />
+<path d="M 35 85 C 55 35 90 35 110 85" />
+<path d="M 35 85 C 55 135 90 135 110 85" />
+<path d="M 110 85 C 130 35 165 35 185 85" />
+<path d="M 110 85 C 130 135 165 135 185 85" />
+<g fill="black" stroke="none">
+<circle cx="35" cy="85" r="5" />
+<circle cx="110" cy="85" r="5" />
+<circle cx="185" cy="85" r="5" />
+</g>
+</svg>
+
+<svg viewBox="0 0 220 170" class="question-region-diagram" aria-label="Three posts, four segments, two regions example 3">
+<path d="M 35 85 C 70 25 150 25 185 85 L 110 85 L 35 85 Z" fill="#baffc9" stroke="none" />
+<path d="M 35 85 L 110 85 L 185 85 C 150 145 70 145 35 85 Z" fill="#bae1ff" stroke="none" />
+<line x1="35" y1="85" x2="110" y2="85" />
+<line x1="110" y1="85" x2="185" y2="85" />
+<path d="M 35 85 C 70 25 150 25 185 85" />
+<path d="M 35 85 C 70 145 150 145 185 85" />
+<g fill="black" stroke="none">
+<circle cx="35" cy="85" r="5" />
+<circle cx="110" cy="85" r="5" />
+<circle cx="185" cy="85" r="5" />
+</g>
+</svg>
+</div>
+
+What is the number of edges on the left, middle and right?
+
+She wondered - is this always the case? is there some rule, that determines the number of edges from the number of posts and regions?
+
+
+Note: hit B to make the screen go black here, we'll resume after the kids do the individual worksheet and the work
+in pairs.
+                </textarea>
             </section>
 
-            <!-- Slide 07: Hints -->
-            <section id="slide-hints" class="lesson-slide" data-slide-name="Hints">
-                <div class="slide-card bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <div class="hint-container">
-                        <div class="hint-card" style="transform: rotate(-3deg);" onclick="this.classList.toggle('is-flipped')">
-                            <div class="hint-card-inner">
-                                <div class="hint-front bg-[#a5f3fc] text-[#0e7490]">HINT</div>
-                                <div class="hint-back">If you find you're stuck, it's always nice to draw more diagrams, and add more triplets of numbers you can stare at, and look for patterns in.</div>
-                            </div>
-                        </div>
+            <section id="slide-after-research" class="lesson-slide markdown-slide" data-markdown data-slide-name="Research">
+                <textarea data-template>
+# Plenary Discussion
 
-                        <div class="hint-card" style="transform: rotate(2deg);" onclick="this.classList.toggle('is-flipped')">
-                            <div class="hint-card-inner">
-                                <div class="hint-front bg-[#e9d5ff] text-[#7e22ce]">HINT</div>
-                                <div class="hint-back">Think of ways you can modify a given diagram slightly - maybe adding a post, or adding a single fence segment. how does that affect the count?</div>
-                            </div>
-                        </div>
+Hopefully, you've all had some fun creating examples, sharing your data, and exploring the patterns that emerge.
+Would you like to share your observations with the class?
 
-                        <div class="hint-card" style="transform: rotate(-1deg);" onclick="this.classList.toggle('is-flipped')">
-                            <div class="hint-card-inner">
-                                <div class="hint-front bg-[#bfdbfe] text-[#1d4ed8]">HINT</div>
-                                <div class="hint-back">which pairs of posts and fence-segment counts are impossible? what's common to all of the impossible ones? start with an impossible pair. what's the minimal change you need in the number of posts to make it possible? what's the minimal change in the number of fence segments? what's the number of fields you get when you make these two minimal changes?</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="stock-rule-stage" aria-label="Euler formula reveal sequence">
+<div class="stock-formula fragment" aria-label="Euler formula">
+<span class="formula-cell formula-segments">Segments</span>
+<span class="formula-symbol">=</span>
+<span class="formula-cell formula-posts">Posts</span>
+<span class="formula-symbol">+</span>
+<span class="formula-cell formula-regions">Regions</span>
+<span class="formula-symbol">- 1</span>
+</div>
+
+<div class="stock-replay-panel fragment">
+<div class="stock-table-copy overflow-hidden rounded-lg border border-slate-200">
+<table class="text-slate-500 stock-source-table" id="stock-final-table">
+<thead class="bg-white">
+<tr>
+<th class="vertical-header w-12 bg-red-100 text-red-900 uppercase text-xs tracking-wider border-b border-red-200">Posts</th>
+<th class="vertical-header w-12 bg-blue-100 text-blue-900 uppercase text-xs tracking-wider border-b border-blue-200">Segments</th>
+<th class="vertical-header w-12 bg-green-100 text-green-900 uppercase text-xs tracking-wider border-b border-green-200">Regions</th>
+</tr>
+</thead>
+<tbody class="bg-white">
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">3</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">3</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">5</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">5</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">1</td>
+</tr>
+<tr class="border-b last:border-0 border-slate-200">
+<td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">18</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">21</td>
+<td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">4</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td colspan="3" class="p-3 text-center bg-slate-50 border-t border-slate-200">
+<button onclick="openModal('stock-final-table')" class="whitespace-nowrap inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-md font-semibold text-xs text-slate-700 uppercase tracking-widest shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+New example
+</button>
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+
+<div class="stock-transform-table" aria-label="Table columns rearranged into Euler formula examples"></div>
+<span class="stock-animation-trigger fragment" aria-hidden="true"></span>
+</div>
+</div>
+
+<!--Euler, topology - counting lots of things in shapes - holes, for example. higher dimenions.-->
+<!--five platonic solids?-->
+
+                </textarea>
             </section>
         </div>
     </div>
@@ -422,7 +569,7 @@
                     <input type="number" id="in-segments" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Segments">
                 </div>
                 <div>
-                    <input type="number" id="in-fields" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Fields">
+                    <input type="number" id="in-regions" class="w-full border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Regions">
                 </div>
             </div>
 
@@ -431,12 +578,15 @@
             </div>
 
             <div class="flex gap-3 mt-6 justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded font-medium text-sm hover:bg-slate-50 shadow-sm">Cancel</button>
                 <button onclick="addEntry()" class="px-4 py-2 bg-blue-600 text-white rounded font-medium text-sm hover:bg-blue-700 shadow-sm">Add</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.min.js"></script>
+    <script src="vendor/reveal/reveal.min.js"></script>
+    <script src="vendor/reveal/markdown.min.js"></script>
+    <script src="vendor/reveal/notes.min.js"></script>
     <script src="euler_teacher_intro.js"></script>
 </body>
 </html>

@@ -2,43 +2,175 @@
 function initializeDeck() {
     if (!window.Reveal) return;
 
+    const plugins = [];
+    if (window.RevealMarkdown) plugins.push(RevealMarkdown);
+    if (window.RevealNotes) plugins.push(RevealNotes);
+
     Reveal.initialize({
         controls: true,
         progress: true,
         hash: true,
         slideNumber: "c/t",
+        defaultTiming: 120,
         center: false,
         transition: "slide",
         backgroundTransition: "fade",
         width: 1280,
         height: 720,
-        margin: 0.04
-    }).then(() => {
-        resizeSketchCanvas();
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise();
+        margin: 0.04,
+        plugins,
+        markdown: {
+            smartypants: true
         }
+    }).then(() => {
+        initializeSketchTool();
+        initializeStockAnimation();
+        resizeSketchCanvas();
     });
 
     Reveal.on("slidechanged", () => requestAnimationFrame(resizeSketchCanvas));
 }
 
+function initializeStockAnimation() {
+    renderStockFormulaRows();
+
+    document.querySelectorAll(".stock-source-table tbody").forEach(tableBody => {
+        new MutationObserver(() => renderStockFormulaRows({ restartAnimation: true })).observe(tableBody, {
+            characterData: true,
+            childList: true,
+            subtree: true
+        });
+    });
+
+    const syncStockAnimation = () => {
+        const panelsToAnimate = [];
+
+        document.querySelectorAll(".stock-replay-panel").forEach(panel => {
+            const trigger = panel.querySelector(".stock-animation-trigger");
+
+            panel.classList.remove("is-animated");
+            if (trigger?.classList.contains("visible")) panelsToAnimate.push(panel);
+        });
+
+        renderStockFormulaRows();
+
+        panelsToAnimate.forEach(panel => {
+            void panel.offsetWidth;
+            requestAnimationFrame(() => panel.classList.add("is-animated"));
+        });
+    };
+
+    Reveal.on("fragmentshown", syncStockAnimation);
+    Reveal.on("fragmenthidden", syncStockAnimation);
+    Reveal.on("slidechanged", syncStockAnimation);
+    syncStockAnimation();
+}
+
+function renderStockFormulaRows({ restartAnimation = false } = {}) {
+    const panelsToRestart = [];
+
+    document.querySelectorAll(".stock-replay-panel").forEach(panel => {
+        const sourceTable = panel.querySelector(".stock-source-table");
+        const transformTable = panel.querySelector(".stock-transform-table");
+        const trigger = panel.querySelector(".stock-animation-trigger");
+        if (!sourceTable || !transformTable) return;
+
+        if (restartAnimation && panel.classList.contains("is-animated") && trigger?.classList.contains("visible")) {
+            panelsToRestart.push(panel);
+            panel.classList.remove("is-animated");
+        }
+
+        transformTable.textContent = "";
+        const rows = Array.from(sourceTable.querySelectorAll("tbody tr")).map(sourceRow => {
+            const [posts, segments, regions] = Array.from(sourceRow.cells)
+                .slice(0, 3)
+                .map(cell => Number.parseInt(cell.textContent.trim(), 10));
+            const isValid = segments === posts + regions - 1;
+
+            sourceRow.classList.toggle("stock-source-invalid", !isValid);
+            return { posts, segments, regions, isValid };
+        });
+
+        const stage = document.createElement("div");
+        stage.className = "stock-column-stage";
+        stage.style.setProperty("--stock-row-count", rows.length);
+        stage.appendChild(createStockColumn("posts", "Posts", rows.map(row => row.posts), rows));
+        stage.appendChild(createStockColumn("segments", "Segments", rows.map(row => row.segments), rows));
+        stage.appendChild(createStockColumn("regions", "Regions", rows.map(row => row.regions), rows));
+        stage.appendChild(createStockOperatorColumn("equals", "=", rows.length));
+        stage.appendChild(createStockOperatorColumn("plus", "+", rows.length));
+        stage.appendChild(createStockOperatorColumn("minus", "-1", rows.length));
+        transformTable.appendChild(stage);
+    });
+
+    panelsToRestart.forEach(panel => {
+        void panel.offsetWidth;
+        requestAnimationFrame(() => panel.classList.add("is-animated"));
+    });
+}
+
+function formatStockValue(value) {
+    return Number.isFinite(value) ? value : "?";
+}
+
+function createStockColumn(kind, label, values, rows) {
+    const column = document.createElement("div");
+    column.className = `stock-moving-column stock-column-${kind}`;
+    column.appendChild(createStockColumnCell(label, `stock-column-heading stock-column-${kind}-heading`, false));
+
+    values.forEach((value, index) => {
+        column.appendChild(createStockColumnCell(
+            formatStockValue(value),
+            `stock-column-value${rows[index].isValid ? "" : " stock-example-invalid"}`,
+            true
+        ));
+    });
+
+    return column;
+}
+
+function createStockOperatorColumn(kind, value, rowCount) {
+    const column = document.createElement("div");
+    column.className = `stock-op-column stock-op-${kind}`;
+    column.appendChild(createStockColumnCell("", "stock-column-heading stock-op-heading", false));
+
+    for (let index = 0; index < rowCount; index++) {
+        column.appendChild(createStockColumnCell(value, "stock-op-value", true));
+    }
+
+    return column;
+}
+
+function createStockColumnCell(value, className, isValueCell) {
+    const cell = document.createElement("span");
+    cell.className = className;
+    cell.textContent = value;
+    cell.dataset.cellType = isValueCell ? "value" : "heading";
+    return cell;
+}
+
 // Quiz logic
 const quizSolutions = { 1: true, 2: false, 3: true };
 
-function checkAnswer(id, userChoiceIsConnected) {
+function checkAnswer(id, userChoiceIsConnected, clickedButton) {
     const isCorrect = userChoiceIsConnected === quizSolutions[id];
     const card = document.getElementById(`q${id}`);
     const feedback = card.querySelector(".q-feedback");
     const buttons = card.querySelectorAll("button");
+    const answerText = userChoiceIsConnected ? "Connected" : "Disconnected";
 
     if (isCorrect) {
-        feedback.textContent = "Correct!";
+        feedback.textContent = `Correct: ${answerText}`;
         feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-green-600 block";
         card.classList.add("border-green-300", "bg-green-50");
         buttons.forEach(btn => {
             btn.disabled = true;
-            btn.classList.add("opacity-50", "cursor-not-allowed");
+            btn.classList.add("cursor-not-allowed");
+            if (btn === clickedButton) {
+                btn.classList.add("answer-selected");
+            } else {
+                btn.classList.add("answer-unselected");
+            }
         });
     } else {
         feedback.textContent = "Not quite. Look closer at the lines.";
@@ -123,14 +255,16 @@ const modal = document.getElementById("modal-overlay");
 const modalError = document.getElementById("modal-error");
 const inPosts = document.getElementById("in-posts");
 const inSegments = document.getElementById("in-segments");
-const inFields = document.getElementById("in-fields");
-const tableBody = document.querySelector("#stats-table tbody");
+const inRegions = document.getElementById("in-regions");
+let tableBody = null;
+let activeTableId = "stats-table";
 
-function openModal() {
+function openModal(targetTableId = "stats-table") {
+    activeTableId = targetTableId;
     modal.classList.remove("hidden");
     inPosts.value = "";
     inSegments.value = "";
-    inFields.value = "";
+    inRegions.value = "";
     modalError.classList.add("hidden");
 }
 
@@ -141,17 +275,22 @@ function closeModal() {
 function addEntry() {
     const v = parseInt(inPosts.value, 10) || 0;
     const e = parseInt(inSegments.value, 10) || 0;
-    const f = parseInt(inFields.value, 10) || 0;
+    const r = parseInt(inRegions.value, 10) || 0;
 
-    if (v - e + f === 1) {
+    if (v - e + r === 1) {
+        const activeTableBody = document.getElementById(activeTableId)?.querySelector("tbody");
+        if (!activeTableBody) return;
+
         const row = document.createElement("tr");
         row.className = "border-b last:border-0 border-slate-200";
         row.innerHTML = `
             <td class="w-12 py-4 text-center text-3xl font-bold bg-red-50 text-slate-700">${v}</td>
             <td class="w-12 py-4 text-center text-3xl font-bold bg-blue-50 text-slate-700">${e}</td>
-            <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">${f}</td>
+            <td class="w-12 py-4 text-center text-3xl font-bold bg-green-50 text-slate-700">${r}</td>
         `;
-        tableBody.appendChild(row);
+        activeTableBody.appendChild(row);
+        if (activeTableId === "stats-table") tableBody = activeTableBody;
+        modalError.classList.add("hidden");
         closeModal();
     } else {
         modalError.classList.remove("hidden");
@@ -163,28 +302,102 @@ modal.addEventListener("click", e => {
 });
 
 // Sketching tool logic
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
+let canvas = null;
+let ctx = null;
+let resizeObserver = null;
+let sketchToolInitialized = false;
+
+function initializeSketchTool() {
+    if (sketchToolInitialized) return;
+
+    tableBody = document.querySelector("#stats-table tbody");
+    canvas = document.getElementById("canvas");
+    if (!canvas) return;
+
+    ctx = canvas.getContext("2d", { willReadFrequently: true });
+    tallyPosts = document.getElementById("tally-posts");
+    tallySegs = document.getElementById("tally-segs");
+    tallyRegions = document.getElementById("tally-regions");
+    tallyContainer = document.getElementById("tally-container");
+    statusDiv = document.getElementById("status");
+
+    resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+            resizeSketchCanvas(entry.contentRect);
+        }
+    });
+    resizeObserver.observe(canvas.parentElement);
+
+    canvas.addEventListener("pointerdown", e => {
+        if (e.pointerType === "touch") e.preventDefault();
+        if (sketchMode === "processed") {
+            sketchMode = "raw";
+            resetTally();
+            redrawRawStrokes();
+        }
+        isDrawing = true;
+        canvas.setPointerCapture(e.pointerId);
+        currentPoints = [getCoords(e)];
+    });
+
+    canvas.addEventListener("pointermove", e => {
+        if (isDrawing) {
+            if (e.pointerType === "touch") e.preventDefault();
+            currentPoints.push(getCoords(e));
+            redrawRawStrokes();
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#333";
+            ctx.beginPath();
+            ctx.moveTo(currentPoints[0][0], currentPoints[0][1]);
+            for (let i = 1; i < currentPoints.length; i++) ctx.lineTo(currentPoints[i][0], currentPoints[i][1]);
+            ctx.stroke();
+        }
+    });
+
+    canvas.addEventListener("pointerup", e => {
+        isDrawing = false;
+        canvas.releasePointerCapture(e.pointerId);
+
+        if (currentPoints.length > 2) {
+            const sim = currentPoints.filter((_, i) => i % 2 === 0);
+            strokes.push({ points: sim, isLoop: false });
+        }
+
+        currentPoints = [];
+        resetTally();
+        redrawRawStrokes();
+    });
+
+    sketchToolInitialized = true;
+}
 
 function resizeSketchCanvas(size) {
+    if (!canvas) return;
+
     const wrapper = canvas.parentElement;
     const width = Math.round(size && size.width ? size.width : wrapper.clientWidth);
     const height = Math.round(size && size.height ? size.height : wrapper.clientHeight);
 
     if (width <= 0 || height <= 0) return;
     if (canvas.width !== width || canvas.height !== height) {
+        const oldWidth = canvas.width;
+        const oldHeight = canvas.height;
+        const shouldScale = oldWidth > 0 && oldHeight > 0;
+
+        if (shouldScale) scaleStoredStrokes(width / oldWidth, height / oldHeight);
+
         canvas.width = width;
         canvas.height = height;
-        if (strokes.length > 0) redrawRawStrokes();
+        if (strokes.length > 0) {
+            if (sketchMode === "processed") {
+                renderProcessedDiagramFromStrokes(false);
+            } else {
+                redrawRawStrokes();
+            }
+        }
     }
 }
-
-const resizeObserver = new ResizeObserver(entries => {
-    for (const entry of entries) {
-        resizeSketchCanvas(entry.contentRect);
-    }
-});
-resizeObserver.observe(canvas.parentElement);
 
 const EPSILON = 1e-9;
 
@@ -351,12 +564,13 @@ class IntersectionGraphBuilder {
 let strokes = [];
 let isDrawing = false;
 let currentPoints = [];
+let sketchMode = "raw";
 
-const tallyPosts = document.getElementById("tally-posts");
-const tallySegs = document.getElementById("tally-segs");
-const tallyFields = document.getElementById("tally-fields");
-const tallyContainer = document.getElementById("tally-container");
-const statusDiv = document.getElementById("status");
+let tallyPosts = null;
+let tallySegs = null;
+let tallyRegions = null;
+let tallyContainer = null;
+let statusDiv = null;
 const PALETTE = [
     [255, 179, 186],
     [255, 223, 186],
@@ -378,55 +592,37 @@ function getCoords(e) {
     ];
 }
 
-canvas.addEventListener("pointerdown", e => {
-    if (e.pointerType === "touch") e.preventDefault();
-    isDrawing = true;
-    canvas.setPointerCapture(e.pointerId);
-    currentPoints = [getCoords(e)];
-});
+function scaleStoredStrokes(scaleX, scaleY) {
+    const scalePoint = point => {
+        point[0] *= scaleX;
+        point[1] *= scaleY;
+    };
 
-canvas.addEventListener("pointermove", e => {
-    if (isDrawing) {
-        if (e.pointerType === "touch") e.preventDefault();
-        currentPoints.push(getCoords(e));
-        redrawRawStrokes();
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#333";
-        ctx.beginPath();
-        ctx.moveTo(currentPoints[0][0], currentPoints[0][1]);
-        for (let i = 1; i < currentPoints.length; i++) ctx.lineTo(currentPoints[i][0], currentPoints[i][1]);
-        ctx.stroke();
-    }
-});
-
-canvas.addEventListener("pointerup", e => {
-    isDrawing = false;
-    canvas.releasePointerCapture(e.pointerId);
-
-    if (currentPoints.length > 2) {
-        const sim = currentPoints.filter((_, i) => i % 2 === 0);
-        strokes.push({ points: sim, isLoop: false });
-    }
-
-    currentPoints = [];
-    resetTally();
-    redrawRawStrokes();
-});
+    strokes.forEach(stroke => stroke.points.forEach(scalePoint));
+    currentPoints.forEach(scalePoint);
+}
 
 function resetTally() {
+    if (!tallyContainer || !statusDiv) return;
+
     tallyContainer.classList.remove("opacity-100");
     tallyContainer.classList.add("opacity-0");
     statusDiv.textContent = "";
 }
 
 function clearCanvas() {
+    if (!canvas || !ctx) return;
+
+    sketchMode = "raw";
     strokes = [];
+    currentPoints = [];
     resetTally();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function redrawRawStrokes() {
+    if (!ctx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#333";
@@ -440,25 +636,41 @@ function redrawRawStrokes() {
 }
 
 function processStrokes() {
-    if (strokes.length === 0) return;
+    if (!ctx) return;
+
+    renderProcessedDiagramFromStrokes(true);
+}
+
+function renderProcessedDiagramFromStrokes(showTally) {
+    if (!ctx || strokes.length === 0) return;
 
     try {
         const builder = new IntersectionGraphBuilder();
         const strokeCopy = JSON.parse(JSON.stringify(strokes));
         const topo = builder.build(strokeCopy);
+        const regionsFound = renderProcessedDiagram(topo);
 
-        tallyPosts.textContent = topo.posts.length;
-        tallySegs.textContent = topo.segments.length;
-        drawSegmentsForRaster(topo.segments);
-        tallyFields.textContent = performFloodFill();
-        drawPosts(topo.posts);
-        statusDiv.textContent = "";
-        tallyContainer.classList.remove("opacity-0");
-        tallyContainer.classList.add("opacity-100");
+        sketchMode = "processed";
+        if (statusDiv) statusDiv.textContent = "";
+        if (showTally && tallyPosts && tallySegs && tallyRegions && tallyContainer) {
+            tallyPosts.textContent = topo.posts.length;
+            tallySegs.textContent = topo.segments.length;
+            tallyRegions.textContent = regionsFound;
+            tallyContainer.classList.remove("opacity-0");
+            tallyContainer.classList.add("opacity-100");
+        }
     } catch (e) {
         console.error(e);
-        statusDiv.textContent = e.message;
+        if (statusDiv) statusDiv.textContent = e.message;
     }
+}
+
+function renderProcessedDiagram(topo) {
+    drawSegmentsForRaster(topo.segments);
+    const regionsFound = performFloodFill();
+    drawSegmentsForDisplay(topo.segments);
+    drawPosts(topo.posts);
+    return regionsFound;
 }
 
 function drawSegmentsForRaster(segments) {
@@ -468,6 +680,20 @@ function drawSegmentsForRaster(segments) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#000000";
+
+    segments.forEach(seg => {
+        ctx.beginPath();
+        ctx.moveTo(seg[0][0], seg[0][1]);
+        for (let j = 1; j < seg.length; j++) ctx.lineTo(seg[j][0], seg[j][1]);
+        ctx.stroke();
+    });
+}
+
+function drawSegmentsForDisplay(segments) {
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#111827";
 
     segments.forEach(seg => {
         ctx.beginPath();
@@ -547,15 +773,15 @@ function performFloodFill() {
     }
 
     flood(0, 0, 1);
-    let fieldsFound = 0;
+    let regionsFound = 0;
 
     for (let y = 0; y < height; y += 2) {
         for (let x = 0; x < width; x += 2) {
             const idx = y * width + x;
 
             if (visited[idx] === 0) {
-                const regionId = fieldsFound + 2;
-                if (flood(x, y, regionId)) fieldsFound++;
+                const regionId = regionsFound + 2;
+                if (flood(x, y, regionId)) regionsFound++;
             }
         }
     }
@@ -576,7 +802,7 @@ function performFloodFill() {
     }
 
     ctx.putImageData(imgData, 0, 0);
-    return fieldsFound;
+    return regionsFound;
 }
 
 initializeDeck();
