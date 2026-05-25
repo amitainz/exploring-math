@@ -231,10 +231,10 @@ function handleFixClick(event, type, containerId) {
 
     if (success) {
         const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.classList.add("post-dot");
         dot.setAttribute("cx", snapX);
         dot.setAttribute("cy", snapY);
-        dot.setAttribute("r", "3.5");
-        dot.setAttribute("fill", "black");
+        dot.setAttribute("r", "5");
         svg.appendChild(dot);
 
         if (type === "trident") {

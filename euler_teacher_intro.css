@@ -14,6 +14,8 @@
     --rose: #be123c;
     --amber: #92400e;
     --peach: #c2410c;
+    --post-fill: #facc15;
+    --post-stroke: #a16207;
 }
 
 .mint {
@@ -963,6 +965,10 @@ body {
     stroke-linejoin: round;
 }
 
+.question-region-diagram .post-dot-group circle {
+    r: 7px;
+}
+
 .question-table-wrap {
     width: min(430px, 100%);
     margin: 0.35rem 0 0.75rem;
@@ -1047,6 +1053,11 @@ body {
     stroke-linejoin: round;
 }
 
+#slide-step-2 .post-svg circle:not([fill="none"]),
+.post-dot {
+    r: 5px;
+}
+
 .post-circle-row {
     display: flex;
     justify-content: center;
@@ -1079,6 +1090,23 @@ body {
     stroke-width: 5;
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+.region-fill.fragment {
+    transition: opacity 220ms ease;
+}
+
+.region-diagram-svg .post-dot-group circle {
+    r: 13px;
+}
+
+.post-dot-group circle,
+#slide-step-2 .post-svg circle:not([fill="none"]),
+.post-dot {
+    fill: var(--post-fill);
+    stroke: var(--post-stroke);
+    stroke-width: 1.7;
+    vector-effect: non-scaling-stroke;
 }
 
 @media (max-width: 800px) {
@@ -1672,6 +1700,15 @@ body {
 
 .taking-stock-tool-card .original-example-diagram-svg {
     max-height: 148px;
+}
+
+.taking-stock-tool-card .simple-example-diagram-svg .post-dot-group circle,
+.taking-stock-tool-card .antenna-example-diagram-svg .post-dot-group circle {
+    r: 7px;
+}
+
+.taking-stock-tool-card .original-example-diagram-svg .post-dot-group circle {
+    r: 13px;
 }
 
 .taking-stock-tool-card #stats-table {
