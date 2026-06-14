@@ -173,7 +173,7 @@ function checkAnswer(id, userChoiceIsConnected, clickedButton) {
             }
         });
     } else {
-        feedback.textContent = "Not quite. Look closer at the lines.";
+        feedback.textContent = "Not quite. Look closer at the segments.";
         feedback.className = "q-feedback mt-2 text-center text-sm font-bold text-red-600 block";
         card.style.transform = "translateX(5px)";
         setTimeout(() => card.style.transform = "translateX(0)", 100);
