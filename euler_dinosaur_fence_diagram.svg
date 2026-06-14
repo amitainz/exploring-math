@@ -45,23 +45,23 @@
 
       <!-- Safe regions: each fill is exactly one face of the fence graph. -->
       <path fill-rule="evenodd" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z" fill="#cdeee8"/>
-      <path d="M455 80 L835 130 L385 280 Z" fill="#d8eaff"/>
+      <path d="M455 80 Q650 60 835 130 L385 280 Z" fill="#d8eaff"/>
       <path d="M835 130 L905 325 L700 235 L385 280 Z" fill="#fff0a8"/>
       <path d="M905 325 L750 550 L700 235 Z" fill="#f7d1dc"/>
       <path d="M330 410 L395 360 L470 410 L390 468 Z" fill="#eadfff"/>
       <path fill-rule="evenodd" class="region-outline" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z"/>
-      <path class="region-outline" d="M455 80 L835 130 L385 280 Z"/>
+      <path class="region-outline" d="M455 80 Q650 60 835 130 L385 280 Z"/>
       <path class="region-outline" d="M835 130 L905 325 L700 235 L385 280 Z"/>
       <path class="region-outline" d="M905 325 L750 550 L700 235 Z"/>
 
       <!-- Fence segments. -->
-      <path class="fence" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence" d="M110 100 L455 80 Q650 60 835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
       <path class="fence" d="M455 80 L385 280 L700 235 L750 550"/>
       <path class="fence" d="M835 130 L610 205 L385 280"/>
       <path class="fence" d="M905 325 L700 235"/>
       <path class="fence" d="M385 280 L395 360"/>
       <path class="fence" d="M330 410 L395 360 L470 410 L390 468 Z"/>
-      <path class="fence-light" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence-light" d="M110 100 L455 80 Q650 60 835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
       <path class="fence-light" d="M455 80 L385 280 L700 235 L750 550"/>
       <path class="fence-light" d="M835 130 L610 205 L385 280"/>
       <path class="fence-light" d="M905 325 L700 235"/>
@@ -84,11 +84,11 @@
       <circle class="post" cx="470" cy="410" r="13"/>
       <circle class="post" cx="390" cy="468" r="13"/>
       <g opacity=".9">
-        <use href="#dinosaur" transform="translate(310 260) scale(.75)"/>
-        <use href="#dinosaur" transform="translate(405 418) scale(.34)"/>
-        <use href="#dinosaur" transform="translate(655 166) scale(.62)"/>
-        <use href="#dinosaur" transform="translate(775 205) scale(.52)"/>
-        <use href="#dinosaur" transform="translate(760 420) scale(.7)"/>
+        <use href="#dinosaur" transform="translate(285 330) scale(.68)"/>
+        <use href="#dinosaur" transform="translate(405 418) scale(.32)"/>
+        <use href="#dinosaur" transform="translate(650 170) scale(.58)"/>
+        <use href="#dinosaur" transform="translate(775 220) scale(.52)"/>
+        <use href="#dinosaur" transform="translate(790 385) scale(.62)"/>
       </g>
 
       <path class="callout" d="M225 318 C266 323 308 329 350 336"/>
@@ -111,8 +111,7 @@
       <text class="small" x="28" y="108">diagram use the same parts.</text>
 
       <g transform="translate(28 158)">
-        <path fill-rule="evenodd" d="M0 0 L88 0 L68 58 L14 50 Z M36 23 L54 18 L61 35 L43 40 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="3"/>
-        <path d="M36 23 L54 18 L61 35 L43 40 Z" fill="#eadfff" stroke="#252f3f" stroke-width="2"/>
+        <path d="M0 0 L88 0 L68 58 L14 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="3"/>
         <text class="body" x="110" y="23">Safe region</text>
         <text class="small" x="110" y="50">one colored area</text>
       </g>
@@ -132,11 +131,6 @@
         <text class="small" x="110" y="72">segments meet</text>
       </g>
 
-      <g transform="translate(28 526)">
-        <rect width="250" height="46" rx="8" fill="#fbf8f0" stroke="#d1c4ad" stroke-width="1.5"/>
-        <text class="small" x="16" y="19">One safe region can</text>
-        <text class="small" x="16" y="39">surround another.</text>
-      </g>
     </g>
   </g>
 </svg>
