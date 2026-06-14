@@ -1,58 +1,77 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[a4paper,margin=12mm]{geometry}
+\usepackage[a4paper,margin=10mm]{geometry}
 \usepackage[svgnames]{xcolor}
 \usepackage{helvet}
 
 \renewcommand{\familydefault}{\sfdefault}
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\fboxsep}{3mm}
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{0.45pt}
 \sloppy
 
 \definecolor{slipblue}{HTML}{1D4ED8}
 \definecolor{slipgreen}{HTML}{166534}
 \definecolor{sliprose}{HTML}{BE123C}
-\definecolor{slipgray}{HTML}{64748B}
+\definecolor{bodytext}{HTML}{111827}
+\definecolor{introtext}{HTML}{334155}
 
-\newcommand{\dashcut}{%
-  \vspace{2mm}
-  {\color{slipgray!65}\leaders\hbox to 0.9em{\hss-\hss}\hfill\kern0pt}
-  \vspace{2mm}
-}
+\newlength{\cardwidth}
+\newlength{\cardheight}
+\setlength{\cardwidth}{0.485\textwidth}
+\setlength{\cardheight}{55mm}
 
-\newcommand{\slip}[4]{%
-  \begin{minipage}[t][58mm][c]{\textwidth}
-    \colorbox{#1!12}{%
-      \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
-        \textcolor{#1!80!black}{\footnotesize\bfseries #2}%
-        \hfill
-        \textcolor{slipgray}{\footnotesize #3}%
+\newcommand{\questioncard}[4]{%
+  \fcolorbox{#1!38!black}{white}{%
+    \parbox[t][#2][t]{\dimexpr\cardwidth-2\fboxrule\relax}{%
+      {\setlength{\fboxsep}{2.4mm}%
+      \colorbox{#1!11}{%
+        \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+          \raggedright\textcolor{#1!78!black}{\large\bfseries #3}%
+        }%
+      }}%
+      \vspace{2.6mm}
+      \hspace*{3.8mm}%
+      \parbox{\dimexpr\linewidth-7.6mm\relax}{%
+        \color{bodytext}\large\raggedright #4\par
       }%
     }%
-
-    \vspace{4mm}
-    {\large\bfseries\raggedright #4\par}
-  \end{minipage}
+  }%
 }
 
 \begin{document}
 
-\slip{slipblue}{Change a Diagram}{Slip 1}{Think of ways you can change a given diagram a little. Can you add a fence segment, without changing the number of posts?}
-\dashcut
-\slip{slipblue}{Change a Diagram}{Slip 2}{Think of ways you can change a given diagram a little. Can you add a fence segment, without changing the number of safe regions?}
-\dashcut
-\slip{slipblue}{Change a Diagram}{Slip 3}{Think of ways you can change a given diagram a little. Can you add a fence segment while keeping both the number of posts and the number of safe regions the same?}
-\dashcut
-\slip{slipblue}{Change a Diagram}{Slip 4}{What happens to the counts if you only add a few posts to the fences, without changing their shape?}
+{\color{introtext}\small\raggedright
+The cards below represent three different lines of investigation. The third one is more of a giveaway,
+you should probably consider carefully whether and when to give it out.
+\par}
 
-\newpage
+\vspace{5mm}
 
-\slip{slipgreen}{Four Posts}{Slip 5}{Suppose my diagram has exactly 4 posts. What is the smallest number of fence segments it must have to be connected, and how many safe regions does this smallest diagram have?}
-\dashcut
-\slip{slipgreen}{Four Posts}{Slip 6}{Suppose I want to have exactly 4 posts. How many segments will I need for at least one safe region, and what about two safe regions?}
-\dashcut
-\slip{sliprose}{Totals}{Slip 7}{Add a fourth column for the total of the number of posts and the number of safe regions. Fill in that column for all the examples you made. For example, if an example has 3 posts and 4 safe regions, in the added column you should write 3 + 4 = 7.}
-\dashcut
-\slip{sliprose}{Totals}{Slip 8}{After adding the fourth column for the total of posts and safe regions, what can you say about the link between this total and the number of segments?}
+\noindent
+\questioncard{slipblue}{\cardheight}{Changing diagrams a little 1:}{can you add a fence segment, without changing the number of posts?}
+\hfill
+\questioncard{slipblue}{\cardheight}{Changing diagrams a little 2:}{can you add a fence segment, without changing the number of safe regions?}
+
+\vspace{4mm}
+
+\noindent
+\questioncard{slipblue}{\cardheight}{Changing diagrams a little 3:}{can you add a fence segment while keeping both the number of posts and the number of safe regions the same?}
+\hfill
+\questioncard{slipblue}{\cardheight}{Changing diagrams a little 4:}{ what happens to the counts if you only add a few posts to the fences, without changing their shape?}
+
+\vspace{4mm}
+
+\noindent
+\questioncard{slipgreen}{\cardheight}{My diagram has exactly four posts (part 1):}{what is the smallest number of fence segments it must have to be connected, and how many safe regions does this smallest diagram have?}
+\hfill
+\questioncard{slipgreen}{\cardheight}{My diagram has exactly 4 posts (part 2):}{How many segments will I need for at least one safe region, and what about two safe regions?}
+
+\vspace{4mm}
+
+\noindent
+\questioncard{sliprose}{\cardheight}{Posts Plus Regions (part 1):}{Add a fourth column for the total of the number of posts and the number of safe regions. Fill in that column for all the examples you made. For example, if an example has 3 posts and 4 safe regions, in the added column you should write \mbox{3 + 4 = 7}.}
+\hfill
+\questioncard{sliprose}{\cardheight}{Posts Plus Regions (part 2):}{What can you say about the link between this total and the number of segments?}
 
 \end{document}
