@@ -795,7 +795,7 @@ body {
     top: 20%;
     right: 305px;
     left: 0.9rem;
-    height: 32%;
+    height: 48%;
     z-index: 1;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 210px;
@@ -805,7 +805,7 @@ body {
 
 .dinosaur-map-image {
     display: block;
-    width: 100%;
+    width: auto;
     height: 100%;
     max-width: none;
     max-height: none !important;
@@ -866,7 +866,7 @@ body {
 
 .dinosaur-intro-sentence {
     position: absolute;
-    top: 80%;
+    top: 86%;
     right: 6%;
     left: 6%;
     z-index: 2;
