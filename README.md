@@ -38,13 +38,14 @@ Addendum: you can practice polyrhythms in a group. One kid conducts
 (or just counts modulo 12)  "left hand" group claps every multiple of 3,
 "right hand" group stamps their foot every multiple of 4.
 
-### [Discover Euler's Beautiful Formula](euler.html)
-Help a farmer crack mysterious patterns in his fence diagrams.
+### [Discover Euler's Beautiful Formula](euler_teacher_intro.html)
 
-We've also turned this into a 60 minute long lesson, letting kids work individually and then
-in small groups, trying to rediscover the formula. The theme changed into a dinosaur park 
-design. Here is the [intro and summary deck](euler_teacher_intro.html), and printable 
-[Euler research question slips](euler_research_questions_slips.pdf).
+This is the intro and summary deck for a 60 minute long lesson for 11 year-olds; kids work individually and then
+in small groups, creating examples and looking for patterns.
+There are some printable [Euler research question slips](euler_research_questions_slips.pdf) and a worksheet (not included)
+to help guide the exploration.
+
+The lesson is based on [this standalone app](euler.html).
 
 ### [Prove There Are Only Five Regular Solids](only_five.html)
 this continues where the previous formula left off.
