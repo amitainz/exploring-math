@@ -92,7 +92,7 @@
         <use href="#dinosaur" transform="translate(785 400) scale(.54)"/>
       </g>
 
-      <path class="callout" d="M258 292 C263 304 269 314 276 322"/>
+      <path class="callout" d="M258 292 C267 311 278 325 288 334"/>
       <rect x="150" y="250" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
       <text class="tag" x="170" y="276">one safe region</text>
 
@@ -100,7 +100,7 @@
       <rect x="585" y="8" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
       <text class="tag" x="606" y="34">fence segment</text>
 
-      <path class="callout" d="M315 135 C292 150 267 165 245 180"/>
+      <path class="callout" d="M315 135 C300 145 281 157 262 168"/>
       <rect x="314" y="104" width="92" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
       <text class="tag" x="339" y="130">post</text>
     </g>
