@@ -88,17 +88,17 @@
         <use href="#dinosaur" transform="translate(292 325) scale(.6)"/>
         <use href="#dinosaur" transform="translate(405 418) scale(.32)"/>
         <use href="#dinosaur" transform="translate(585 170) scale(.52)"/>
-        <use href="#dinosaur" transform="translate(775 245) scale(.46)"/>
+        <use href="#dinosaur" transform="translate(800 220) scale(.42)"/>
         <use href="#dinosaur" transform="translate(785 400) scale(.54)"/>
       </g>
 
-      <path class="callout" d="M225 318 C245 348 264 373 285 390"/>
+      <path class="callout" d="M236 310 C252 314 274 320 292 325"/>
       <rect x="34" y="288" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
       <text class="tag" x="54" y="314">one safe region</text>
 
-      <path class="callout" d="M665 80 L665 108"/>
-      <rect x="585" y="38" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
-      <text class="tag" x="606" y="64">fence segment</text>
+      <path class="callout" d="M665 50 L665 108"/>
+      <rect x="585" y="8" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
+      <text class="tag" x="606" y="34">fence segment</text>
 
       <path class="callout" d="M315 135 C292 150 267 165 245 180"/>
       <rect x="314" y="104" width="92" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
