@@ -27,15 +27,15 @@ The PP about Euler clues talks about areas but the rest of the information says 
 --- qs text ----
 
 
-Think of ways you can modify a given diagram a little:
+Think of ways you can change a given diagram a little:
 Can you add a fence segment, without changing the number of posts?
 Can you add a fence segment, without changing the number of safe regions?
 Can you add a fence segment while keeping both the number of posts and the number of safe regions the same?
 What happens to the counts if you only add a few posts to the fences, without changing their shape?
 
 
-Suppose my diagram has exactly 4 posts. What’s the minimal number of fence segments it must have to be connected? How many safe regions does this minimal diagram have? Suppose I want to have exactly 4 posts, and at least one safe regions - how many segments will I need? And what about two safe regions?
+Suppose my diagram has exactly 4 posts. What’s the smallest number of fence segments it must have to be connected? How many safe regions does this smallest diagram have? Suppose I want to have exactly 4 posts, and at least one safe region - how many segments will I need? And what about two safe regions?
 
 
-Add a fourth column for the total of the number of posts and the number of safe areas. Fill in that column for all the examples you produced (so if an example has 3 posts and 4 safe regions, in the added column you should write 3 + 4 = 7)
+Add a fourth column for the total of the number of posts and the number of safe regions. Fill in that column for all the examples you made (so if an example has 3 posts and 4 safe regions, in the added column you should write 3 + 4 = 7)
 What can you say about the link between this number and the number of segments?
