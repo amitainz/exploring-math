@@ -1,32 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
   <title id="title">Dinosaur park fence diagram</title>
-  <desc id="desc">A zoo-map style diagram showing how colored safe regions, dark fence segments, and gold electrical posts form one complete dinosaur park diagram.</desc>
+  <desc id="desc">A clean zoo-map style diagram showing safe regions, fence segments, electrical posts, and one safe region surrounding another safe region.</desc>
   <defs>
     <style>
       .title { font: 800 46px Arial, sans-serif; fill: #1f2937; }
       .subtitle { font: 600 24px Arial, sans-serif; fill: #526071; }
-      .panel-title { font: 800 27px Arial, sans-serif; fill: #1f2937; }
-      .body { font: 600 20px Arial, sans-serif; fill: #334155; }
-      .small { font: 600 17px Arial, sans-serif; fill: #526071; }
+      .panel-title { font: 800 28px Arial, sans-serif; fill: #1f2937; }
+      .body { font: 700 21px Arial, sans-serif; fill: #304156; }
+      .small { font: 600 17px Arial, sans-serif; fill: #5b6677; }
       .tag { font: 800 18px Arial, sans-serif; fill: #243044; }
-      .map-note { font: 800 21px Arial, sans-serif; fill: #304156; }
-      .region-label { font: 800 25px Arial, sans-serif; fill: #243044; }
-      .fence { fill: none; stroke: #283140; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
-      .fence-highlight { fill: none; stroke: #f6f0de; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
-      .post { fill: #ffc94d; stroke: #71460b; stroke-width: 5; }
-      .thin-stroke { stroke: #243044; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .fence { fill: none; stroke: #252f3f; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+      .fence-light { fill: none; stroke: #f6f0dc; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+      .post { fill: #ffc94d; stroke: #70470b; stroke-width: 5; }
       .callout { stroke: #243044; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; fill: none; marker-end: url(#arrow); }
+      .region-outline { fill: none; stroke: #252f3f; stroke-width: 2; opacity: .12; }
     </style>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.3" refY="5" markerWidth="8" markerHeight="8" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#243044"/>
     </marker>
     <filter id="shadow" x="-10%" y="-12%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#101828" flood-opacity=".13"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#101828" flood-opacity=".12"/>
     </filter>
-    <pattern id="grass" width="28" height="28" patternUnits="userSpaceOnUse">
-      <rect width="28" height="28" fill="#eef8e8"/>
-      <path d="M5 23 q6 -9 13 0 M17 10 q5 -6 10 0" fill="none" stroke="#d8eccf" stroke-width="2.2"/>
-    </pattern>
     <g id="dinosaur" fill="#314056" stroke="#314056" stroke-linecap="round" stroke-linejoin="round">
       <path d="M-31 4 L-62 -12 L-35 18 Z"/>
       <ellipse cx="-4" cy="0" rx="31" ry="18"/>
@@ -36,134 +30,112 @@
     </g>
   </defs>
 
-  <rect width="1600" height="900" fill="#f4efe5"/>
-  <path d="M0 765 C205 716 314 806 488 755 C641 711 769 785 930 746 C1138 696 1280 778 1600 724 L1600 900 L0 900 Z" fill="#e7dec9"/>
+  <rect width="1600" height="900" fill="#f4efe6"/>
+  <path d="M0 770 C210 718 340 792 530 748 C690 711 805 790 990 745 C1188 697 1328 778 1600 720 L1600 900 L0 900 Z" fill="#e4dbc8"/>
 
   <g transform="translate(55 38)">
-    <rect width="1490" height="824" rx="26" fill="#fffdf8" filter="url(#shadow)"/>
-    <rect x="26" y="26" width="1438" height="772" rx="20" fill="#fbf7ed" stroke="#d1c4ad" stroke-width="2"/>
+    <rect width="1490" height="824" rx="20" fill="#fffdf8" filter="url(#shadow)"/>
+    <rect x="26" y="26" width="1438" height="772" rx="14" fill="#fbf8f0" stroke="#d1c4ad" stroke-width="2"/>
 
-    <text class="title" x="62" y="88">Dinosaur Park Fence Diagram</text>
-    <text class="subtitle" x="64" y="126">Colored safe regions, dark fence segments, and gold electrical posts in one finished map.</text>
+    <text class="title" x="64" y="90">Dinosaur Park Fence Diagram</text>
+    <text class="subtitle" x="66" y="130">Fence segments make the colored safe regions; posts are the dots where segments meet.</text>
 
-    <g transform="translate(70 164)">
-      <rect width="1000" height="610" rx="18" fill="url(#grass)" stroke="#aed2a6" stroke-width="3"/>
-      <path d="M0 512 C123 450 235 500 354 452 C504 392 642 483 805 426 C884 398 945 409 1000 443 L1000 610 L0 610 Z" fill="#dcefd3"/>
-      <path d="M98 520 C184 477 282 503 376 460 C485 410 572 430 681 377 C775 331 878 356 953 318" fill="none" stroke="#aec89b" stroke-width="14" stroke-linecap="round" opacity=".5"/>
-      <path d="M210 405 C315 344 427 366 535 420 C632 468 736 440 840 393" fill="none" stroke="#f7f2df" stroke-width="24" stroke-linecap="round" opacity=".7"/>
-      <path d="M210 405 C315 344 427 366 535 420 C632 468 736 440 840 393" fill="none" stroke="#d5c6a1" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 14" opacity=".72"/>
-      <ellipse cx="825" cy="184" rx="76" ry="58" fill="#b8dfef" opacity=".78"/>
+    <g transform="translate(92 182)">
+      <rect width="1010" height="600" rx="12" fill="#f7fbf4" stroke="#b9d4af" stroke-width="3"/>
 
-      <!-- Safe regions -->
-      <path d="M105 88 L444 76 L374 278 L110 286 Z" fill="#d8eaff" stroke="#87afd9" stroke-width="2.3"/>
-      <path d="M444 76 L833 112 L596 270 L374 278 Z" fill="#dcf3d3" stroke="#8ec77f" stroke-width="2.3"/>
-      <path d="M833 112 L906 342 L596 270 Z" fill="#ffe2bd" stroke="#e7ad6e" stroke-width="2.3"/>
-      <path d="M110 286 L374 278 L315 447 L132 469 Z" fill="#eadfff" stroke="#b29bdc" stroke-width="2.3"/>
-      <path d="M374 278 L596 270 L505 452 L315 447 Z" fill="#fff1a9" stroke="#d5b941" stroke-width="2.3"/>
-      <path d="M596 270 L686 456 L505 452 Z" fill="#e4e8ff" stroke="#a6aedf" stroke-width="2.3"/>
-      <path d="M596 270 L906 342 L816 559 L686 456 Z" fill="#f7d4dc" stroke="#dc8d9b" stroke-width="2.3"/>
-      <path d="M132 469 L315 447 L505 452 L610 612 L255 600 Z" fill="#d5f1ed" stroke="#73bdb2" stroke-width="2.3"/>
-      <path d="M505 452 L686 456 L816 559 L610 612 Z" fill="#e9e1c9" stroke="#baab82" stroke-width="2.3"/>
+      <!-- Safe regions: each fill is exactly one face of the fence graph. -->
+      <path fill-rule="evenodd" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z" fill="#cdeee8"/>
+      <path d="M455 80 L835 130 L385 280 Z" fill="#d8eaff"/>
+      <path d="M835 130 L905 325 L700 235 L385 280 Z" fill="#fff0a8"/>
+      <path d="M905 325 L750 550 L700 235 Z" fill="#f7d1dc"/>
+      <path d="M330 410 L395 360 L470 410 L390 468 Z" fill="#eadfff"/>
+      <path fill-rule="evenodd" class="region-outline" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z"/>
+      <path class="region-outline" d="M455 80 L835 130 L385 280 Z"/>
+      <path class="region-outline" d="M835 130 L905 325 L700 235 L385 280 Z"/>
+      <path class="region-outline" d="M905 325 L750 550 L700 235 Z"/>
 
-      <!-- Fence segments -->
-      <path class="fence" d="M105 88 L444 76 L833 112 L906 342 L816 559 L610 612 L255 600 L132 469 L110 286 Z"/>
-      <path class="fence" d="M444 76 L374 278 L110 286"/>
-      <path class="fence" d="M374 278 L833 112"/>
-      <path class="fence" d="M374 278 L315 447 L132 469"/>
-      <path class="fence" d="M374 278 L596 270 L906 342"/>
-      <path class="fence" d="M596 270 L505 452 L315 447"/>
-      <path class="fence" d="M596 270 L686 456 L816 559"/>
-      <path class="fence" d="M505 452 L686 456 L610 612"/>
-      <path class="fence" d="M315 447 L255 600"/>
+      <!-- Fence segments. -->
+      <path class="fence" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence" d="M455 80 L385 280 L700 235 L750 550"/>
+      <path class="fence" d="M835 130 L610 205 L385 280"/>
+      <path class="fence" d="M905 325 L700 235"/>
+      <path class="fence" d="M385 280 L395 360"/>
+      <path class="fence" d="M330 410 L395 360 L470 410 L390 468 Z"/>
+      <path class="fence-light" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence-light" d="M455 80 L385 280 L700 235 L750 550"/>
+      <path class="fence-light" d="M835 130 L610 205 L385 280"/>
+      <path class="fence-light" d="M905 325 L700 235"/>
+      <path class="fence-light" d="M385 280 L395 360"/>
+      <path class="fence-light" d="M330 410 L395 360 L470 410 L390 468 Z"/>
 
-      <path class="fence-highlight" d="M105 88 L444 76 L833 112 L906 342 L816 559 L610 612 L255 600 L132 469 L110 286 Z"/>
-      <path class="fence-highlight" d="M444 76 L374 278 L110 286"/>
-      <path class="fence-highlight" d="M374 278 L833 112"/>
-      <path class="fence-highlight" d="M374 278 L315 447 L132 469"/>
-      <path class="fence-highlight" d="M374 278 L596 270 L906 342"/>
-      <path class="fence-highlight" d="M596 270 L505 452 L315 447"/>
-      <path class="fence-highlight" d="M596 270 L686 456 L816 559"/>
-      <path class="fence-highlight" d="M505 452 L686 456 L610 612"/>
-      <path class="fence-highlight" d="M315 447 L255 600"/>
-
-      <!-- Electrical posts -->
-      <circle class="post" cx="105" cy="88" r="17"/>
-      <circle class="post" cx="444" cy="76" r="17"/>
-      <circle class="post" cx="833" cy="112" r="17"/>
-      <circle class="post" cx="906" cy="342" r="17"/>
-      <circle class="post" cx="816" cy="559" r="17"/>
-      <circle class="post" cx="610" cy="612" r="17"/>
-      <circle class="post" cx="255" cy="600" r="17"/>
-      <circle class="post" cx="132" cy="469" r="17"/>
-      <circle class="post" cx="110" cy="286" r="17"/>
-      <circle class="post" cx="374" cy="278" r="17"/>
-      <circle class="post" cx="596" cy="270" r="17"/>
-      <circle class="post" cx="315" cy="447" r="17"/>
-      <circle class="post" cx="505" cy="452" r="17"/>
-      <circle class="post" cx="686" cy="456" r="17"/>
-
+      <!-- Electrical posts. -->
+      <circle class="post" cx="110" cy="100" r="17"/>
+      <circle class="post" cx="455" cy="80" r="17"/>
+      <circle class="post" cx="835" cy="130" r="17"/>
+      <circle class="post" cx="905" cy="325" r="17"/>
+      <circle class="post" cx="750" cy="550" r="17"/>
+      <circle class="post" cx="410" cy="590" r="17"/>
+      <circle class="post" cx="135" cy="420" r="17"/>
+      <circle class="post" cx="385" cy="280" r="17"/>
+      <circle class="post" cx="610" cy="205" r="17"/>
+      <circle class="post" cx="700" cy="235" r="17"/>
+      <circle class="post" cx="330" cy="410" r="13"/>
+      <circle class="post" cx="395" cy="360" r="13"/>
+      <circle class="post" cx="470" cy="410" r="13"/>
+      <circle class="post" cx="390" cy="468" r="13"/>
       <g opacity=".9">
-        <use href="#dinosaur" transform="translate(246 185) scale(.86)"/>
-        <use href="#dinosaur" transform="translate(548 158) scale(.82)"/>
-        <use href="#dinosaur" transform="translate(760 252) scale(.72)"/>
-        <use href="#dinosaur" transform="translate(235 392) scale(.72)"/>
-        <use href="#dinosaur" transform="translate(448 370) scale(.76)"/>
-        <use href="#dinosaur" transform="translate(696 422) scale(.76)"/>
-        <use href="#dinosaur" transform="translate(405 548) scale(.66)"/>
+        <use href="#dinosaur" transform="translate(310 260) scale(.75)"/>
+        <use href="#dinosaur" transform="translate(405 418) scale(.34)"/>
+        <use href="#dinosaur" transform="translate(655 166) scale(.62)"/>
+        <use href="#dinosaur" transform="translate(775 205) scale(.52)"/>
+        <use href="#dinosaur" transform="translate(760 420) scale(.7)"/>
       </g>
 
-      <text class="region-label" x="195" y="135">Safe region</text>
-      <text class="region-label" x="490" y="132">Safe region</text>
-      <text class="region-label" x="680" y="214">Safe region</text>
-      <text class="region-label" x="182" y="342">Safe region</text>
-      <text class="region-label" x="420" y="330">Safe region</text>
-      <text class="region-label" x="636" y="365">Safe region</text>
+      <path class="callout" d="M225 318 C266 323 308 329 350 336"/>
+      <rect x="34" y="288" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
+      <text class="tag" x="54" y="314">one safe region</text>
 
-      <rect x="34" y="27" width="232" height="38" rx="19" fill="#fffdf8" stroke="#d7ddc9" stroke-width="1.5"/>
-      <text class="map-note" x="54" y="53">Completed park layout</text>
+      <path class="callout" d="M665 80 L665 108"/>
+      <rect x="585" y="38" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
+      <text class="tag" x="606" y="64">fence segment</text>
 
-      <path class="callout" d="M706 88 C746 48 796 42 848 83"/>
-      <rect x="724" y="22" width="162" height="39" rx="19.5" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.4"/>
-      <text class="tag" x="745" y="48">fence segment</text>
-
-      <path class="callout" d="M921 452 C970 447 981 408 930 354"/>
-      <rect x="843" y="432" width="137" height="39" rx="19.5" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.4"/>
-      <text class="tag" x="861" y="458">post</text>
-
-      <path class="callout" d="M174 214 C213 224 254 236 296 248"/>
-      <rect x="30" y="195" width="145" height="39" rx="19.5" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.4"/>
-      <text class="tag" x="52" y="221">safe region</text>
+      <path class="callout" d="M955 304 C938 313 923 320 907 325"/>
+      <rect x="942" y="255" width="92" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
+      <text class="tag" x="967" y="281">post</text>
     </g>
 
-    <g transform="translate(1120 164)">
-      <rect width="356" height="610" rx="18" fill="#ffffff" stroke="#d4dae3" stroke-width="2.5"/>
-      <text class="panel-title" x="32" y="54">How To Read It</text>
-      <text class="small" x="32" y="86">The park picture and math</text>
-      <text class="small" x="32" y="110">diagram share the same parts.</text>
+    <g transform="translate(1152 182)">
+      <rect width="306" height="600" rx="12" fill="#ffffff" stroke="#d4dae3" stroke-width="2.5"/>
+      <text class="panel-title" x="28" y="52">How To Read It</text>
+      <text class="small" x="28" y="84">The picture and the abstract</text>
+      <text class="small" x="28" y="108">diagram use the same parts.</text>
 
-      <g transform="translate(32 156)">
-        <rect x="0" y="0" width="74" height="52" rx="10" fill="#d8eaff" stroke="#283140" stroke-width="3"/>
-        <text class="body" x="96" y="22">Safe regions</text>
-        <text class="small" x="96" y="50">colored enclosures</text>
+      <g transform="translate(28 158)">
+        <path fill-rule="evenodd" d="M0 0 L88 0 L68 58 L14 50 Z M36 23 L54 18 L61 35 L43 40 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="3"/>
+        <path d="M36 23 L54 18 L61 35 L43 40 Z" fill="#eadfff" stroke="#252f3f" stroke-width="2"/>
+        <text class="body" x="110" y="23">Safe region</text>
+        <text class="small" x="110" y="50">one colored area</text>
       </g>
 
-      <g transform="translate(32 286)">
-        <line x1="2" y1="27" x2="75" y2="27" class="fence"/>
-        <line x1="2" y1="27" x2="75" y2="27" class="fence-highlight"/>
-        <text class="body" x="96" y="22">Fence segments</text>
-        <text class="small" x="96" y="50">dark line pieces</text>
+      <g transform="translate(28 288)">
+        <line x1="2" y1="28" x2="90" y2="28" class="fence"/>
+        <line x1="2" y1="28" x2="90" y2="28" class="fence-light"/>
+        <text class="body" x="110" y="23">Fence segment</text>
+        <text class="small" x="110" y="50">one fence</text>
+        <text class="small" x="110" y="72">piece</text>
       </g>
 
-      <g transform="translate(32 416)">
-        <circle class="post" cx="38" cy="27" r="18"/>
-        <text class="body" x="96" y="22">Electrical posts</text>
-        <text class="small" x="96" y="50">gold dots where</text>
-        <text class="small" x="96" y="74">segments meet</text>
+      <g transform="translate(28 418)">
+        <circle class="post" cx="44" cy="29" r="18"/>
+        <text class="body" x="110" y="23">Electrical post</text>
+        <text class="small" x="110" y="50">where fence</text>
+        <text class="small" x="110" y="72">segments meet</text>
       </g>
 
-      <g transform="translate(32 535)">
-        <rect width="292" height="44" rx="10" fill="#fbf7ed" stroke="#d1c4ad" stroke-width="1.5"/>
-        <text class="small" x="18" y="28">Together they form the full diagram.</text>
+      <g transform="translate(28 526)">
+        <rect width="250" height="46" rx="8" fill="#fbf8f0" stroke="#d1c4ad" stroke-width="1.5"/>
+        <text class="small" x="16" y="19">One safe region can</text>
+        <text class="small" x="16" y="39">surround another.</text>
       </g>
     </g>
   </g>
