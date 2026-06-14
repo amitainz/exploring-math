@@ -41,3 +41,32 @@ Add a fourth column for the total of the number of posts and the number of safe 
 What can you say about the link between this number and the number of segments?
 
 --- slips text ---
+
+Slip 1
+Can you add a fence segment, without changing the number of posts?
+
+Slip 2
+Can you add a fence segment, without changing the number of safe regions?
+
+Slip 3
+Can you add a fence segment while keeping both the number of posts and the number of safe regions the same?
+
+Slip 4
+What happens to the counts if you only add a few posts to the fences, without changing their shape?
+
+Slip 5
+Suppose my diagram has exactly 4 posts. What is the smallest number of fence segments it must have to be connected?
+How many safe regions does this smallest diagram have?
+
+
+Slip 6
+Suppose I want to have exactly 4 posts, and at least one safe region. How many segments will I need?
+
+Slip 7
+What about two safe regions?
+
+Slip 9
+Add a fourth column for the total of posts and safe regions. What total should you write for each example you made?
+
+Slip 10
+What can you say about the link between this total and the number of segments?
