@@ -44,25 +44,25 @@
       <rect width="1010" height="600" rx="12" fill="#f7fbf4" stroke="#b9d4af" stroke-width="3"/>
 
       <!-- Safe regions: each fill is exactly one face of the fence graph. -->
-      <path fill-rule="evenodd" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z" fill="#cdeee8"/>
-      <path d="M455 80 Q650 60 835 130 L385 280 Z" fill="#d8eaff"/>
-      <path d="M835 130 L905 325 L700 235 L385 280 Z" fill="#fff0a8"/>
+      <path fill-rule="evenodd" d="M110 100 L455 80 L385 280 C470 215 520 315 565 250 C610 195 665 205 700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z" fill="#cdeee8"/>
+      <path d="M455 80 L835 130 L385 280 Z" fill="#d8eaff"/>
+      <path d="M835 130 L905 325 L700 235 C665 205 610 195 565 250 C520 315 470 215 385 280 Z" fill="#fff0a8"/>
       <path d="M905 325 L750 550 L700 235 Z" fill="#f7d1dc"/>
       <path d="M330 410 L395 360 L470 410 L390 468 Z" fill="#eadfff"/>
-      <path fill-rule="evenodd" class="region-outline" d="M110 100 L455 80 L385 280 L700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z"/>
-      <path class="region-outline" d="M455 80 Q650 60 835 130 L385 280 Z"/>
-      <path class="region-outline" d="M835 130 L905 325 L700 235 L385 280 Z"/>
+      <path fill-rule="evenodd" class="region-outline" d="M110 100 L455 80 L385 280 C470 215 520 315 565 250 C610 195 665 205 700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z"/>
+      <path class="region-outline" d="M455 80 L835 130 L385 280 Z"/>
+      <path class="region-outline" d="M835 130 L905 325 L700 235 C665 205 610 195 565 250 C520 315 470 215 385 280 Z"/>
       <path class="region-outline" d="M905 325 L750 550 L700 235 Z"/>
 
       <!-- Fence segments. -->
-      <path class="fence" d="M110 100 L455 80 Q650 60 835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
-      <path class="fence" d="M455 80 L385 280 L700 235 L750 550"/>
+      <path class="fence" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence" d="M455 80 L385 280 C470 215 520 315 565 250 C610 195 665 205 700 235 L750 550"/>
       <path class="fence" d="M835 130 L610 205 L385 280"/>
       <path class="fence" d="M905 325 L700 235"/>
       <path class="fence" d="M385 280 L395 360"/>
       <path class="fence" d="M330 410 L395 360 L470 410 L390 468 Z"/>
-      <path class="fence-light" d="M110 100 L455 80 Q650 60 835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
-      <path class="fence-light" d="M455 80 L385 280 L700 235 L750 550"/>
+      <path class="fence-light" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
+      <path class="fence-light" d="M455 80 L385 280 C470 215 520 315 565 250 C610 195 665 205 700 235 L750 550"/>
       <path class="fence-light" d="M835 130 L610 205 L385 280"/>
       <path class="fence-light" d="M905 325 L700 235"/>
       <path class="fence-light" d="M385 280 L395 360"/>
@@ -84,11 +84,11 @@
       <circle class="post" cx="470" cy="410" r="13"/>
       <circle class="post" cx="390" cy="468" r="13"/>
       <g opacity=".9">
-        <use href="#dinosaur" transform="translate(285 330) scale(.68)"/>
+        <use href="#dinosaur" transform="translate(290 335) scale(.64)"/>
         <use href="#dinosaur" transform="translate(405 418) scale(.32)"/>
-        <use href="#dinosaur" transform="translate(650 170) scale(.58)"/>
-        <use href="#dinosaur" transform="translate(775 220) scale(.52)"/>
-        <use href="#dinosaur" transform="translate(790 385) scale(.62)"/>
+        <use href="#dinosaur" transform="translate(635 145) scale(.5)"/>
+        <use href="#dinosaur" transform="translate(785 250) scale(.46)"/>
+        <use href="#dinosaur" transform="translate(785 400) scale(.54)"/>
       </g>
 
       <path class="callout" d="M225 318 C245 348 264 373 285 390"/>
