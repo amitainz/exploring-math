@@ -1,0 +1,41 @@
+
+1. I think making the link between the abstract sketches and the dinosaur park more explicit would help. E.g. A labelled diagram as follows:-
+
+How the dinosaur fences are clearly represented by segments
+How the electrical posts are represented by the dots. 
+How the safe regions relate to the dinosaur
+
+
+
+2. I like the Euler activity research questions however I think we should just have one question per slide. I think we can print these questions as separate slips for children to collect from us as they work through the activity collaboratively with a partner or in a three.
+- see the questions' text below. separate into cards.
+
+3. terminology:
+- segments everywhere, not lines - make sure.
+- Modify - > changes
+- use Regions everywhere, no "areas", make sure.
+The PP about Euler clues talks about areas but the rest of the information says regions.
+
+- Minimal -> smallest
+- Sum -> total
+- Relationship  -> link
+- Produced ->  made
+
+
+
+
+--- qs text ----
+
+
+Think of ways you can modify a given diagram a little:
+Can you add a fence segment, without changing the number of posts?
+Can you add a fence segment, without changing the number of safe areas?
+Can you add a fence segment while keeping both the number of posts and the number of safe areas the same?
+What happens to the counts if you only add a few posts to the fences, without changing their shape?
+
+
+Suppose my diagram has exactly 4 posts. What’s the minimal number of fence segments it must have to be connected? How many safe areas does this minimal diagram have? Suppose I want to have exactly 4 posts, and at least one safe area - how many segments will I need? And what about two safe areas?
+
+
+Add a fourth column for the sum of the number of posts and the number of safe areas. Fill in that column for all of the examples you produced (so if an example has 3 posts and 4 safe areas, in the added column you should write 3 + 4 = 7)
+What can you say about the relationship between this number and the number of segments?
