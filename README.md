@@ -40,6 +40,12 @@ Addendum: you can practice polyrhythms in a group. One kid conducts
 
 ### [Discover Euler's Beautiful Formula](euler.html)
 Help a farmer crack mysterious patterns in his fence diagrams.
+
+We've also turned this into a 60 minute long lesson, letting kids work individually and then
+in small groups, trying to rediscover the formula. The theme changed into a dinosaur park 
+design. Here is the [intro and summary deck](euler_teacher_intro.html), and printable 
+[Euler research question slips](euler_research_questions_slips.pdf).
+
 ### [Prove There Are Only Five Regular Solids](only_five.html)
 this continues where the previous formula left off.
 ### [Locate Your Stranded Boat](tutorial.html)
