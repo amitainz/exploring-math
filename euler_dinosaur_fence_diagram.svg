@@ -60,12 +60,14 @@
       <path class="fence" d="M835 130 L610 205 L385 280"/>
       <path class="fence" d="M905 325 L700 235"/>
       <path class="fence" d="M110 100 L245 180"/>
+      <path class="fence" d="M410 590 L390 468"/>
       <path class="fence" d="M330 410 L395 360 L470 410 L390 468 Z"/>
       <path class="fence-light" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
       <path class="fence-light" d="M455 80 L385 280 C450 345 515 270 565 292 C615 335 665 292 700 235 L750 550"/>
       <path class="fence-light" d="M835 130 L610 205 L385 280"/>
       <path class="fence-light" d="M905 325 L700 235"/>
       <path class="fence-light" d="M110 100 L245 180"/>
+      <path class="fence-light" d="M410 590 L390 468"/>
       <path class="fence-light" d="M330 410 L395 360 L470 410 L390 468 Z"/>
 
       <!-- Electrical posts. -->
