@@ -38,7 +38,7 @@
     <rect x="26" y="26" width="1438" height="772" rx="14" fill="#fbf8f0" stroke="#d1c4ad" stroke-width="2"/>
 
     <text class="title" x="64" y="90">Dinosaur Park Fence Diagram</text>
-    <text class="subtitle" x="66" y="130">Fence segments make the colored safe regions; posts mark the ends of segments.</text>
+    <text class="subtitle" x="66" y="130">Fence segments make the colored safe regions; electrical posts sit at segment ends.</text>
 
     <g transform="translate(92 182)">
       <rect width="1010" height="600" rx="12" fill="#f7fbf4" stroke="#b9d4af" stroke-width="3"/>
@@ -113,23 +113,18 @@
 
       <g transform="translate(28 158)">
         <path d="M0 0 L88 0 L68 58 L14 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="3"/>
-        <text class="body" x="110" y="23">Safe region</text>
-        <text class="small" x="110" y="50">one colored area</text>
+        <text class="body" x="110" y="36">Safe region</text>
       </g>
 
       <g transform="translate(28 288)">
         <line x1="2" y1="28" x2="90" y2="28" class="fence"/>
         <line x1="2" y1="28" x2="90" y2="28" class="fence-light"/>
-        <text class="body" x="110" y="23">Fence segment</text>
-        <text class="small" x="110" y="50">one fence</text>
-        <text class="small" x="110" y="72">piece</text>
+        <text class="body" x="110" y="36">Fence segment</text>
       </g>
 
       <g transform="translate(28 418)">
         <circle class="post" cx="44" cy="29" r="18"/>
-        <text class="body" x="110" y="23">Electrical post</text>
-        <text class="small" x="110" y="50">marks segment</text>
-        <text class="small" x="110" y="72">ends</text>
+        <text class="body" x="110" y="36">Electrical post</text>
       </g>
 
     </g>
