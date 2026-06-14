@@ -39,3 +39,5 @@ Suppose my diagram has exactly 4 posts. What’s the smallest number of fence se
 
 Add a fourth column for the total of the number of posts and the number of safe regions. Fill in that column for all the examples you made (so if an example has 3 posts and 4 safe regions, in the added column you should write 3 + 4 = 7)
 What can you say about the link between this number and the number of segments?
+
+--- slips text ---
