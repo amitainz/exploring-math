@@ -50,129 +50,29 @@ and rediscover a formula that profoundly influences our understanding of the lin
                 </header>
 
                 <div class="dinosaur-intro-diagram fragment fade-in" data-fragment-index="0" aria-label="Dinosaur park fence diagram">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="dinosaur-map-svg" viewBox="105 200 1440 640" role="img" aria-labelledby="dinosaur-map-title dinosaur-map-desc">
-                        <title id="dinosaur-map-title">Dinosaur park fence diagram</title>
-                        <desc id="dinosaur-map-desc">A clean zoo-map style diagram showing safe regions, fence segments, and electrical posts.</desc>
-                        <defs>
-                            <style>
-                                .title { font: 800 46px Arial, sans-serif; fill: #1f2937; }
-                                .subtitle { font: 600 24px Arial, sans-serif; fill: #526071; }
-                                .panel-title { font: 800 28px Arial, sans-serif; fill: #1f2937; }
-                                .body { font: 700 21px Arial, sans-serif; fill: #304156; }
-                                .small { font: 600 17px Arial, sans-serif; fill: #5b6677; }
-                                .tag { font: 800 18px Arial, sans-serif; fill: #243044; }
-                                .fence { fill: none; stroke: #252f3f; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
-                                .fence-light { fill: none; stroke: #f6f0dc; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
-                                .post { fill: #ffc94d; stroke: #70470b; stroke-width: 5; }
-                                .callout { stroke: #243044; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; fill: none; marker-end: url(#dinosaur-map-arrow); }
-                                .region-outline { fill: none; stroke: #252f3f; stroke-width: 2; opacity: .12; }
-                            </style>
-                            <marker id="dinosaur-map-arrow" viewBox="0 0 10 10" refX="8.3" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#243044"/>
-                            </marker>
-                            <filter id="dinosaur-map-shadow" x="-10%" y="-12%" width="120%" height="130%">
-                                <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#101828" flood-opacity=".12"/>
-                            </filter>
-                            <g id="dinosaur-map-dinosaur" fill="#314056" stroke="#314056" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M-31 4 L-62 -12 L-35 18 Z"/>
-                                <ellipse cx="-4" cy="0" rx="31" ry="18"/>
-                                <path d="M22 -8 C38 -31 61 -29 65 -10" fill="none" stroke-width="11"/>
-                                <circle cx="68" cy="-9" r="8"/>
-                                <path d="M-15 15 L-21 32 M10 15 L5 32" fill="none" stroke-width="7"/>
-                            </g>
-                        </defs>
-
-                        <rect width="1600" height="900" fill="#f4efe6"/>
-                        <path d="M0 770 C210 718 340 792 530 748 C690 711 805 790 990 745 C1188 697 1328 778 1600 720 L1600 900 L0 900 Z" fill="#e4dbc8"/>
-
-                        <g transform="translate(55 38)">
-                            <rect width="1490" height="824" rx="20" fill="#fffdf8" filter="url(#dinosaur-map-shadow)"/>
-                            <rect x="26" y="26" width="1438" height="772" rx="14" fill="#fbf8f0" stroke="#d1c4ad" stroke-width="2"/>
-
-                            <g transform="translate(92 182)">
-                                <rect width="1010" height="600" rx="12" fill="#f7fbf4" stroke="#b9d4af" stroke-width="3"/>
-
-                                <path fill-rule="evenodd" d="M110 100 L455 80 L385 280 C450 345 515 270 565 292 C615 335 665 292 700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z" fill="#cdeee8"/>
-                                <path d="M455 80 L835 130 L385 280 Z" fill="#d8eaff"/>
-                                <path d="M835 130 L905 325 L700 235 C665 292 615 335 565 292 C515 270 450 345 385 280 Z" fill="#fff0a8"/>
-                                <path d="M905 325 L750 550 L700 235 Z" fill="#f7d1dc"/>
-                                <path d="M330 410 L395 360 L470 410 L390 468 Z" fill="#eadfff"/>
-                                <path fill-rule="evenodd" class="region-outline" d="M110 100 L455 80 L385 280 C450 345 515 270 565 292 C615 335 665 292 700 235 L750 550 L410 590 L135 420 Z M330 410 L395 360 L470 410 L390 468 Z"/>
-                                <path class="region-outline" d="M455 80 L835 130 L385 280 Z"/>
-                                <path class="region-outline" d="M835 130 L905 325 L700 235 C665 292 615 335 565 292 C515 270 450 345 385 280 Z"/>
-                                <path class="region-outline" d="M905 325 L750 550 L700 235 Z"/>
-
-                                <path class="fence" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
-                                <path class="fence" d="M455 80 L385 280 C450 345 515 270 565 292 C615 335 665 292 700 235 L750 550"/>
-                                <path class="fence" d="M835 130 L610 205 L385 280"/>
-                                <path class="fence" d="M905 325 L700 235"/>
-                                <path class="fence" d="M110 100 L245 180"/>
-                                <path class="fence" d="M330 410 L395 360 L470 410 L390 468 Z"/>
-                                <path class="fence-light" d="M110 100 L455 80 L835 130 L905 325 L750 550 L410 590 L135 420 Z"/>
-                                <path class="fence-light" d="M455 80 L385 280 C450 345 515 270 565 292 C615 335 665 292 700 235 L750 550"/>
-                                <path class="fence-light" d="M835 130 L610 205 L385 280"/>
-                                <path class="fence-light" d="M905 325 L700 235"/>
-                                <path class="fence-light" d="M110 100 L245 180"/>
-                                <path class="fence-light" d="M330 410 L395 360 L470 410 L390 468 Z"/>
-
-                                <circle class="post" cx="110" cy="100" r="17"/>
-                                <circle class="post" cx="455" cy="80" r="17"/>
-                                <circle class="post" cx="835" cy="130" r="17"/>
-                                <circle class="post" cx="905" cy="325" r="17"/>
-                                <circle class="post" cx="750" cy="550" r="17"/>
-                                <circle class="post" cx="410" cy="590" r="17"/>
-                                <circle class="post" cx="135" cy="420" r="17"/>
-                                <circle class="post" cx="385" cy="280" r="17"/>
-                                <circle class="post" cx="610" cy="205" r="17"/>
-                                <circle class="post" cx="700" cy="235" r="17"/>
-                                <circle class="post" cx="245" cy="180" r="17"/>
-                                <circle class="post" cx="330" cy="410" r="13"/>
-                                <circle class="post" cx="395" cy="360" r="13"/>
-                                <circle class="post" cx="470" cy="410" r="13"/>
-                                <circle class="post" cx="390" cy="468" r="13"/>
-                                <g opacity=".9">
-                                    <use href="#dinosaur-map-dinosaur" transform="translate(320 350) scale(.58)"/>
-                                    <use href="#dinosaur-map-dinosaur" transform="translate(405 418) scale(.32)"/>
-                                    <use href="#dinosaur-map-dinosaur" transform="translate(585 170) scale(.52)"/>
-                                    <use href="#dinosaur-map-dinosaur" transform="translate(800 220) scale(.42)"/>
-                                    <use href="#dinosaur-map-dinosaur" transform="translate(785 400) scale(.54)"/>
-                                </g>
-
-                                <path class="callout" d="M258 292 C267 311 278 325 288 334"/>
-                                <rect x="150" y="250" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
-                                <text class="tag" x="170" y="276">one safe region</text>
-
-                                <path class="callout" d="M665 50 L665 92"/>
-                                <rect x="585" y="8" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
-                                <text class="tag" x="606" y="34">fence segment</text>
-
-                                <path class="callout" d="M315 135 C300 145 281 157 262 168"/>
-                                <rect x="314" y="104" width="92" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
-                                <text class="tag" x="339" y="130">post</text>
-                            </g>
-
-                            <g transform="translate(1152 182)">
-                                <rect width="306" height="600" rx="12" fill="#ffffff" stroke="#d4dae3" stroke-width="2.5"/>
-                                <text class="panel-title" x="28" y="52">How To Read It</text>
-
-                                <g class="fragment fade-in" data-fragment-index="1" transform="translate(28 142)">
-                                    <path d="M0 0 L88 0 L68 58 L14 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="3"/>
-                                    <text class="body" x="110" y="36">Safe region</text>
-                                </g>
-
-                                <g class="fragment fade-in" data-fragment-index="2" transform="translate(28 278)">
-                                    <line x1="2" y1="28" x2="90" y2="28" class="fence"/>
-                                    <line x1="2" y1="28" x2="90" y2="28" class="fence-light"/>
-                                    <text class="body" x="110" y="36">Fence segment</text>
-                                </g>
-
-                                <g class="fragment fade-in" data-fragment-index="3" transform="translate(28 414)">
-                                    <circle class="post" cx="44" cy="29" r="18"/>
-                                    <text class="body" x="110" y="36">Electrical post</text>
-                                </g>
-                            </g>
-                        </g>
-                    </svg>
+                    <img src="euler_dinosaur_fence_diagram_slide.svg" alt="Dinosaur park fence diagram" class="dinosaur-map-image">
+                    <div class="dinosaur-intro-legend" aria-label="How to read the diagram">
+                        <h2>How To Read It</h2>
+                        <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="1">
+                            <svg viewBox="0 0 96 64" aria-hidden="true">
+                                <path d="M4 6 L90 6 L70 58 L18 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="4"/>
+                            </svg>
+                            <span>Safe region</span>
+                        </div>
+                        <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="2">
+                            <svg viewBox="0 0 96 64" aria-hidden="true">
+                                <line x1="8" y1="32" x2="88" y2="32" class="dinosaur-legend-fence"/>
+                                <line x1="8" y1="32" x2="88" y2="32" class="dinosaur-legend-fence-light"/>
+                            </svg>
+                            <span>Fence segment</span>
+                        </div>
+                        <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="3">
+                            <svg viewBox="0 0 96 64" aria-hidden="true">
+                                <circle cx="48" cy="32" r="18" fill="#ffc94d" stroke="#70470b" stroke-width="6"/>
+                            </svg>
+                            <span>Electrical post</span>
+                        </div>
+                    </div>
                 </div>
 
                 <p class="dinosaur-intro-sentence fragment fade-in" data-fragment-index="4">

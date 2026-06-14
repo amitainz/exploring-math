@@ -793,18 +793,75 @@ body {
 .dinosaur-intro-diagram {
     position: absolute;
     top: 20%;
-    right: 320px;
+    right: 305px;
     left: 0.9rem;
     height: 50%;
     z-index: 1;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 0.8rem;
     align-items: stretch;
 }
 
-.dinosaur-map-svg {
+.dinosaur-map-image {
     display: block;
     width: 100%;
     height: 100%;
+    max-width: none;
+    max-height: none !important;
+    margin: 0;
+    object-fit: contain;
+}
+
+.dinosaur-intro-legend {
+    display: grid;
+    grid-template-rows: auto repeat(3, 1fr);
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.8rem 0.8rem 0.7rem;
+    border: 1px solid #d4dae3;
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.dinosaur-intro-legend h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.05rem;
+    line-height: 1.05;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.dinosaur-legend-item {
+    display: grid;
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: center;
+    color: #304156;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.dinosaur-legend-item svg {
+    width: 62px;
+    height: 44px;
+}
+
+.dinosaur-legend-fence {
+    fill: none;
+    stroke: #252f3f;
+    stroke-width: 10;
+    stroke-linecap: round;
+}
+
+.dinosaur-legend-fence-light {
+    fill: none;
+    stroke: #f6f0dc;
+    stroke-width: 3;
+    stroke-linecap: round;
 }
 
 .dinosaur-intro-sentence {
