@@ -85,18 +85,18 @@
       <circle class="post" cx="470" cy="410" r="13"/>
       <circle class="post" cx="390" cy="468" r="13"/>
       <g opacity=".9">
-        <use href="#dinosaur" transform="translate(292 325) scale(.6)"/>
+        <use href="#dinosaur" transform="translate(320 350) scale(.58)"/>
         <use href="#dinosaur" transform="translate(405 418) scale(.32)"/>
         <use href="#dinosaur" transform="translate(585 170) scale(.52)"/>
         <use href="#dinosaur" transform="translate(800 220) scale(.42)"/>
         <use href="#dinosaur" transform="translate(785 400) scale(.54)"/>
       </g>
 
-      <path class="callout" d="M236 310 C252 314 274 320 292 325"/>
-      <rect x="34" y="288" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
-      <text class="tag" x="54" y="314">one safe region</text>
+      <path class="callout" d="M258 292 C263 304 269 314 276 322"/>
+      <rect x="150" y="250" width="206" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
+      <text class="tag" x="170" y="276">one safe region</text>
 
-      <path class="callout" d="M665 50 L665 108"/>
+      <path class="callout" d="M665 50 L665 92"/>
       <rect x="585" y="8" width="164" height="39" rx="8" fill="#fffdf8" stroke="#d1d7df" stroke-width="1.5"/>
       <text class="tag" x="606" y="34">fence segment</text>
 
