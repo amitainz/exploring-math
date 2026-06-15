@@ -40,10 +40,10 @@ Addendum: you can practice polyrhythms in a group. One kid conducts
 
 ### [Discover Euler's Beautiful Formula](euler_teacher_intro.html)
 
-This is the intro and summary deck for a 60 minute long lesson for 11 year-olds; kids work individually and then
-in small groups, creating examples and looking for patterns.
-There are some printable [Euler research question slips](euler_research_questions_slips.pdf) and a worksheet (not included)
-to help guide the exploration.
+This is the intro and summary deck for a 60 minute long lesson for 11 year-olds; after the introduction
+kids work individually on [this worksheet](euler_worksheet.pdf). They then pool their examples 
+and work in small groups, creating additional examples and looking for the rule that governs the diagram counts.
+There are some printable [Euler research question slips](euler_research_questions_slips.pdf) to help guide the exploration.
 
 The lesson is based on [this standalone app](euler.html).
 
