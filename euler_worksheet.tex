@@ -1,0 +1,278 @@
+\documentclass[10pt,a4paper,landscape]{article}
+\usepackage[a4paper,landscape,margin=8mm]{geometry}
+\usepackage[svgnames]{xcolor}
+\usepackage{array}
+\usepackage{helvet}
+\usepackage{tikz}
+
+\renewcommand{\familydefault}{\sfdefault}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{0.45pt}
+
+\definecolor{bodytext}{HTML}{1f2937}
+\definecolor{mutedtext}{HTML}{475569}
+\definecolor{cardborder}{HTML}{cbd5e1}
+\definecolor{cardfill}{HTML}{fffdf8}
+\definecolor{titlefill}{HTML}{eef6ec}
+\definecolor{greenregion}{HTML}{cdeee8}
+\definecolor{blueregion}{HTML}{d8eaff}
+\definecolor{yellowregion}{HTML}{fff0a8}
+\definecolor{pinkregion}{HTML}{f7d1dc}
+\definecolor{purpleregion}{HTML}{eadfff}
+\definecolor{fence}{HTML}{252f3f}
+\definecolor{fencelight}{HTML}{f6f0dc}
+\definecolor{postfill}{HTML}{ffc94d}
+\definecolor{poststroke}{HTML}{70470b}
+
+\newlength{\cellwidth}
+\newlength{\cellheight}
+\newlength{\cellgap}
+\setlength{\cellwidth}{68mm}
+\setlength{\cellheight}{92mm}
+\setlength{\cellgap}{3mm}
+
+\tikzset{
+  fence/.style={draw=fence,line width=2.1pt,line cap=round,line join=round},
+  fencelight/.style={draw=fencelight,line width=0.55pt,line cap=round,line join=round},
+  post/.style={circle,draw=poststroke,fill=postfill,line width=0.75pt,minimum size=5.4pt,inner sep=0pt},
+  guide/.style={draw=cardborder,line width=0.5pt,dashed,rounded corners=2pt}
+}
+
+\newcommand{\celltitle}[2]{%
+  {\setlength{\fboxsep}{1.8mm}%
+  \colorbox{#1!11}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \textcolor{#1!70!black}{\bfseries #2}%
+    }%
+  }}%
+  \par\vspace{1.6mm}%
+}
+
+\newcommand{\worksheetcell}[3]{%
+  \fcolorbox{cardborder}{cardfill}{%
+    \begin{minipage}[t][\cellheight][t]{\dimexpr\cellwidth-2\fboxrule\relax}
+      \setlength{\parindent}{0pt}%
+      \setlength{\parskip}{0pt}%
+      \vspace{2mm}%
+      \hspace*{2.3mm}%
+      \begin{minipage}[t]{\dimexpr\linewidth-4.6mm\relax}
+        \celltitle{#1}{#2}%
+        #3%
+      \end{minipage}%
+    \end{minipage}%
+  }%
+}
+
+\newcommand{\frontrow}[4]{%
+  \noindent #1\hspace{\cellgap}#2\hspace{\cellgap}#3\hspace{\cellgap}#4\par
+}
+
+\newcommand{\counttable}{%
+  \vspace{1mm}
+  {\renewcommand{\arraystretch}{1.35}%
+  \begin{tabular}{|>{\centering\arraybackslash}p{14mm}|>{\centering\arraybackslash}p{18mm}|>{\centering\arraybackslash}p{17mm}|}
+    \hline
+    \scriptsize Posts & \scriptsize Fence segments & \scriptsize Safe regions \\
+    \hline
+    \rule{0pt}{5.5mm} & & \\
+    \hline
+  \end{tabular}}%
+}
+
+\newcommand{\targettriplet}[3]{%
+  \begin{center}
+  {\renewcommand{\arraystretch}{1.25}%
+  \begin{tabular}{|>{\centering\arraybackslash}p{14mm}|>{\centering\arraybackslash}p{18mm}|>{\centering\arraybackslash}p{17mm}|}
+    \hline
+    \scriptsize Posts & \scriptsize Fence segments & \scriptsize Safe regions \\
+    \hline
+    \Large #1 & \Large #2 & \Large #3 \\
+    \hline
+  \end{tabular}}%
+  \end{center}
+}
+
+\newcommand{\drawspace}[1]{%
+  \begin{center}
+  \begin{tikzpicture}[x=1mm,y=1mm]
+    \draw[guide] (0,0) rectangle (#1,35);
+  \end{tikzpicture}
+  \end{center}
+}
+
+\newcommand{\smallbox}[1]{%
+  \begin{tikzpicture}[x=1mm,y=1mm,baseline=(base)]
+    \coordinate (base) at (0,0);
+    \draw[guide] (0,0) rectangle (#1,19);
+  \end{tikzpicture}
+}
+
+\newcommand{\checkbox}{\fbox{\rule{0pt}{1.55ex}\hspace{1.55ex}}}
+
+\newcommand{\tripletrow}[3]{%
+  #1 & #2 & #3 & \checkbox & \checkbox \\
+}
+
+\newcommand{\possibleTable}[4]{%
+  \begin{center}
+  {\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.28}%
+  \begin{tabular}{|>{\centering\arraybackslash}p{7mm}|>{\centering\arraybackslash}p{7mm}|>{\centering\arraybackslash}p{7mm}|>{\centering\arraybackslash}p{10mm}|>{\centering\arraybackslash}p{10mm}|}
+    \hline
+    \scriptsize P & \scriptsize S & \scriptsize R & \scriptsize yes & \scriptsize no \\
+    \hline
+    #1
+    #2
+    #3
+    #4
+    \hline
+  \end{tabular}}%
+  \end{center}
+}
+
+\newcommand{\ownrow}[1]{#1 & & & \\ \hline}
+
+\newcommand{\ownTable}[2]{%
+  {\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.35}%
+  \begin{tabular}{|>{\centering\arraybackslash}p{10mm}|>{\centering\arraybackslash}p{10mm}|>{\centering\arraybackslash}p{14mm}|>{\centering\arraybackslash}p{13mm}|}
+    \hline
+    \scriptsize Drawing & \scriptsize Posts & \scriptsize Segments & \scriptsize Regions \\
+    \hline
+    \ownrow{#1}
+    #2
+  \end{tabular}}%
+}
+
+\newcommand{\drawFence}[1]{\draw[fence] #1; \draw[fencelight] #1;}
+
+\newcommand{\diagramTriangle}{%
+  \begin{center}
+  \begin{tikzpicture}[scale=0.88]
+    \coordinate (A) at (0,0); \coordinate (B) at (3.2,0); \coordinate (C) at (1.6,2.5);
+    \fill[greenregion] (A)--(B)--(C)--cycle;
+    \drawFence{(A)--(B)--(C)--cycle}
+    \foreach \p in {A,B,C} \node[post] at (\p) {};
+  \end{tikzpicture}
+  \end{center}
+}
+
+\newcommand{\diagramFourPosts}{%
+  \begin{center}
+  \begin{tikzpicture}[scale=0.78]
+    \coordinate (A) at (0,0); \coordinate (B) at (3.1,0); \coordinate (C) at (3.1,2.2); \coordinate (D) at (0,2.2);
+    \fill[greenregion] (A)--(B)--(C)--cycle;
+    \fill[blueregion] (A)--(C)--(D)--cycle;
+    \drawFence{(A)--(B)--(C)--(D)--cycle}
+    \drawFence{(A)--(C)}
+    \foreach \p in {A,B,C,D} \node[post] at (\p) {};
+  \end{tikzpicture}
+  \end{center}
+}
+
+\newcommand{\diagramTree}{%
+  \begin{center}
+  \begin{tikzpicture}[scale=0.9]
+    \coordinate (O) at (1.6,1.2); \coordinate (A) at (0,0); \coordinate (B) at (3.2,0); \coordinate (C) at (1.6,2.7);
+    \drawFence{(O)--(A)}
+    \drawFence{(O)--(B)}
+    \drawFence{(O)--(C)}
+    \foreach \p in {O,A,B,C} \node[post] at (\p) {};
+  \end{tikzpicture}
+  \end{center}
+}
+
+\newcommand{\diagramFourRegions}{%
+  \begin{center}
+  \begin{tikzpicture}[scale=0.78]
+    \coordinate (A) at (0,0); \coordinate (B) at (3,0); \coordinate (C) at (3,2.5); \coordinate (D) at (0,2.5); \coordinate (O) at (1.5,1.25);
+    \fill[greenregion] (A)--(B)--(O)--cycle;
+    \fill[blueregion] (B)--(C)--(O)--cycle;
+    \fill[yellowregion] (C)--(D)--(O)--cycle;
+    \fill[pinkregion] (D)--(A)--(O)--cycle;
+    \drawFence{(A)--(B)--(C)--(D)--cycle}
+    \drawFence{(A)--(O)}
+    \drawFence{(B)--(O)}
+    \drawFence{(C)--(O)}
+    \drawFence{(D)--(O)}
+    \foreach \p in {A,B,C,D,O} \node[post] at (\p) {};
+  \end{tikzpicture}
+  \end{center}
+}
+
+\begin{document}
+\color{bodytext}
+
+\frontrow
+{\worksheetcell{ForestGreen}{Count the Design A}{\diagramTriangle \counttable}}
+{\worksheetcell{RoyalBlue}{Count the Design B}{\diagramFourPosts \counttable}}
+{\worksheetcell{DarkOrange}{Count the Design C}{\diagramTree \counttable}}
+{\worksheetcell{MediumVioletRed}{Count the Design D}{\diagramFourRegions \counttable}}
+
+\vspace{\cellgap}
+
+\frontrow
+{\worksheetcell{ForestGreen}{Make a Design A}{\targettriplet{3}{3}{1}\drawspace{48}}}
+{\worksheetcell{RoyalBlue}{Make a Design B}{\targettriplet{4}{5}{2}\drawspace{48}}}
+{\worksheetcell{MediumVioletRed}{Make a Design C}{\targettriplet{5}{7}{3}\drawspace{48}}}
+{\worksheetcell{DarkOrange}{Make a Design D}{\targettriplet{4}{3}{0}\drawspace{48}}}
+
+\newpage
+
+\frontrow
+{\worksheetcell{ForestGreen}{Possible or Impossible A}{\possibleTable
+  {\tripletrow{3}{3}{1}}
+  {\tripletrow{4}{4}{2}}
+  {\tripletrow{4}{3}{0}}
+  {\tripletrow{5}{5}{2}}
+  \vspace{1.8mm}\drawspace{45}}}
+{\worksheetcell{RoyalBlue}{Possible or Impossible B}{\possibleTable
+  {\tripletrow{4}{5}{2}}
+  {\tripletrow{5}{7}{3}}
+  {\tripletrow{5}{7}{4}}
+  {\tripletrow{6}{5}{0}}
+  \vspace{1.8mm}\drawspace{45}}}
+{\worksheetcell{MediumVioletRed}{Possible or Impossible C}{\possibleTable
+  {\tripletrow{3}{4}{2}}
+  {\tripletrow{6}{8}{3}}
+  {\tripletrow{6}{8}{2}}
+  {\tripletrow{5}{4}{0}}
+  \vspace{1.8mm}\drawspace{45}}}
+{\worksheetcell{DarkOrange}{Possible or Impossible D}{\possibleTable
+  {\tripletrow{5}{6}{2}}
+  {\tripletrow{4}{6}{3}}
+  {\tripletrow{4}{5}{1}}
+  {\tripletrow{7}{6}{0}}
+  \vspace{1.8mm}\drawspace{45}}}
+
+\vspace{\cellgap}
+
+\frontrow
+{\worksheetcell{ForestGreen}{Your Examples A--B}{%
+  \smallbox{23}\hfill\smallbox{23}\par
+  \vspace{1.5mm}
+  \hspace{10mm}\textbf{A}\hfill\textbf{B}\hspace{10mm}\par
+  \vspace{2mm}
+  \ownTable{A}{\ownrow{B}}}}
+{\worksheetcell{RoyalBlue}{Your Examples C--D}{%
+  \smallbox{23}\hfill\smallbox{23}\par
+  \vspace{1.5mm}
+  \hspace{10mm}\textbf{C}\hfill\textbf{D}\hspace{10mm}\par
+  \vspace{2mm}
+  \ownTable{C}{\ownrow{D}}}}
+{\worksheetcell{MediumVioletRed}{Your Examples E--F}{%
+  \smallbox{23}\hfill\smallbox{23}\par
+  \vspace{1.5mm}
+  \hspace{10mm}\textbf{E}\hfill\textbf{F}\hspace{10mm}\par
+  \vspace{2mm}
+  \ownTable{E}{\ownrow{F}}}}
+{\worksheetcell{DarkOrange}{Your Example G}{%
+  \begin{center}
+  \begin{tikzpicture}[x=1mm,y=1mm]
+    \draw[guide] (0,0) rectangle (49,36);
+    \node[anchor=north west,font=\bfseries\large,text=bodytext] at (2,34) {G};
+  \end{tikzpicture}
+  \end{center}
+  \ownTable{G}{}}}
+
+\end{document}
