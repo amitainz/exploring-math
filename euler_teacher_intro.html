@@ -23,12 +23,12 @@
 
 <!-- .element: class="fragment" -->
 
-Today we'll give you a chance to experience this for yourself.
-We'll be following the footsteps of the great mathematician [Leonhard Euler](https://en.wikipedia.org/wiki/Leonhard_Euler),
-and rediscover a formula that profoundly influences our understanding of the link between numbers and geometry to this day.
+- We'll be following the footsteps of the mathematician [Leonhard Euler](https://en.wikipedia.org/wiki/Leonhard_Euler),
+who discovered a formula that profoundly influences our understanding of the link between numbers and geometry to this day.
+
 <!-- .element: class="fragment" -->
 
-- It might be quite different than what you're used to. There will be no complicated calculations. Instead, you'll need to tap into your **imagination** and **curiosity**.
+- There will be no complicated calculations. Instead, you'll need to tap into your **imagination** and **curiosity**.
 
 <!-- .element: class="fragment" -->
 
@@ -45,7 +45,7 @@ and rediscover a formula that profoundly influences our understanding of the lin
                     <header class="dinosaur-intro-header">
                         <div>
                             <h1>The Jurassic Park Engineer</h1>
-                            <p>An engineer is exploring different designs for a Dinosaur Park.</p>
+                            <p>An engineer is trying to design a Dinosaur Park.</p>
                         </div>
                         <img src="jurassic_engineer.png" alt="Jurassic Park engineer" class="dinosaur-intro-engineer">
                     </header>
@@ -53,25 +53,25 @@ and rediscover a formula that profoundly influences our understanding of the lin
                     <div class="dinosaur-intro-diagram fragment fade-in" data-fragment-index="0" aria-label="Dinosaur park fence diagram">
                         <img src="euler_dinosaur_fence_diagram_slide.svg" alt="Dinosaur park fence diagram" class="dinosaur-map-image">
                         <div class="dinosaur-intro-legend" aria-label="How to read the diagram">
-                            <h2>How To Read It</h2>
+                            <h2>Design Elements</h2>
                             <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="1">
-                                <svg viewBox="0 0 96 64" aria-hidden="true">
-                                    <path d="M4 6 L90 6 L70 58 L18 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="4"/>
-                                </svg>
-                                <span>Safe region</span>
-                            </div>
-                            <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="2">
                                 <svg viewBox="0 0 96 64" aria-hidden="true">
                                     <line x1="8" y1="32" x2="88" y2="32" class="dinosaur-legend-fence"/>
                                     <line x1="8" y1="32" x2="88" y2="32" class="dinosaur-legend-fence-light"/>
                                 </svg>
                                 <span>Fence segment</span>
                             </div>
-                            <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="3">
+                            <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="2">
                                 <svg viewBox="0 0 96 64" aria-hidden="true">
                                     <circle cx="48" cy="32" r="18" fill="#ffc94d" stroke="#70470b" stroke-width="6"/>
                                 </svg>
                                 <span>Electrical post</span>
+                            </div>
+                            <div class="dinosaur-legend-item fragment fade-in" data-fragment-index="3">
+                                <svg viewBox="0 0 96 64" aria-hidden="true">
+                                    <path d="M4 6 L90 6 L70 58 L18 50 Z" fill="#cdeee8" stroke="#252f3f" stroke-width="4"/>
+                                </svg>
+                                <span>Safe region</span>
                             </div>
                         </div>
                     </div>
@@ -93,14 +93,17 @@ and rediscover a formula that profoundly influences our understanding of the lin
                 <textarea data-template>
 # Step 1: Drawing the Fences
 
-You can draw any number of fence segments - straight or curved.
-We want the fences and their sensors to be controlled from a central location, so there's a rule:
+You can draw any number of fence segments - straight or curved, but there's a rule:
 <!-- .element: class="fragment" data-fragment-index="0" -->
 
 > **Fences Must Be Connected**
 >
 > You should be able to get between any two parts of the fence by walking along the fences only.
 <!-- .element: class="fragment" data-fragment-index="1" -->
+
+You can imagine that there are walkways at the top of the fences for scientists and visitors,
+and we want them to be able to get to every bit of fence from every other bit of fence.
+
 
 <div class="example-grid fragment" data-fragment-index="2">
 <div class="diagram-box diagram-example">
@@ -179,16 +182,16 @@ We want the fences and their sensors to be controlled from a central location, s
                 <textarea data-template>
 # Step 2. Adding Posts
 
-The fences are held up and controlled by special electrical posts, marked as thick dots on the diagram.
+The fences are held up by special posts, marked as thick dots on the diagram.
 You can add as many posts as you like, anywhere along the fences -- there's just one more rule:
 <!-- .element: class="fragment" data-fragment-index="0" -->
 
 > **The Posts Cut the Fences into Simple Segments**
-> which means:
-> - each fence segment has a post on either side -- no "loose ends" without a post.
-> - segments cannot intersect themselves or other segments; where there's an intersection in the diagram, you
+> - Each fence segment has a post on either side -- no "loose ends" without a post.
+> - Segments cannot intersect themselves or other segments; where there's an intersection in the diagram, you
 > must add a post and separate the fence into simple segments.
 <!-- .element: class="fragment" data-fragment-index="1" -->
+
 
 Let's fix the middle and right diagrams:
 <!-- .element: class="fragment" data-fragment-index="2" -->
@@ -255,8 +258,8 @@ Dinosaurs must be separated from each other and from the outside world by fences
 > A *"safe region"* is a part of the diagram that is fenced in from all sides.
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-There's no choice in this step - the fences determine the safe regions, but the engineer likes to clearly
-mark each safe region with a different color.
+There's no choice in this step - the fences determine the safe regions, but we do need to carefully label
+(using colors or in other ways) all the different safe regions our diagram has.
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 <div class="region-visual-row">
@@ -481,8 +484,8 @@ I count <span id="tally-posts" class="font-bold text-slate-900">-</span> posts, 
 
 # A Curious Thing
 
-The engineer noticed something odd. If she wanted to design a park with 3 posts and two safe regions, she could do it
-in a few different ways:
+The engineer wanted to design a park with 3 posts and two safe regions. After a little while she
+discovered she could do it in a few different ways:
 <!-- .element: class="fragment" data-fragment-index="0" -->
 
 <div class="question-diagram-grid fragment" data-fragment-index="1">
