@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Empires - Who's in the House?</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #1b1b2f;
+    color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  h1 {
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+  }
+  .panel {
+    background: #26264a;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .entry-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    outline: none;
+  }
+  button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.15s ease;
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  #enterBtn {
+    background: #4e8cff;
+    color: white;
+  }
+  #revealBtn {
+    background: #ffb703;
+    color: #1b1b2f;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  #newGameBtn {
+    background: #ef476f;
+    color: white;
+    width: 100%;
+  }
+  #count {
+    text-align: center;
+    color: #a0a0c0;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  ul#revealList {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px 0;
+  }
+  ul#revealList li {
+    background: #34345c;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 17px;
+  }
+  .hidden {
+    display: none !important;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎭 Empires</h1>
+
+<div class="panel">
+  <div id="entrySection">
+    <div class="entry-row">
+      <input type="text" id="nameInput" placeholder="Enter your secret identity..." autofocus>
+      <button id="enterBtn">Enter</button>
+    </div>
+    <div id="count">0 identities collected</div>
+  </div>
+
+  <div id="revealSection" class="hidden">
+    <ul id="revealList"></ul>
+  </div>
+
+  <button id="revealBtn">Who's in the house?</button>
+  <button id="newGameBtn">New game</button>
+</div>
+
+<script>
+  const nameInput = document.getElementById('nameInput');
+  const enterBtn = document.getElementById('enterBtn');
+  const revealBtn = document.getElementById('revealBtn');
+  const newGameBtn = document.getElementById('newGameBtn');
+  const countEl = document.getElementById('count');
+  const revealSection = document.getElementById('revealSection');
+  const revealList = document.getElementById('revealList');
+
+  let identities = [];
+  let revealed = false;
+
+  function updateCount() {
+    countEl.textContent = identities.length + (identities.length === 1 ? ' identity collected' : ' identities collected');
+  }
+
+  function addIdentity() {
+    if (revealed) return;
+    const value = nameInput.value.trim();
+    if (!value) return;
+    identities.push(value);
+    nameInput.value = '';
+    nameInput.focus();
+    updateCount();
+  }
+
+  function shuffle(array) {
+    const arr = array.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function revealIdentities() {
+    if (identities.length === 0) return;
+    revealed = true;
+    enterBtn.disabled = true;
+    nameInput.disabled = true;
+    revealList.innerHTML = '';
+    shuffle(identities).forEach(name => {
+      const li = document.createElement('li');
+      li.textContent = name;
+      revealList.appendChild(li);
+    });
+    revealSection.classList.remove('hidden');
+  }
+
+  function newGame() {
+    identities = [];
+    revealed = false;
+    enterBtn.disabled = false;
+    nameInput.disabled = false;
+    nameInput.value = '';
+    revealList.innerHTML = '';
+    revealSection.classList.add('hidden');
+    updateCount();
+    nameInput.focus();
+  }
+
+  enterBtn.addEventListener('click', addIdentity);
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addIdentity();
+  });
+  revealBtn.addEventListener('click', revealIdentities);
+  newGameBtn.addEventListener('click', newGame);
+</script>
+
+</body>
+</html>
